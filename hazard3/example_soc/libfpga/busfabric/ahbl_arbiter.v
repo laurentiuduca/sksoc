@@ -203,8 +203,10 @@ end
 // AHB State Machine
 
 reg [N_PORTS-1:0] mast_gnt_d, r_mast_gnt_a;
-assign dst_hready = canchange && (mast_gnt_a != mast_gnt_d) && mast_gnt_a ? 1'b1 :
-	mast_gnt_d ? |(src_hready & mast_gnt_d) : |(src_hready & mast_gnt_a); //1'b1;
+wire force_dst_hready, dst_hready_base;
+assign force_dst_hready = canchange && (mast_gnt_a != mast_gnt_d) && mast_gnt_a ? 1'b1 : 1'b0;
+assign dst_hready_base = mast_gnt_d ? |(src_hready & mast_gnt_d) : |(src_hready & mast_gnt_a); //1'b1;
+assign dst_hready = force_dst_hready | dst_hready_base;
 
 // see spliter
 wire [N_PORTS-1:0] mast_aphase_ends = mast_req_a & src_hready;
@@ -233,7 +235,7 @@ always @ (posedge clk or negedge rst_n) begin
 		end
 	end else begin
 		r_mast_gnt_a <= mast_gnt_a;
-		if (dst_hready || !mast_gnt_d) begin
+		if (dst_hready_base) begin
 			mast_gnt_d <= mast_gnt_a;
 			buf_valid <= 0; //buf_valid & ~mast_gnt_a;
 		end

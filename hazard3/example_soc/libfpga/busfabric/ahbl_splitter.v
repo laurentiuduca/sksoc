@@ -166,7 +166,7 @@ onehot_mux #(
 	.N_INPUTS(N_PORTS),
 	.W_INPUT(W_DATA)
 ) hrdata_mux (
-	.in(r_dst_hrdata),
+	.in(dst_hrdata),
 	.sel(slave_sel_d),
 	.out(src_hrdata)
 );
