@@ -153,7 +153,7 @@ reg  [N_PORTS-1:0] mast_req_a;
 wire [N_PORTS-1:0] mast_gnt_a;
 
 always @ (*) begin
-	for (i = 0; i < N_PORTS; i = i + 1) begin
+	for (i = 0; i < N_HARTS; i = i + 1) begin
 		// HTRANS == 2'b10, 2'b11 when active
 		mast_req_a[i] = actual_htrans[i * 2 + 1] && CONN_MASK[i];
 	end
@@ -164,7 +164,7 @@ wire canchange;
 assign canchange = dst_hready_resp; // & !(actual_hwrite & mast_gnt_a); // & !|buf_wen;
 
 onehot_priority #(
-	.W_INPUT(N_PORTS)
+	.W_INPUT(N_HARTS)
 ) arb_priority (
 	.clk(clk),
 	.rst_n(rst_n),
@@ -173,17 +173,21 @@ onehot_priority #(
 	.out(mast_gnt_a)
 );
 
-`ifdef laur0
+//`ifdef laur0
 //always @(mast_gnt_a) begin
 reg [N_PORTS-1:0] o_mast_gnt_a=0;
 integer tcnt=0;
 always @(posedge clk) begin
 	tcnt = tcnt + 1;
-	if(o_mast_gnt_a != mast_gnt_a) begin // || mast_req_a != mast_gnt_a) begin
+	//if(o_mast_gnt_a != mast_gnt_a) begin // || mast_req_a != mast_gnt_a) begin
+	if(actual_hwrite) begin
 		o_mast_gnt_a = mast_gnt_a;
-		$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x pc1=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x", 
-			SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], src_d_pc[63:32], src_haddr[63:32], dst_haddr, src_hwrite, dst_hwrite,
-			src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);
+		$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x dhaddr=%x dhwdata=%x shwr=%2x dhwr=%1x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x",
+                        SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], dst_haddr, dst_hwdata, src_hwrite, dst_hwrite,
+                        src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);		
+		//$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x pc1=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x", 
+		//	SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], src_d_pc[63:32], src_haddr[63:32], dst_haddr, src_hwrite, dst_hwrite,
+		//	src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);
 	end
 end
 always @(dst_haddr or dst_hwrite or dst_hartid or dst_htrans or dst_hready_resp or dst_hready) begin
@@ -198,7 +202,7 @@ always @(dst_haddr or dst_hwrite or dst_hartid or dst_htrans or dst_hready_resp 
 		$finish;
 	end
 end
-`endif
+//`endif
 
 // AHB State Machine
 
@@ -351,7 +355,7 @@ onehot_mux #(
 	.N_INPUTS(N_PORTS)
 ) mux_hwrite (
 	.in(actual_hwrite),
-	.sel(mast_gnt_a),
+	.sel(mast_gnt_d),
 	.out(dst_hwrite)
 );
 
