@@ -150,7 +150,6 @@ end
 endgenerate
 
 
-localparam N_HARTS = 1;
 localparam XLEN = 32;
 
 wire                      sys_reset_req;
@@ -273,6 +272,7 @@ wire              pwrup_req;
 wire              unblock_out;
 
 wire              uart_irq;
+wire [N_HARTS-1:0]          soft_irq;    // -> mip.msip
 wire              timer_irq;
 
 hazard3_cpu_1port #(
@@ -324,6 +324,7 @@ hazard3_cpu_1port #(
 	.clk_always_on              (clk),
 	.rst_n                      (rst_n_cpu),
 
+	.hartid			    (),
 	.d_pc			    (d_pc),
 
 	.pwrup_req                  (pwrup_req),
@@ -373,7 +374,7 @@ hazard3_cpu_1port #(
 
 	.irq                        (uart_irq),
 
-	.soft_irq                   (1'b0),
+	.soft_irq                   (soft_irq),
 	.timer_irq                  (timer_irq),
 	.hmaster 		    ()
 );
@@ -399,6 +400,12 @@ wire [3:0]         sram0_hprot;
 wire               sram0_hmastlock;
 wire [W_DATA-1:0]  sram0_hwdata;
 wire [W_DATA-1:0]  sram0_hrdata;
+wire [W_ADDR-1:0]  sram0_d_pc;
+wire [W_DATA-1:0]  sram0_hartid;
+// exclusive access signaling
+wire               sram0_hexcl;
+wire [7:0]         sram0_hmaster;
+wire               sram0_hexokay;
 
 wire               bridge_hready_resp;
 wire               bridge_hready;
@@ -412,6 +419,13 @@ wire [3:0]         bridge_hprot;
 wire               bridge_hmastlock;
 wire [W_DATA-1:0]  bridge_hwdata;
 wire [W_DATA-1:0]  bridge_hrdata;
+wire [W_ADDR-1:0]  bridge_d_pc;
+wire [W_DATA-1:0]  bridge_hartid;
+// exclusive access signaling
+wire               bridge_hexcl;
+wire [7:0]         bridge_hmaster;
+wire               bridge_hexokay=1;
+
 
 `define USECROSS
 `ifndef USECROSS
@@ -451,6 +465,10 @@ ahbl_splitter #(
 	.dst_hrdata      ({bridge_hrdata      , sram0_hrdata     })
 );
 `else
+        wire               src_hexcl; // exclusive access signaling
+        wire [7:0]         src_hmaster; // exclusive access signaling
+        wire               src_hexokay; // exclusive access signaling
+
 ahbl_crossbar #(
         .N_MASTERS(1),
         .N_SLAVES(2),
@@ -462,7 +480,6 @@ ahbl_crossbar #(
         // Global signals
         .clk             (clk),
         .rst_n           (rst_n),
-        .d_pc            (d_pc),
 
         // From masters; function as slave ports
         .src_hready_resp ({/*sd_hready, */proc_hready}),
@@ -477,6 +494,12 @@ ahbl_crossbar #(
         .src_hmastlock   ({/*sd_hmastlock, */proc_hmastlock}),
         .src_hwdata      ({/*sd_hwdata, */proc_hwdata}),
         .src_hrdata      ({/*sd_hrdata, */proc_hrdata}), 
+	.src_d_pc        (d_pc),
+        .src_hartid      (0),
+        // exclusive access signaling
+        .src_hexcl       (src_hexcl),
+        .src_hmaster     (src_hmaster),
+        .src_hexokay     (src_hexokay),
 
         // To slaves; function as master ports
 	.dst_hready_resp ({bridge_hready_resp , sram0_hready_resp}),
@@ -490,7 +513,14 @@ ahbl_crossbar #(
         .dst_hprot       ({bridge_hprot       , sram0_hprot      }),
         .dst_hmastlock   ({bridge_hmastlock   , sram0_hmastlock  }),
         .dst_hwdata      ({bridge_hwdata      , sram0_hwdata     }),
-        .dst_hrdata      ({bridge_hrdata      , sram0_hrdata     })
+        .dst_hrdata      ({bridge_hrdata      , sram0_hrdata     }),
+        .dst_d_pc        ({bridge_d_pc        , sram0_d_pc       }),
+        .dst_hartid      ({bridge_hartid      , sram0_hartid     }),
+        // exclusive access signaling
+        .dst_hexcl       ({bridge_hexcl       , sram0_hexcl}),
+        .dst_hmaster     ({bridge_hmaster     , sram0_hmaster}),
+        .dst_hexokay     ({bridge_hexokay     , sram0_hexokay})
+	
 );
 `endif
 
@@ -601,7 +631,8 @@ ahb_sync_sram #(
 	.rst_n             (rst_n),
 	.clk_sdram         (clk_sdram),
 
-	.d_pc              (d_pc),
+        .d_pc              (sram0_d_pc),
+        .hartid            (sram0_hartid),
         .w_init_done(w_init_done),
 
 	.ahbls_hready_resp (sram0_hready_resp),
@@ -616,6 +647,10 @@ ahb_sync_sram #(
 	.ahbls_hmastlock   (sram0_hmastlock),
 	.ahbls_hwdata      (sram0_hwdata),
 	.ahbls_hrdata      (sram0_hrdata),
+        // exclusive access signaling
+        .ahbls_hexcl       (sram0_hexcl),
+        .ahbls_hmaster     (sram0_hmaster),
+        .ahbls_hexokay     (sram0_hexokay),	
 
     // tang nano 20k SDRAM
     .O_sdram_clk(O_sdram_clk),
@@ -712,6 +747,7 @@ hazard3_riscv_timer timer_u (
 
 	.tick      (timer_tick),
 
+        .soft_irq  (soft_irq),	
 	.timer_irq (timer_irq)
 );
 
