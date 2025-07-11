@@ -108,17 +108,17 @@ always @ (posedge clk or negedge rst_n) begin
 	end else begin
 		if (bus_write && paddr == ADDR_MTIMECMP) begin
 			mtimecmp0[31:0] <= ~pwdata;
-			$display("ADDR_MTIMECMP pwdata=%8d", pwdata);
+			//$display("ADDR_MTIMECMP pwdata=%8d", pwdata);
 		end else if (bus_write && paddr == ADDR_MTIMECMPH) begin
 			mtimecmp0[63:32] <= ~pwdata;
-			$display("ADDR_MTIMECMPH pwdata=%8d", pwdata);
+			//$display("ADDR_MTIMECMPH pwdata=%8d", pwdata);
 		end if (bus_write && paddr == ADDR_MTIMECMP+8) begin
 			// laur
                         mtimecmp1[31:0] <= ~pwdata;
-			$display("ADDR_MTIMECMP+8 pwdata=%8d", pwdata);
+			//$display("ADDR_MTIMECMP+8 pwdata=%8d", pwdata);
 		end else if (bus_write && paddr == ADDR_MTIMECMPH+8) begin
                         mtimecmp1[63:32] <= ~pwdata;
-			$display("ADDR_MTIMECMPH+8 pwdata=%8d", pwdata);
+			//$display("ADDR_MTIMECMPH+8 pwdata=%8d", pwdata);
 		end
 		timer_irq <= {cmp_diff1[64], cmp_diff0[64]};
 	end
