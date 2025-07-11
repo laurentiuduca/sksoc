@@ -427,7 +427,10 @@ wire [7:0]         bridge_hmaster;
 wire               bridge_hexokay=1;
 
 
-`define USECROSS
+wire               src_hexcl; // exclusive access signaling
+wire [7:0]         src_hmaster; // exclusive access signaling
+wire               src_hexokay; // exclusive access signaling
+//`define USECROSS
 `ifndef USECROSS
 ahbl_splitter #(
 	.N_PORTS     (2),
@@ -437,7 +440,6 @@ ahbl_splitter #(
 	.clk             (clk),
 	.rst_n           (rst_n),
 
-	.d_pc		 (d_pc),
 	.src_hready_resp (proc_hready   ),
 	.src_hready      (proc_hready   ),
 	.src_hresp       (proc_hresp    ),
@@ -450,6 +452,12 @@ ahbl_splitter #(
 	.src_hmastlock   (proc_hmastlock),
 	.src_hwdata      (proc_hwdata   ),
 	.src_hrdata      (proc_hrdata   ),
+        .src_d_pc        (d_pc),
+        .src_hartid      (0),
+        // exclusive access signaling
+        .src_hexcl       (src_hexcl),
+        .src_hmaster     (src_hmaster),
+        .src_hexokay     (src_hexokay),
 
 	.dst_hready_resp ({bridge_hready_resp , sram0_hready_resp}),
 	.dst_hready      ({bridge_hready      , sram0_hready     }),
@@ -462,12 +470,16 @@ ahbl_splitter #(
 	.dst_hprot       ({bridge_hprot       , sram0_hprot      }),
 	.dst_hmastlock   ({bridge_hmastlock   , sram0_hmastlock  }),
 	.dst_hwdata      ({bridge_hwdata      , sram0_hwdata     }),
-	.dst_hrdata      ({bridge_hrdata      , sram0_hrdata     })
+	.dst_hrdata      ({bridge_hrdata      , sram0_hrdata     }),
+        .dst_d_pc        ({bridge_d_pc        , sram0_d_pc       }),
+        .dst_hartid      ({bridge_hartid      , sram0_hartid     }),
+        // exclusive access signaling
+        .dst_hexcl       ({bridge_hexcl       , sram0_hexcl}),
+        .dst_hmaster     ({bridge_hmaster     , sram0_hmaster}),
+        .dst_hexokay     ({bridge_hexokay     , sram0_hexokay})
+
 );
 `else
-        wire               src_hexcl; // exclusive access signaling
-        wire [7:0]         src_hmaster; // exclusive access signaling
-        wire               src_hexokay; // exclusive access signaling
 
 ahbl_crossbar #(
         .N_MASTERS(1),
