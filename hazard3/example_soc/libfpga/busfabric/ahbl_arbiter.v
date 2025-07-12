@@ -161,7 +161,9 @@ end
 
 //single_pulse sp(clk, rst_n, dst_hready & dst_hready_resp & !actual_hwrite[actual_hartid+:1], canchange);
 wire canchange;
-assign canchange = dst_hready_resp; // & !(actual_hwrite & mast_gnt_a); // & !|buf_wen;
+wire iswrite;
+assign iswrite = (r_mast_gnt_a == 1) ? actual_hwrite[0] : actual_hwrite[1];
+assign canchange = dst_hready_resp & !iswrite; // & !|buf_wen;
 
 onehot_priority #(
 	.W_INPUT(N_PORTS)
