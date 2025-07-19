@@ -79,7 +79,10 @@ module ahbl_arbiter #(
         // exclusive access signaling   
         output wire        		 dst_hexcl,
         output wire [7:0]     		 dst_hmaster,
-        input wire        		 dst_hexokay
+        input wire        		 dst_hexokay,
+
+	output reg [N_PORTS-1:0] r_mast_gnt_a,
+	output reg [N_PORTS-1:0] mast_gnt_d
 );
 
 integer i;
@@ -175,7 +178,7 @@ onehot_priority #(
 	.out(mast_gnt_a)
 );
 
-//`ifdef laur0
+`ifdef laur0
 //always @(mast_gnt_a) begin
 reg [N_PORTS-1:0] o_mast_gnt_a=0;
 integer tcnt=0;
@@ -204,11 +207,11 @@ always @(dst_haddr or dst_hwrite or dst_hartid or dst_htrans or dst_hready_resp 
 		$finish;
 	end
 end
-//`endif
+`endif
 
 // AHB State Machine
 
-reg [N_PORTS-1:0] mast_gnt_d, r_mast_gnt_a;
+//reg [N_PORTS-1:0] mast_gnt_d, r_mast_gnt_a;
 wire force_dst_hready, dst_hready_base;
 assign force_dst_hready = canchange && (mast_gnt_a != mast_gnt_d) && mast_gnt_a ? 1'b1 : 1'b0;
 assign dst_hready_base = mast_gnt_d ? |(src_hready & mast_gnt_d) : |(src_hready & mast_gnt_a); //1'b1;

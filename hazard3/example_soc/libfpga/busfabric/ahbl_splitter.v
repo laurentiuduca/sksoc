@@ -77,7 +77,10 @@ module ahbl_splitter #(
 	// exlusive access signaling
 	output wire [N_PORTS-1:0]        dst_hexcl,
 	output wire [N_PORTS*8-1:0]      dst_hmaster,
-	input wire  [N_PORTS-1:0]        dst_hexokay
+	input wire  [N_PORTS-1:0]        dst_hexokay,
+
+	input wire [N_HARTS-1:0] 	 r_mast_gnt_a,
+	input wire [N_HARTS-1:0] 	 mast_gnt_d
 );
 
 localparam HTRANS_IDLE = 2'b00;
