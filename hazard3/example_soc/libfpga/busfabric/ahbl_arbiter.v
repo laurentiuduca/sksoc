@@ -162,6 +162,17 @@ always @ (*) begin
 	end
 end
 
+reg [N_PORTS-1:0]       or_mast_gnt_a=0;
+reg [N_PORTS-1:0]       omast_gnt_d=0;
+
+always @(posedge clk) begin
+        if(or_mast_gnt_a != mast_gnt_a || omast_gnt_d != mast_gnt_d) begin
+                or_mast_gnt_a <= mast_gnt_a;
+                omast_gnt_d <= mast_gnt_d;
+                $display("arbiter gnt s%x %x %x", SLAVE_ID, mast_gnt_a, mast_gnt_d);
+        end
+end
+
 //single_pulse sp(clk, rst_n, dst_hready & dst_hready_resp & !actual_hwrite[actual_hartid+:1], canchange);
 wire canchange;
 wire iswrite;
@@ -434,7 +445,5 @@ begin
 	end
 
 end
-
-
 
 endmodule

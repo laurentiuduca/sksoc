@@ -230,4 +230,15 @@ always @(posedge clk) begin
 end
 `endif
 
+reg [N_PORTS * N_HARTS-1:0]       or_mast_gnt_a=0;
+reg [N_PORTS * N_HARTS-1:0]       omast_gnt_d=0;
+always @(posedge clk) begin
+	if(or_mast_gnt_a != r_mast_gnt_a || omast_gnt_d != mast_gnt_d) begin
+                or_mast_gnt_a <= r_mast_gnt_a;
+                omast_gnt_d <= mast_gnt_d;
+		for(i=0; i < N_PORTS; i=i+1)
+			$display("splitter gnt h%x %x %x", src_hartid, r_mast_gnt_a[i*N_HARTS +: N_HARTS], mast_gnt_d[i*N_HARTS +: N_HARTS]);
+	end
+end
+
 endmodule
