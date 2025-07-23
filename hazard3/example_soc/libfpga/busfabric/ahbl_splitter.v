@@ -237,7 +237,7 @@ always @(posedge clk) begin
                 or_mast_gnt_a <= r_mast_gnt_a;
                 omast_gnt_d <= mast_gnt_d;
 		for(i=0; i < N_PORTS; i=i+1)
-			$display("splitter gnt h%x %x %x", src_hartid, r_mast_gnt_a[i*N_HARTS +: N_HARTS], mast_gnt_d[i*N_HARTS +: N_HARTS]);
+			$display("splitter gnt h%1x i%1x %x %x", src_hartid, i, r_mast_gnt_a[i*N_HARTS +: N_HARTS], mast_gnt_d[i*N_HARTS +: N_HARTS]);
 	end
 end
 

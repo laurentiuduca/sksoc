@@ -166,10 +166,10 @@ reg [N_PORTS-1:0]       or_mast_gnt_a=0;
 reg [N_PORTS-1:0]       omast_gnt_d=0;
 
 always @(posedge clk) begin
-        if(or_mast_gnt_a != mast_gnt_a || omast_gnt_d != mast_gnt_d) begin
-                or_mast_gnt_a <= mast_gnt_a;
+        if(or_mast_gnt_a != r_mast_gnt_a || omast_gnt_d != mast_gnt_d) begin
+                or_mast_gnt_a <= r_mast_gnt_a;
                 omast_gnt_d <= mast_gnt_d;
-                $display("arbiter gnt s%x %x %x", SLAVE_ID, mast_gnt_a, mast_gnt_d);
+                $display("arbiter gnt s%1x %x %x", SLAVE_ID, r_mast_gnt_a, mast_gnt_d);
         end
 end
 
