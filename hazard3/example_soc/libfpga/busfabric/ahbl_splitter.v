@@ -135,23 +135,20 @@ end
 
 // AHB state machine
 
-reg [N_PORTS-1:0] slave_sel_d;
+reg [N_PORTS-1:0] slave_sel_d, r_slave_sel_a;
 reg decode_err_d;
 reg err_ph1;
-reg [N_PORTS*W_DATA-1:0] r_dst_hrdata;
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		slave_sel_d <= {N_PORTS{1'b0}};
 		decode_err_d <= 1'b0;
 		err_ph1 <= 1'b0;
-		r_dst_hrdata <= 0;
 	end else begin
+		r_slave_sel_a <= slave_sel_a;
 		if (src_hready) begin
 			slave_sel_d <= slave_sel_a;
 			decode_err_d <= decode_err_a;
 		end
-		if (|dst_hready)
-			r_dst_hrdata <= dst_hrdata;
 		if (decode_err_d) begin
 			err_ph1 <= !err_ph1;
 		end else begin
