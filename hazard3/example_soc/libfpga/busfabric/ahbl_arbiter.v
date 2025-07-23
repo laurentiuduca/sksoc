@@ -227,7 +227,7 @@ always @ (posedge clk or negedge rst_n) begin
 			was_force <= 1;
 			force_mast_gnt_a <= mast_gnt_a;
 			$display("force mast_gnt_a=%x", mast_gnt_a);
-		end else if(was_force && (dst_hready_resp & force_mast_gnt_a))
+		end else if(was_force && dst_hready_base)
 			was_force <= 0;
 		r_mast_gnt_a <= mast_gnt_a;
 		if (dst_hready_base) begin
