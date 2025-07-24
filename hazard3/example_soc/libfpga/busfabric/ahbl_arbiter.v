@@ -152,7 +152,7 @@ end
 
 // Address-phase arbitration
 
-reg  [N_PORTS-1:0] mast_req_a, force_mast_gnt_a;
+reg  [N_PORTS-1:0] mast_req_a;
 wire [N_PORTS-1:0] mast_gnt_a;
 
 always @ (*) begin
@@ -177,7 +177,7 @@ end
 wire canchange;
 wire iswrite;
 assign iswrite = 0; //(r_mast_gnt_a == 1) ? actual_hwrite[0] : actual_hwrite[N_PORTS-1];
-assign canchange = dst_hready_resp & !iswrite & !was_force; // & !|buf_wen;
+assign canchange = dst_hready_resp & !iswrite; // & !was_force; // & !|buf_wen;
 
 onehot_priority #(
 	.W_INPUT(N_PORTS)
@@ -204,9 +204,7 @@ reg was_force;
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		r_mast_gnt_a <= {N_PORTS{1'b0}};
-		force_mast_gnt_a <= {N_PORTS{1'b0}};
 		mast_gnt_d <= {N_PORTS{1'b0}};
-		was_force <= 0;
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			buf_valid[i]     <= 1'b0;
 			buf_htrans[i]    <= 2'h0;
@@ -223,18 +221,9 @@ always @ (posedge clk or negedge rst_n) begin
 			buf_hmaster[i]   <= 8'd0;
 		end
 	end else begin
-		if(force_dst_hready) begin
-			was_force <= 1;
-			force_mast_gnt_a <= mast_gnt_a;
-			$display("force mast_gnt_a=%x", mast_gnt_a);
-		end else if(was_force && dst_hready_base)
-			was_force <= 0;
 		r_mast_gnt_a <= mast_gnt_a;
-		if (dst_hready_base) begin
-			if(was_force)
-				mast_gnt_d <= force_mast_gnt_a;
-			else
-				mast_gnt_d <= mast_gnt_a;
+		if (dst_hready) begin
+			mast_gnt_d <= mast_gnt_a;
 			buf_valid <= 0; //buf_valid & ~mast_gnt_a;
 		end
 		for (i = 0; i < N_PORTS; i = i + 1) begin
