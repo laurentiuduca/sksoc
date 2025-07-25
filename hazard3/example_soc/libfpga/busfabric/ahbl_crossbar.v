@@ -106,7 +106,7 @@ wire [W_DATA-1:0] xbar_hartid      [0:N_MASTERS-1][0:N_SLAVES-1];
 wire              xbar_hexcl       [0:N_MASTERS-1][0:N_SLAVES-1];
 wire [7:0]        xbar_hmaster     [0:N_MASTERS-1][0:N_SLAVES-1];
 wire              xbar_hexokay     [0:N_MASTERS-1][0:N_SLAVES-1];
-wire [N_MASTERS-1:0] xbar_r_mast_gnt_a [0:N_MASTERS-1][0:N_SLAVES-1];
+wire [N_MASTERS-1:0] xbar_mast_gnt_a [0:N_MASTERS-1][0:N_SLAVES-1];
 wire [N_MASTERS-1:0] xbar_mast_gnt_d   [0:N_MASTERS-1][0:N_SLAVES-1];
 
 genvar i, j;
@@ -137,7 +137,7 @@ for (i = 0; i < N_MASTERS; i = i + 1) begin: split_instantiate
         wire [N_SLAVES-1:0]         split_hexcl;
         wire [N_SLAVES*8-1:0]       split_hmaster;
         wire [N_SLAVES-1:0]         split_hexokay;
-	wire [N_SLAVES*N_MASTERS-1:0] 	    split_r_mast_gnt_a;
+	wire [N_SLAVES*N_MASTERS-1:0] 	    split_mast_gnt_a;
 	wire [N_SLAVES*N_MASTERS-1:0]       split_mast_gnt_d;
 
 	for (j = 0; j < N_SLAVES; j = j + 1) begin: split_connect
@@ -162,7 +162,7 @@ for (i = 0; i < N_MASTERS; i = i + 1) begin: split_instantiate
 			assign split_hrdata[W_DATA * j +: W_DATA] = xbar_hrdata[i][j];
 			// exclusive access signaling
 			assign split_hexokay[j]                   = xbar_hexokay[i][j];
-			assign split_r_mast_gnt_a[N_MASTERS * j +: N_MASTERS] = xbar_r_mast_gnt_a[i][j];
+			assign split_mast_gnt_a[N_MASTERS * j +: N_MASTERS] = xbar_mast_gnt_a[i][j];
         		assign split_mast_gnt_d[N_MASTERS * j +: N_MASTERS]   = xbar_mast_gnt_d[i][j];
 		end else begin
 			// Disconnected
@@ -186,7 +186,7 @@ for (i = 0; i < N_MASTERS; i = i + 1) begin: split_instantiate
 			assign split_hrdata[W_DATA * j +: W_DATA] = {W_DATA{1'b0}};
 			// exclusive access signaling
                         assign split_hexokay[j]                   = 1'b1;
-			assign split_r_mast_gnt_a[N_MASTERS * j +: N_MASTERS] = 0;
+			assign split_mast_gnt_a[N_MASTERS * j +: N_MASTERS] = 0;
                         assign split_mast_gnt_d[N_MASTERS * j +: N_MASTERS]   = 0;
 		end
 	end
@@ -239,8 +239,8 @@ for (i = 0; i < N_MASTERS; i = i + 1) begin: split_instantiate
                 .dst_hmaster	 (split_hmaster),
         	.dst_hexokay     (split_hexokay),
 	
-		.r_mast_gnt_a	 (split_r_mast_gnt_a),
-		.mast_gnt_d      (split_mast_gnt_d)
+		.w_mast_gnt_a	 (split_mast_gnt_a),
+		.w_mast_gnt_d    (split_mast_gnt_d)
 	);
 end
 endgenerate
@@ -269,7 +269,7 @@ for (j = 0; j < N_SLAVES; j = j + 1) begin: arb_instantiate
 	wire [N_MASTERS-1:0]         arb_hexcl;
 	wire [N_MASTERS*8-1:0]       arb_hmaster;
 	wire [N_MASTERS-1:0]         arb_hexokay;
-	wire [N_SLAVES*N_MASTERS-1:0]         arb_r_mast_gnt_a;
+	wire [N_SLAVES*N_MASTERS-1:0]         arb_mast_gnt_a;
 	wire [N_SLAVES*N_MASTERS-1:0]         arb_mast_gnt_d;
 
 	for (i = 0; i < N_MASTERS; i = i + 1) begin: arb_connect
@@ -293,7 +293,7 @@ for (j = 0; j < N_SLAVES; j = j + 1) begin: arb_instantiate
 		assign xbar_hrdata[i][j]                = arb_hrdata[W_DATA * i +: W_DATA];
 		// exclusive access signaling
 		assign xbar_hexokay[i][j]		= arb_hexokay[i];
-	        assign xbar_r_mast_gnt_a[i][j]          = arb_r_mast_gnt_a[N_MASTERS * j +: N_MASTERS];
+	        assign xbar_mast_gnt_a[i][j]          = arb_mast_gnt_a[N_MASTERS * j +: N_MASTERS];
 		assign xbar_mast_gnt_d[i][j]            = arb_mast_gnt_d[N_MASTERS * j +: N_MASTERS];
 	end
 
@@ -344,8 +344,8 @@ for (j = 0; j < N_SLAVES; j = j + 1) begin: arb_instantiate
                 .dst_hmaster     (dst_hmaster[8 * j +: 8]),
                 .dst_hexokay     (dst_hexokay[j]),
 
-		.r_mast_gnt_a    (arb_r_mast_gnt_a[N_MASTERS * j +: N_MASTERS]),
-                .mast_gnt_d      (arb_mast_gnt_d[N_MASTERS * j +: N_MASTERS])
+		.w_mast_gnt_a    (arb_mast_gnt_a[N_MASTERS * j +: N_MASTERS]),
+                .w_mast_gnt_d    (arb_mast_gnt_d[N_MASTERS * j +: N_MASTERS])
 	);
 end
 endgenerate

@@ -81,8 +81,8 @@ module ahbl_arbiter #(
         output wire [7:0]     		 dst_hmaster,
         input wire        		 dst_hexokay,
 
-	output reg [N_PORTS-1:0] r_mast_gnt_a,
-	output reg [N_PORTS-1:0] mast_gnt_d
+	output wire [N_PORTS-1:0] w_mast_gnt_a,
+	output wire [N_PORTS-1:0] w_mast_gnt_d
 );
 
 integer i;
@@ -164,12 +164,11 @@ end
 
 reg [N_PORTS-1:0]       or_mast_gnt_a=0;
 reg [N_PORTS-1:0]       omast_gnt_d=0;
-
 always @(posedge clk) begin
-        if(or_mast_gnt_a != r_mast_gnt_a || omast_gnt_d != mast_gnt_d) begin
+        if(or_mast_gnt_a != w_mast_gnt_a || omast_gnt_d != w_mast_gnt_d) begin
                 or_mast_gnt_a <= r_mast_gnt_a;
                 omast_gnt_d <= mast_gnt_d;
-                $display("arbiter gnt s%1x %x %x", SLAVE_ID, r_mast_gnt_a, mast_gnt_d);
+                $display("arbiter gnt s%1x %x %x", SLAVE_ID, w_mast_gnt_a, w_mast_gnt_d);
         end
 end
 
@@ -191,6 +190,10 @@ onehot_priority #(
 
 // AHB State Machine
 
+reg [N_PORTS-1:0] r_mast_gnt_a, mast_gnt_d, amast_gnt_d;
+assign w_mast_gnt_a = r_mast_gnt_a;
+assign w_mast_gnt_d = amast_gnt_d;
+
 wire force_dst_hready, dst_hready_base;
 assign force_dst_hready = canchange && (mast_gnt_a != mast_gnt_d) && mast_gnt_a ? 1'b1 : 1'b0;
 assign dst_hready_base = mast_gnt_d ? |(src_hready & mast_gnt_d) : |(src_hready & mast_gnt_a); //1'b1;
@@ -205,6 +208,7 @@ always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		r_mast_gnt_a <= {N_PORTS{1'b0}};
 		mast_gnt_d <= {N_PORTS{1'b0}};
+		amast_gnt_d <= {N_PORTS{1'b0}};
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			buf_valid[i]     <= 1'b0;
 			buf_htrans[i]    <= 2'h0;
@@ -224,6 +228,7 @@ always @ (posedge clk or negedge rst_n) begin
 		r_mast_gnt_a <= mast_gnt_a;
 		if (dst_hready) begin
 			mast_gnt_d <= mast_gnt_a;
+			amast_gnt_d <= mast_gnt_d;
 			buf_valid <= 0; //buf_valid & ~mast_gnt_a;
 		end
 		for (i = 0; i < N_PORTS; i = i + 1) begin
@@ -261,7 +266,7 @@ wire [N_PORTS-1:0] mast_in_dphase = buf_valid | mast_gnt_d;
 // - the master is in data phase with both arbiter and slave, and slave is ready
 assign src_hready_resp = ~mast_in_dphase ? 
 				mast_gnt_a ? mast_gnt_a & {N_PORTS{dst_hready_resp}} : {N_PORTS{1'b1}} :
-				(mast_gnt_d & {N_PORTS{dst_hready_resp}}) | (r_mast_gnt_a & {N_PORTS{dst_hready_resp}});
+				(amast_gnt_d & {N_PORTS{dst_hready_resp}}) | (r_mast_gnt_a & {N_PORTS{dst_hready_resp}});
 assign src_hresp = mast_gnt_d & {N_PORTS{dst_hresp}};
 assign src_hrdata = {N_PORTS{dst_hrdata}};
 assign src_hexokay = mast_gnt_d & {N_PORTS{dst_hexokay}};

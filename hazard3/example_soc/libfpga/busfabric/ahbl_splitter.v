@@ -79,8 +79,8 @@ module ahbl_splitter #(
 	output wire [N_PORTS*8-1:0]      dst_hmaster,
 	input wire  [N_PORTS-1:0]        dst_hexokay,
 
-	input wire [N_PORTS * N_HARTS-1:0] 	 r_mast_gnt_a,
-	input wire [N_PORTS * N_HARTS-1:0] 	 mast_gnt_d
+	input wire [N_PORTS * N_HARTS-1:0] 	 w_mast_gnt_a,
+	input wire [N_PORTS * N_HARTS-1:0] 	 w_mast_gnt_d
 );
 
 localparam HTRANS_IDLE = 2'b00;
@@ -171,12 +171,16 @@ onehot_mux #(
 	.out(src_hrdata)
 );
 
+wire sel_a_response, sel_d_response;
+assign sel_a_response=w_mast_gnt_a[slave_sel_a * N_HARTS +: N_HARTS] & (1 << src_hartid);
+assign sel_d_response=w_mast_gnt_d[slave_sel_d * N_HARTS +: N_HARTS] & (1 << src_hartid);
 // We want to avoid any combinatorial paths from htrans->hready
 // both for timing closure reasons, and to avoid loops with poorly
 // behaved masters.
 // One rule to avoid this is to *only use data-phase state for muxing*
 assign src_hready_resp = (!slave_sel_d && (err_ph1 || !decode_err_d)) ||
-	|(slave_sel_d & dst_hready_resp);
+        ((|(slave_sel_a & dst_hready_resp)) & sel_a_response) ||
+	((|(slave_sel_d & dst_hready_resp)) & sel_d_response); 
 assign src_hresp = decode_err_d || |(slave_sel_d & dst_hresp);
 assign src_hexokay = |(slave_sel_d & dst_hexokay);
 
@@ -230,11 +234,11 @@ end
 reg [N_PORTS * N_HARTS-1:0]       or_mast_gnt_a=0;
 reg [N_PORTS * N_HARTS-1:0]       omast_gnt_d=0;
 always @(posedge clk) begin
-	if(or_mast_gnt_a != r_mast_gnt_a || omast_gnt_d != mast_gnt_d) begin
-                or_mast_gnt_a <= r_mast_gnt_a;
-                omast_gnt_d <= mast_gnt_d;
+	if(or_mast_gnt_a != w_mast_gnt_a || omast_gnt_d != w_mast_gnt_d) begin
+                or_mast_gnt_a <= w_mast_gnt_a;
+                omast_gnt_d <= w_mast_gnt_d;
 		for(i=0; i < N_PORTS; i=i+1)
-			$display("splitter gnt h%1x i%1x %x %x", src_hartid, i, r_mast_gnt_a[i*N_HARTS +: N_HARTS], mast_gnt_d[i*N_HARTS +: N_HARTS]);
+			$display("splitter gnt h%1x i%1x %x %x", src_hartid, i, w_mast_gnt_a[i*N_HARTS +: N_HARTS], w_mast_gnt_d[i*N_HARTS +: N_HARTS]);
 	end
 end
 
