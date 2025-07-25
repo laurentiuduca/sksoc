@@ -192,7 +192,7 @@ onehot_priority #(
 
 reg [N_PORTS-1:0] r_mast_gnt_a, mast_gnt_d, amast_gnt_d;
 assign w_mast_gnt_a = r_mast_gnt_a;
-assign w_mast_gnt_d = amast_gnt_d;
+assign w_mast_gnt_d = mast_gnt_d;
 
 wire force_dst_hready, dst_hready_base;
 assign force_dst_hready = canchange && (mast_gnt_a != mast_gnt_d) && mast_gnt_a ? 1'b1 : 1'b0;
@@ -266,7 +266,7 @@ wire [N_PORTS-1:0] mast_in_dphase = buf_valid | mast_gnt_d;
 // - the master is in data phase with both arbiter and slave, and slave is ready
 assign src_hready_resp = ~mast_in_dphase ? 
 				mast_gnt_a ? mast_gnt_a & {N_PORTS{dst_hready_resp}} : {N_PORTS{1'b1}} :
-				(amast_gnt_d & {N_PORTS{dst_hready_resp}}) | (r_mast_gnt_a & {N_PORTS{dst_hready_resp}});
+				(mast_gnt_d & {N_PORTS{dst_hready_resp}}) | (r_mast_gnt_a & {N_PORTS{dst_hready_resp}});
 assign src_hresp = mast_gnt_d & {N_PORTS{dst_hresp}};
 assign src_hrdata = {N_PORTS{dst_hrdata}};
 assign src_hexokay = mast_gnt_d & {N_PORTS{dst_hexokay}};
