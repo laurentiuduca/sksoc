@@ -203,14 +203,18 @@ always @ (posedge clk or negedge rst_n) begin
 			state <= 20;
 			if(ahb_read_aphase || ahb_write_aphase) begin
 				$display("ahb_read_aphase or write aphase in write dphase");
+				`ifdef SIM_MODE
 				$finish;
+				`endif
 			end
 		end
 
 
 		if(ahbls_htrans == 2'b01 || ahbls_htrans == 2'b11) begin
 			$display("ahbls_htrans=%x not supported", ahbls_htrans);
+			`ifdef SIM_MODE
 			$finish;
+			`endif
 		end
 
 	end

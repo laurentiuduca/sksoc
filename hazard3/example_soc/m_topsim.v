@@ -4,6 +4,7 @@ module m_topsim (
 `ifndef ICARUS
 	input wire clk, 
 `endif
+`ifndef YOSYS
 	    // tang nano 20k SDRAM
     output wire O_sdram_clk,
     output wire O_sdram_cke,
@@ -15,7 +16,7 @@ module m_topsim (
     output wire [10:0] O_sdram_addr,     // 11 bit multiplexed address bus
     output wire [1:0] O_sdram_ba,        // two banks
     output wire [3:0] O_sdram_dqm,       // 32/4
-
+`endif
 	input wire i_rx,
     	output wire o_tx,
         output wire [5:0] w_led,
@@ -44,7 +45,25 @@ always begin
 end
 `endif
 
+`ifdef YOSYS
+            // tang nano 20k SDRAM
+    wire O_sdram_clk;
+    wire O_sdram_cke;
+    wire O_sdram_cs_n;            // chip select
+    wire O_sdram_cas_n;           // columns addrefoc select
+    wire O_sdram_ras_n;           // row address select
+    wire O_sdram_wen_n;           // write enable
+    wire [31:0] IO_sdram_dq;       // 32 bit bidirectional data bus
+    wire [10:0] O_sdram_addr;     // 11 bit multiplexed address bus
+    wire [1:0] O_sdram_ba;        // two banks
+    wire [3:0] O_sdram_dqm;       // 32/4
+`endif
+
 wire pll_clk, clk_sdram;
+`ifdef YOSYS
+    assign pll_clk = clk;
+    assign clk_sdram = clk;
+`else
 `ifdef SIM_MODE
     assign pll_clk = clk;
     assign clk_sdram = clk;
@@ -54,6 +73,7 @@ wire pll_clk, clk_sdram;
     .clkout(pll_clk),          // FREQ main clock
     .clkoutp(clk_sdram)    // FREQ main clock phase shifted
     );
+`endif
 `endif
 
 wire        w_rxd=1;

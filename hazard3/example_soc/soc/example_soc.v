@@ -454,6 +454,8 @@ ahbl_splitter #(
 	.src_hrdata      (proc_hrdata   ),
         .src_d_pc        (d_pc),
         .src_hartid      (0),
+	.w_mast_gnt_a	 (),
+	.w_mast_gnt_d	 (),
         // exclusive access signaling
         .src_hexcl       (src_hexcl),
         .src_hmaster     (src_hmaster),

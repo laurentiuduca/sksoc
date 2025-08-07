@@ -51,6 +51,7 @@ clean:
 	rm -rf laur2.txt log*txt ./a.out
 	rm -rf xsim*.* xelab*.* xvlog*.* sd_model.log
 	rm -f init_kernel.txt fh fl fout cl ch cr impl dump.vcd
+	rm -f *vg *json yosys.txt
 
 veriwb:
 	${VERILATOR} ${VERIFLAGS2} ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWB} ${SDSPI}
@@ -82,11 +83,11 @@ gwsynth:
 	time gw_sh run.tcl
 
 BOARD=tangnano20k
-FAMILY=GW2A
+FAMILY=GW2A-18C
 DEVICE=GW2AR-LV18QN88C8/I7
-yosys:
-	yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI}; synth_gowin -top ${TOPMODULE} -vout synth.vg"
+yosys: ${TOPMODULE}.vg ${TOPMODULE}.json
+	yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI}; synth_gowin -top ${TOPMODULE} -vout ${TOPMODULE}.vg -json ${TOPMODULE}.json"
 nextpnr:
-	nextpnr-gowin --json ${TOPSOURCE}.json --freq 27 --write ${TOPSOURCE}_pnr.json --device ${DEVICE} --family ${FAMILY} --cst rlsoc.cst
-	gowin_pack -d ${FAMILY} -o counter.fs counter_pnr.json
+	nextpnr-himbaechel --json ${TOPMODULE}.json --freq 27 --write ${TOPMODULE}_pnr.json --device ${DEVICE} --vopt family=${FAMILY} --vopt cst=rlsoc.cst.nextpnr
+	gowin_pack -d ${FAMILY} -o ${TOPMODULE}.fs ${TOPMODULE}_pnr.json
 

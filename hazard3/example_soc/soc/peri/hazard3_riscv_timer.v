@@ -3,6 +3,7 @@
 |                     SPDX-License-Identifier: Apache-2.0                     |
 \*****************************************************************************/
 
+
 `default_nettype none
 
 // Basic implementation of standard 64-bit RISC-V timer with 32-bit APB.
@@ -61,14 +62,14 @@ always @ (posedge clk or negedge rst_n) begin
 	end else begin
 	    if (bus_write && paddr == ADDR_IPI && !state) begin
 		// laur - nuttx sends ipi at this addr
-		$display("bus_write && paddr == ADDR_IPI %x && pwdata=%x soft_irq was %x t%d", paddr, pwdata, soft_irq, $time);
+		$display("bus_write && paddr == ADDR_IPI %x && pwdata=%x soft_irq was %x", paddr, pwdata, soft_irq);
 		if(pwdata == 0)
 			soft_irq[0] <= 0;
 		else
 			soft_irq[0] <= 1;
 	    end else if (bus_write && paddr == (ADDR_IPI+4) && !state) begin
                 // laur - nuttx sends ipi at this addr
-		$display("bus_write && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d", paddr, pwdata, soft_irq, $time);
+		$display("bus_write && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x", paddr, pwdata, soft_irq);
                 if(pwdata == 0)
                         soft_irq[1] <= 0;
                 else
@@ -169,3 +170,4 @@ endmodule
 `ifndef YOSYS
 `default_nettype none
 `endif
+

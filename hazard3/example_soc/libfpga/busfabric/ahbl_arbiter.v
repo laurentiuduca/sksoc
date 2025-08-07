@@ -235,7 +235,6 @@ always @ (posedge clk or negedge rst_n) begin
 			if (buf_wen[i]) begin
 				if(buf_valid[i]) begin
 					$display("buf_wen and buf_valid for i=%d", i);
-					$finish;
 				end
 				//buf_valid    [i] <= 1'b1;
 				buf_htrans   [i] <= src_htrans   [i * 2 +: 2];
