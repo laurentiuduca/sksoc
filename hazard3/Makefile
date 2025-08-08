@@ -85,7 +85,7 @@ gwsynth:
 BOARD=tangnano20k
 FAMILY=GW2A-18C
 DEVICE=GW2AR-LV18QN88C8/I7
-yosys: ${TOPMODULE}.vg ${TOPMODULE}.json
+yosys:
 	yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI}; synth_gowin -top ${TOPMODULE} -vout ${TOPMODULE}.vg -json ${TOPMODULE}.json"
 nextpnr:
 	nextpnr-himbaechel --json ${TOPMODULE}.json --freq 27 --write ${TOPMODULE}_pnr.json --device ${DEVICE} --vopt family=${FAMILY} --vopt cst=rlsoc.cst.nextpnr
