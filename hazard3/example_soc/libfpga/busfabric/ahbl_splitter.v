@@ -187,6 +187,10 @@ reg [31:0] osrc_haddr=0, odst_hrdata=0;
 reg osrc_hready=0, osrc_hwrite=0;
 reg [1:0] osrc_htrans=0;
 always @(posedge clk) begin
+	if(src_haddr == 32'h3b340) begin
+		//$display("h%1x src_d_pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d",
+                //        src_hartid, src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
+	end
         if(/*j < 20 &&*/ src_hready && 
         (osrc_haddr!= src_haddr || osrc_htrans != src_htrans ||//odst_hrdata[W_DATA-1:0] != dst_hrdata[W_DATA-1:0] || 
 		osrc_hready != src_hready || osrc_hwrite != src_hwrite)) begin
