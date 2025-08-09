@@ -430,7 +430,7 @@ wire               bridge_hexokay=1;
 wire               src_hexcl; // exclusive access signaling
 wire [7:0]         src_hmaster; // exclusive access signaling
 wire               src_hexokay; // exclusive access signaling
-//`define USECROSS
+`define USECROSS
 `ifndef USECROSS
 ahbl_splitter #(
 	.N_PORTS     (2),
@@ -454,8 +454,6 @@ ahbl_splitter #(
 	.src_hrdata      (proc_hrdata   ),
         .src_d_pc        (d_pc),
         .src_hartid      (0),
-	.w_mast_gnt_a	 (),
-	.w_mast_gnt_d	 (),
         // exclusive access signaling
         .src_hexcl       (src_hexcl),
         .src_hmaster     (src_hmaster),

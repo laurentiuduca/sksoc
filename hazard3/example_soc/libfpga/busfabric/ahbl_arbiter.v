@@ -79,10 +79,7 @@ module ahbl_arbiter #(
         // exclusive access signaling   
         output wire        		 dst_hexcl,
         output wire [7:0]     		 dst_hmaster,
-        input wire        		 dst_hexokay,
-
-	output wire [N_PORTS-1:0] w_mast_gnt_a,
-	output wire [N_PORTS-1:0] w_mast_gnt_d
+        input wire        		 dst_hexokay
 );
 
 integer i;
@@ -162,53 +159,28 @@ always @ (*) begin
 	end
 end
 
-reg [N_PORTS-1:0]       or_mast_gnt_a=0;
-reg [N_PORTS-1:0]       omast_gnt_d=0;
-always @(posedge clk) begin
-        if(or_mast_gnt_a != w_mast_gnt_a || omast_gnt_d != w_mast_gnt_d) begin
-                or_mast_gnt_a <= r_mast_gnt_a;
-                omast_gnt_d <= mast_gnt_d;
-                $display("arbiter gnt s%1x %x %x", SLAVE_ID, w_mast_gnt_a, w_mast_gnt_d);
-        end
-end
-
-//single_pulse sp(clk, rst_n, dst_hready & dst_hready_resp & !actual_hwrite[actual_hartid+:1], canchange);
-wire canchange;
-wire iswrite;
-assign iswrite = 0; //(r_mast_gnt_a == 1) ? actual_hwrite[0] : actual_hwrite[N_PORTS-1];
-assign canchange = dst_hready_resp & !iswrite; // & !was_force; // & !|buf_wen;
-
 onehot_priority #(
 	.W_INPUT(N_PORTS)
 ) arb_priority (
 	.clk(clk),
 	.rst_n(rst_n),
-	.canchange(canchange),
+	.canchange(1'b0),
 	.in(mast_req_a),
 	.out(mast_gnt_a)
 );
 
 // AHB State Machine
 
-reg [N_PORTS-1:0] r_mast_gnt_a, mast_gnt_d, amast_gnt_d;
-assign w_mast_gnt_a = r_mast_gnt_a;
-assign w_mast_gnt_d = mast_gnt_d;
-
-wire force_dst_hready, dst_hready_base;
-assign force_dst_hready = canchange && (mast_gnt_a != mast_gnt_d) && mast_gnt_a ? 1'b1 : 1'b0;
-assign dst_hready_base = mast_gnt_d ? |(src_hready & mast_gnt_d) : |(src_hready & mast_gnt_a); //1'b1;
-assign dst_hready = force_dst_hready | dst_hready_base;
+reg [N_PORTS-1:0] mast_gnt_d;
+assign dst_hready = mast_gnt_d ? |(src_hready & mast_gnt_d) : |(src_hready & mast_gnt_a); //1'b1;
 
 // see spliter
 wire [N_PORTS-1:0] mast_aphase_ends = mast_req_a & src_hready;
-wire [N_PORTS-1:0] buf_wen = 0; //mast_aphase_ends & ~(mast_gnt_a & {N_PORTS{dst_hready}});
+wire [N_PORTS-1:0] buf_wen = mast_aphase_ends & ~(mast_gnt_a & {N_PORTS{dst_hready}});
 
-reg was_force;
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
-		r_mast_gnt_a <= {N_PORTS{1'b0}};
 		mast_gnt_d <= {N_PORTS{1'b0}};
-		amast_gnt_d <= {N_PORTS{1'b0}};
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			buf_valid[i]     <= 1'b0;
 			buf_htrans[i]    <= 2'h0;
@@ -225,18 +197,13 @@ always @ (posedge clk or negedge rst_n) begin
 			buf_hmaster[i]   <= 8'd0;
 		end
 	end else begin
-		r_mast_gnt_a <= mast_gnt_a;
 		if (dst_hready) begin
 			mast_gnt_d <= mast_gnt_a;
-			amast_gnt_d <= mast_gnt_d;
-			buf_valid <= 0; //buf_valid & ~mast_gnt_a;
+			buf_valid <= buf_valid & ~mast_gnt_a;
 		end
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			if (buf_wen[i]) begin
-				if(buf_valid[i]) begin
-					$display("buf_wen and buf_valid for i=%d", i);
-				end
-				//buf_valid    [i] <= 1'b1;
+				buf_valid    [i] <= 1'b1;
 				buf_htrans   [i] <= src_htrans   [i * 2 +: 2];
 				buf_d_pc     [i] <= src_d_pc     [i * W_ADDR +: W_ADDR];
 				buf_hartid   [i] <= src_hartid   [i * W_DATA +: W_DATA];
@@ -263,9 +230,7 @@ wire [N_PORTS-1:0] mast_in_dphase = buf_valid | mast_gnt_d;
 // There are two reasons to report ready:
 // - the master is currently not in data phase with the arbiter (IDLE)
 // - the master is in data phase with both arbiter and slave, and slave is ready
-assign src_hready_resp = ~mast_in_dphase ? 
-				mast_gnt_a ? mast_gnt_a & {N_PORTS{dst_hready_resp}} : {N_PORTS{1'b1}} :
-				(mast_gnt_d & {N_PORTS{dst_hready_resp}}) | (r_mast_gnt_a & {N_PORTS{dst_hready_resp}});
+assign src_hready_resp = ~mast_in_dphase | (mast_gnt_d & {N_PORTS{dst_hready_resp}});
 assign src_hresp = mast_gnt_d & {N_PORTS{dst_hresp}};
 assign src_hrdata = {N_PORTS{dst_hrdata}};
 assign src_hexokay = mast_gnt_d & {N_PORTS{dst_hexokay}};
@@ -274,7 +239,7 @@ onehot_mux #(
 	.W_INPUT(W_DATA),
 	.N_INPUTS(N_PORTS)
 ) hwdata_mux (
-	.in(src_hwdata), 
+	.in(src_hwdata),
 	.sel(mast_gnt_d),
 	.out(dst_hwdata)
 );
@@ -385,55 +350,30 @@ onehot_mux #(
 reg [N_PORTS-1:0] o_mast_gnt_a=0;
 integer tcnt=0;
 always @(posedge clk) begin
-        tcnt = tcnt + 1;
-        //if(o_mast_gnt_a != mast_gnt_a) begin // || mast_req_a != mast_gnt_a) begin
-        if(actual_hwrite) begin
-                o_mast_gnt_a = mast_gnt_a;
-                $display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x,%x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x",
+	tcnt = tcnt + 1;
+	//if(o_mast_gnt_a != mast_gnt_a) begin // || mast_req_a != mast_gnt_a) begin
+	if(actual_hwrite) begin
+		o_mast_gnt_a = mast_gnt_a;
+		$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x,%x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x",
                         SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], dst_haddr, src_hwrite, dst_hwrite, dst_hwdata,
-                        src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);
-                //$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x pc1=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x", 
-                //      SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], src_d_pc[63:32], src_haddr[63:32], dst_haddr, src_hwrite, dst_hwrite,
-                //      src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);
-        end
+                        src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);		
+		//$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x pc1=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x", 
+		//	SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], src_d_pc[63:32], src_haddr[63:32], dst_haddr, src_hwrite, dst_hwrite,
+		//	src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);
+	end
 end
 always @(dst_haddr or dst_hwrite or dst_hartid or dst_htrans or dst_hready_resp or dst_hready) begin
-        `ifdef laur0
-        if((src_d_pc[63:32] >= pc_trace_start && src_d_pc[63:32] <= pc_trace_stop)) begin
-                $display("  s%1d pc0=%x pc1=%x dpc=%x dhaddr=%x dhwr=%x dhrd=%x dh=%1x dhtrans=%x dhrdy_resp=%x dhrdy=%x shrdy=%x shrdy_resp=%x req_a=%x gnt_a=%x gnt_d=%x str=%x atr=%x btr=%x t=%8d",
-                        SLAVE_ID, src_d_pc[31:0], src_d_pc[63:32], dst_d_pc, dst_haddr, dst_hwrite, dst_hrdata, dst_hartid, dst_htrans, dst_hready_resp, dst_hready, src_hready_resp, src_hready, mast_req_a, mast_gnt_a, mast_gnt_d, src_htrans, actual_htrans, buf_htrans, tcnt);
-        end
-        `endif
-        if(dst_hresp) begin
-                $display("dst_hresp");   
-                $finish;
-        end             
-end                     
-`endif 
-endmodule
-
-module single_pulse(input wire clk, input wire rstn, input wire in1, output wire out1);
-
-reg [2:0] state;
-assign out1 = (state == 0) && in1;
-always @(posedge clk or negedge rstn)
-begin
-	if(!rstn) begin
-		state <= 0;
-		//out1 <= 0;
-	end else begin
-		if(state == 0) begin
-			if(in1) begin
-				//out1 <= 1;
-				state <= 1;
-			end
-		end else if(state == 1) begin
-		        if(!in1)
-				state <= 0;
-			//out1 <= 0;
-		end
+	`ifdef laur0
+	if((src_d_pc[63:32] >= pc_trace_start && src_d_pc[63:32] <= pc_trace_stop)) begin
+		$display("  s%1d pc0=%x pc1=%x dpc=%x dhaddr=%x dhwr=%x dhrd=%x dh=%1x dhtrans=%x dhrdy_resp=%x dhrdy=%x shrdy=%x shrdy_resp=%x req_a=%x gnt_a=%x gnt_d=%x str=%x atr=%x btr=%x t=%8d",
+			SLAVE_ID, src_d_pc[31:0], src_d_pc[63:32], dst_d_pc, dst_haddr, dst_hwrite, dst_hrdata, dst_hartid, dst_htrans, dst_hready_resp, dst_hready, src_hready_resp, src_hready, mast_req_a, mast_gnt_a, mast_gnt_d, src_htrans, actual_htrans, buf_htrans, tcnt);
 	end
-
+	`endif
+	if(dst_hresp) begin
+		$display("dst_hresp");
+		$finish;
+	end
 end
+`endif
 
 endmodule

@@ -47,7 +47,7 @@ always @(posedge clk or negedge rst_n) begin
 		r_was_write <= 0;
 	end else if(state == 0) begin	
 		if(apbs_psel && apbs_penable && apbs_pwrite) begin
-			$display("---uart-write %x r_was_write=%x %d", apbs_pwdata, r_was_write, $time);
+			//$display("---uart-write %x r_was_write=%x %d", apbs_pwdata, r_was_write, $time);
 		        if(r_was_write == 0) begin
 				if(w_tx_ready) begin
 					r_uart_data <= apbs_pwdata[7:0];
@@ -101,6 +101,9 @@ module UartTx(CLK, RST_X, DATA, WE, TXD, READY);
             if( WE )begin
 		`ifdef SIM_MODE
                 $write("%c", DATA);
+                `ifndef VERILATOR
+                $fflush();
+                `endif
 		`endif
                 READY <= 1'b0;
                 cmd   <= {DATA, 1'b0};

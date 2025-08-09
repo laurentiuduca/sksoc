@@ -77,10 +77,7 @@ module ahbl_splitter #(
 	// exlusive access signaling
 	output wire [N_PORTS-1:0]        dst_hexcl,
 	output wire [N_PORTS*8-1:0]      dst_hmaster,
-	input wire  [N_PORTS-1:0]        dst_hexokay,
-
-	input wire [N_PORTS * N_HARTS-1:0] 	 w_mast_gnt_a,
-	input wire [N_PORTS * N_HARTS-1:0] 	 w_mast_gnt_d
+	input wire  [N_PORTS-1:0]        dst_hexokay
 );
 
 localparam HTRANS_IDLE = 2'b00;
@@ -135,16 +132,16 @@ end
 
 // AHB state machine
 
-reg [N_PORTS-1:0] slave_sel_d, r_slave_sel_a;
+reg [N_PORTS-1:0] slave_sel_d;
 reg decode_err_d;
 reg err_ph1;
+
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		slave_sel_d <= {N_PORTS{1'b0}};
 		decode_err_d <= 1'b0;
 		err_ph1 <= 1'b0;
 	end else begin
-		r_slave_sel_a <= slave_sel_a;
 		if (src_hready) begin
 			slave_sel_d <= slave_sel_a;
 			decode_err_d <= decode_err_a;
@@ -171,16 +168,13 @@ onehot_mux #(
 	.out(src_hrdata)
 );
 
-wire sel_a_response, sel_d_response;
-assign sel_a_response=w_mast_gnt_a[slave_sel_a * N_HARTS +: N_HARTS] & (1 << src_hartid);
-assign sel_d_response=w_mast_gnt_d[slave_sel_d * N_HARTS +: N_HARTS] & (1 << src_hartid);
 // We want to avoid any combinatorial paths from htrans->hready
 // both for timing closure reasons, and to avoid loops with poorly
 // behaved masters.
 // One rule to avoid this is to *only use data-phase state for muxing*
+
 assign src_hready_resp = (!slave_sel_d && (err_ph1 || !decode_err_d)) ||
-        ((|(slave_sel_a & dst_hready_resp)) & sel_a_response) ||
-	((|(slave_sel_d & dst_hready_resp)) & sel_d_response); 
+	|(slave_sel_d & dst_hready_resp);
 assign src_hresp = decode_err_d || |(slave_sel_d & dst_hresp);
 assign src_hexokay = |(slave_sel_d & dst_hexokay);
 
@@ -205,8 +199,8 @@ always @(posedge clk) begin
                 odst_hrdata[W_DATA-1:0] <= dst_hrdata[W_DATA-1:0];
 		osrc_htrans <= src_htrans;
 		if(j < 20 || (src_d_pc >= pc_trace_start && src_d_pc <= pc_trace_stop && li < 20))
-                $display("h%1x src_d_pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d", 
-			src_hartid, src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
+                $display("h%1x src_d_pc=%x hartid=%1x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d", 
+			src_hartid, src_d_pc, src_hartid, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
 		if(!closed && src_haddr > 0)
 			$fwrite(f, "pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x src_hrdata=%x src_hwrite=%x,o=%x src_hwdata=%x src_hready_resp=%x\n",
                         src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, src_hrdata, src_hwrite, osrc_hwrite, (src_hwrite|osrc_hwrite)?src_hwdata:0, src_hready_resp);
@@ -230,16 +224,5 @@ always @(posedge clk) begin
     end
 end
 `endif
-
-reg [N_PORTS * N_HARTS-1:0]       or_mast_gnt_a=0;
-reg [N_PORTS * N_HARTS-1:0]       omast_gnt_d=0;
-always @(posedge clk) begin
-	if(or_mast_gnt_a != w_mast_gnt_a || omast_gnt_d != w_mast_gnt_d) begin
-                or_mast_gnt_a <= w_mast_gnt_a;
-                omast_gnt_d <= w_mast_gnt_d;
-		for(i=0; i < N_PORTS; i=i+1)
-			$display("splitter gnt h%1x i%1x %x %x", src_hartid, i, w_mast_gnt_a[i*N_HARTS +: N_HARTS], w_mast_gnt_d[i*N_HARTS +: N_HARTS]);
-	end
-end
 
 endmodule

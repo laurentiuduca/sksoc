@@ -87,7 +87,7 @@ wire ahb_read_aphase  = ahbls_htrans[1] && ahbls_hready && !ahbls_hwrite;
 wire ahb_write_aphase = ahbls_htrans[1] && ahbls_hready &&  ahbls_hwrite;
 
 reg [5:0] state, ostate;
-reg [W_ADDR-1:0]  r_ahbls_haddr;
+reg [W_ADDR-1:0]  r_ahbls_haddr, exfailaddr;
 reg [3:0]         r_mask;
 reg [W_DATA-1:0]  r_ahbls_hrdata, r_ahbls_hwdata;
 reg r_ahbls_hexokay;
@@ -129,7 +129,10 @@ task check_new_req;
 			end else if(ahb_write_aphase) begin
 				if(ahbls_hexcl) begin
 				        if(r_excl_addr[hartid] == ahbls_haddr && r_excl_addr_valid[hartid]) begin
-						$display("--exclusive write success at addr %x h%1x", ahbls_haddr, hartid);
+						if(exfailaddr == ahbls_haddr) begin
+							exfailaddr <= -1;
+							$display("--exclusive write success at addr %x h%1x", ahbls_haddr, hartid);
+						end
 						r_ahbls_hexokay <= 1;
 						for(i = 0; i < N_HARTS; i=i+1)
 							if(r_excl_addr[i] == ahbls_haddr)
@@ -143,6 +146,7 @@ task check_new_req;
                 	                        r_ahbls_hwdata <= ahbls_hwdata; // this must also be in state 22
 					end else begin
 						$display("--exclusive write fail at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
+						exfailaddr <= ahbls_haddr;
 						r_ahbls_hexokay <= 0;
 						state <= 0;
 					end
@@ -182,6 +186,7 @@ always @ (posedge clk or negedge rst_n) begin
 		//r_excl_addr_valid[1] <= 0;
 		for(i = 0; i < N_HARTS; i=i+1)
                         r_excl_addr_valid[i] <= 0;
+		exfailaddr <= 0;
 	end else begin
 		r_ahbls_hexokay <= 1;
 		if(state == 0) begin
@@ -203,18 +208,14 @@ always @ (posedge clk or negedge rst_n) begin
 			state <= 20;
 			if(ahb_read_aphase || ahb_write_aphase) begin
 				$display("ahb_read_aphase or write aphase in write dphase");
-				`ifdef SIM_MODE
 				$finish;
-				`endif
 			end
 		end
 
 
 		if(ahbls_htrans == 2'b01 || ahbls_htrans == 2'b11) begin
 			$display("ahbls_htrans=%x not supported", ahbls_htrans);
-			`ifdef SIM_MODE
 			$finish;
-			`endif
 		end
 
 	end
