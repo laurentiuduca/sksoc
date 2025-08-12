@@ -44,7 +44,8 @@ make clean
 make
 
 4. simulate in verilator
-git checkout 3373d18fa9f091ce
+git checkout d2ddc1f56e6c4265
+// git checkout 3373d18fa9f091ce for old single core
 cd ../hazard3
 set SIM_MODE in define.vh
 ./run-nuttx2.sh
