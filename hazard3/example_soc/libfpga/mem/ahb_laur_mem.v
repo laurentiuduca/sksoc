@@ -117,10 +117,12 @@ integer i=0, j=0, k=0, l=0, m=0, lj=0;
     reg exclwrdisplay;
     reg [W_DATA-1:0] exclwrhaddr;
 task check_new_req;
+			`ifdef laur0
 			if(exclwrhaddr == 32'h3b340) begin
 				exclwrhaddr <= 0;
                                 //$display("--exclusive read res at addr %x h%1x data=%x", ahbls_haddr, hartid, w_dram_odata);
 			end
+			`endif
 			if (ahb_read_aphase) begin
                                 state <= 0;
 				//r_ahbls_haddr <= ahbls_haddr;
