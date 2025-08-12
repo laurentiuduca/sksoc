@@ -1,6 +1,8 @@
 skSoC: RISC-V Hazard3 based open SoC skeleton
 ====
 
+-2. dual core was tested in simulation
+
 -1.
 Download the latest RISCV GCC toolchain prebuilt by xPack for nuttx and add .../riscv-none-elf-gcc/bin to PATH
 RUN mkdir riscv-none-elf-gcc && \
@@ -44,7 +46,7 @@ make clean
 make
 
 4. simulate in verilator
-git checkout d2ddc1f56e6c4265
+git checkout d92fab7eff827ab8b1026b
 // git checkout 3373d18fa9f091ce for old single core
 cd ../hazard3
 set SIM_MODE in define.vh
