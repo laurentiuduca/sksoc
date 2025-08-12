@@ -119,7 +119,7 @@ integer i=0, j=0, k=0, l=0, m=0, lj=0;
 task check_new_req;
 			if(exclwrhaddr == 32'h3b340) begin
 				exclwrhaddr <= 0;
-                                $display("--exclusive read res at addr %x h%1x data=%x", ahbls_haddr, hartid, w_dram_odata);
+                                //$display("--exclusive read res at addr %x h%1x data=%x", ahbls_haddr, hartid, w_dram_odata);
 			end
 			if (ahb_read_aphase) begin
                                 state <= 0;
@@ -130,7 +130,7 @@ task check_new_req;
 					r_ahbls_hexokay <= 1;
 					r_excl_addr[hartid] <= ahbls_haddr;
 					r_excl_addr_valid[hartid] <= 1;
-					$display("--exclusive read res at addr %x h%1x", ahbls_haddr, hartid);
+					//$display("--exclusive read res at addr %x h%1x", ahbls_haddr, hartid);
 					exclwrhaddr <= ahbls_haddr;
 				end
 			end else if(ahb_write_aphase) begin
@@ -147,7 +147,7 @@ task check_new_req;
 	                                        state <= 22;
         	                                r_mask <= wmask;
                 	                        r_ahbls_hwdata <= ahbls_hwdata; // this must also be in state 22
-						$display("--exclusive write succ at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
+						//$display("--exclusive write succ at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
 						exclwrdisplay <= 1;
 					end else begin
 						$display("--exclusive write fail at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
@@ -217,7 +217,7 @@ always @ (posedge clk or negedge rst_n) begin
 			end
 			if(exclwrdisplay) begin
 				exclwrdisplay <= 0;
-				$display("--exclusive write succ at addr %x h%1x pc=%x data=%x", ahbls_haddr, hartid, d_pc, ahbls_hwdata);
+				//$display("--exclusive write succ at addr %x h%1x pc=%x data=%x", ahbls_haddr, hartid, d_pc, ahbls_hwdata);
 			end
 		end else if (state == 30) begin
 			// excl write fail
