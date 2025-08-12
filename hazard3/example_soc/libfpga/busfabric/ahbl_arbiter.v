@@ -239,7 +239,7 @@ onehot_mux #(
 	.W_INPUT(W_DATA),
 	.N_INPUTS(N_PORTS)
 ) hwdata_mux (
-	.in(actual_hwdata),
+	.in(src_hwdata),
 	.sel(mast_gnt_d),
 	.out(dst_hwdata)
 );
