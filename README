@@ -46,9 +46,10 @@ make clean
 make
 
 4. simulate in verilator
-git checkout d92fab7eff827ab8b1026b
-// git checkout 3373d18fa9f091ce for old single core
 cd ../hazard3
+- in Makefile and run.tcl, set
+  for single core example_soc.v
+  for dual core example_soc-dual.v
 set SIM_MODE in define.vh
 ./run-nuttx2.sh
 
