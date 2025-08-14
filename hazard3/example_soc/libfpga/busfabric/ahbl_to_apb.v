@@ -18,6 +18,7 @@ module ahbl_to_apb #(
 	input  wire               ahbls_hmastlock,
 	input  wire [W_DATA-1:0]  ahbls_hwdata,
 	output reg  [W_DATA-1:0]  ahbls_hrdata,
+	input wire [W_DATA-1:0]   ahbls_hartid,
 
 	output reg  [W_PADDR-1:0] apbm_paddr,
 	output reg                apbm_psel,
@@ -26,7 +27,8 @@ module ahbl_to_apb #(
 	output reg  [W_DATA-1:0]  apbm_pwdata,
 	input wire                apbm_pready,
 	input wire  [W_DATA-1:0]  apbm_prdata,
-	input wire                apbm_pslverr 
+	input wire                apbm_pslverr,
+	output wire [W_DATA-1:0]  apbm_phartid
 );
 
 // Transfer state machine
@@ -101,6 +103,8 @@ assign ahbls_hready_resp =
 assign ahbls_hresp =
 	apb_state == S_ERR0 ||
 	apb_state == S_ERR1;
+
+assign apbm_phartid=ahbls_hartid;
 
 always @ (posedge clk or negedge rst_n)
 	if (!rst_n)
