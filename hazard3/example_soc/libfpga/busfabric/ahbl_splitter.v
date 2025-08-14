@@ -147,15 +147,7 @@ always @ (posedge clk or negedge rst_n) begin
 			slave_sel_d <= slave_sel_a;
 			decode_err_d <= decode_err_a;
 		end
-			if(src_hwrite) begin
-				if(src_haddr == 32'h4000400c)
-					waswr <= 1;
-			end else begin
-				if(waswr)
-					$display("--h%1x src_haddr=%x src_hwdata=%x %8d", src_hartid, src_haddr, src_hwdata, $time);
-				waswr <= 0;
-			end
-		
+
 		if (decode_err_d) begin
 			err_ph1 <= !err_ph1;
 		end else begin
@@ -201,6 +193,8 @@ always @(posedge clk) begin
 		//$display("h%1x src_d_pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d",
                 //        src_hartid, src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
 	end
+        if($past(src_hwrite) && $past(src_haddr == 32'h4000400c))
+           	$display("--h%1x src_haddr=%x src_hwdata=%x %8d", src_hartid, src_haddr, src_hwdata, $time);
         if(/*j < 20 &&*/ src_hready && 
         (osrc_haddr!= src_haddr || osrc_htrans != src_htrans ||//odst_hrdata[W_DATA-1:0] != dst_hrdata[W_DATA-1:0] || 
 		osrc_hready != src_hready || osrc_hwrite != src_hwrite)) begin

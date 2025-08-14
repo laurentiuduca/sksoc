@@ -55,16 +55,28 @@ always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		apb_state <= S_IDLE;
 	end else case (apb_state)
-		S_IDLE: if (ahbls_hready) apb_state <= aphase_to_dphase;
+		S_IDLE: if (ahbls_hready) begin 
+			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 		S_WR0:                    apb_state <= S_WR1;
 		S_WR1:                    apb_state <= S_WR2;
 		S_WR2:  if (apbm_pready)  apb_state <= apbm_pslverr ? S_ERR0 : S_WR3;
-		S_WR3:                    apb_state <= aphase_to_dphase;
+		S_WR3:  begin
+      			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 		S_RD0:                    apb_state <= S_RD1;
 		S_RD1:  if (apbm_pready)  apb_state <= apbm_pslverr ? S_ERR0 : S_RD2;
-		S_RD2:                    apb_state <= aphase_to_dphase;
+		S_RD2:  begin
+			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 		S_ERR0:                   apb_state <= S_ERR1;
-		S_ERR1:                   apb_state <= aphase_to_dphase;
+		S_ERR1: begin
+      			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 	endcase
 end
 
@@ -89,7 +101,7 @@ always @ (posedge clk or negedge rst_n) begin
 		if (ahbls_htrans[1] && ahbls_hready)
 			apbm_paddr <= ahbls_haddr[W_PADDR-1:0];
 		if (apb_state == S_WR0) begin
-			apbm_phartid <= ahbls_hartid;
+			$display("apb_state == S_WR0 prev=%x ahbls_hwdata=%x", $past(apb_state), ahbls_hwdata);
 			apbm_pwdata <= ahbls_hwdata;
 		end
 	end
