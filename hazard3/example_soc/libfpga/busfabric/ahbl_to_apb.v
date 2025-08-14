@@ -18,7 +18,7 @@ module ahbl_to_apb #(
 	input  wire               ahbls_hmastlock,
 	input  wire [W_DATA-1:0]  ahbls_hwdata,
 	output reg  [W_DATA-1:0]  ahbls_hrdata,
-	input wire [W_DATA-1:0]   ahbls_hartid,
+	input wire  [W_DATA-1:0]  ahbls_hartid,
 
 	output reg  [W_PADDR-1:0] apbm_paddr,
 	output reg                apbm_psel,
@@ -28,7 +28,7 @@ module ahbl_to_apb #(
 	input wire                apbm_pready,
 	input wire  [W_DATA-1:0]  apbm_prdata,
 	input wire                apbm_pslverr,
-	output wire [W_DATA-1:0]  apbm_phartid
+	output reg  [W_DATA-1:0]  apbm_phartid
 );
 
 // Transfer state machine
@@ -48,8 +48,8 @@ localparam S_ERR1  = 4'd9; // AHBL error response, and accept new address phase 
 reg [W_APB_STATE-1:0] apb_state;
 
 wire [W_APB_STATE-1:0] aphase_to_dphase =
-	ahbls_htrans[1] &&  ahbls_hwrite ? S_WR0 :
-	ahbls_htrans[1] && !ahbls_hwrite ? S_RD0 : S_IDLE;
+	ahbls_htrans[1] &&  ahbls_hwrite && ahbls_hready ? S_WR0 :
+	ahbls_htrans[1] && !ahbls_hwrite && ahbls_hready ? S_RD0 : S_IDLE;
 
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
@@ -84,11 +84,14 @@ always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		apbm_paddr <= {W_PADDR{1'b0}};
 		apbm_pwdata <= {W_DATA{1'b0}};
+		apbm_phartid <= 0;
 	end else begin
 		if (ahbls_htrans[1] && ahbls_hready)
 			apbm_paddr <= ahbls_haddr[W_PADDR-1:0];
-		if (apb_state == S_WR0)
+		if (apb_state == S_WR0) begin
+			apbm_phartid <= ahbls_hartid;
 			apbm_pwdata <= ahbls_hwdata;
+		end
 	end
 end
 
@@ -104,7 +107,7 @@ assign ahbls_hresp =
 	apb_state == S_ERR0 ||
 	apb_state == S_ERR1;
 
-assign apbm_phartid=ahbls_hartid;
+//assign apbm_phartid=ahbls_hartid;
 
 always @ (posedge clk or negedge rst_n)
 	if (!rst_n)

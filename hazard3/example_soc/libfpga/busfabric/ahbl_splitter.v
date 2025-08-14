@@ -135,17 +135,27 @@ end
 reg [N_PORTS-1:0] slave_sel_d;
 reg decode_err_d;
 reg err_ph1;
-
+reg waswr;
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		slave_sel_d <= {N_PORTS{1'b0}};
 		decode_err_d <= 1'b0;
 		err_ph1 <= 1'b0;
+		waswr <= 0;
 	end else begin
 		if (src_hready) begin
 			slave_sel_d <= slave_sel_a;
 			decode_err_d <= decode_err_a;
 		end
+			if(src_hwrite) begin
+				if(src_haddr == 32'h4000400c)
+					waswr <= 1;
+			end else begin
+				if(waswr)
+					$display("--h%1x src_haddr=%x src_hwdata=%x %8d", src_hartid, src_haddr, src_hwdata, $time);
+				waswr <= 0;
+			end
+		
 		if (decode_err_d) begin
 			err_ph1 <= !err_ph1;
 		end else begin
