@@ -310,6 +310,7 @@ wire [31:0] bridge_pwdata;
 wire [31:0] bridge_prdata;
 wire        bridge_pready;
 wire        bridge_pslverr;
+wire [W_DATA-1:0]  bridge_phartid;
 
 wire        uart_psel;
 wire        uart_penable;
@@ -338,6 +339,8 @@ wire [31:0] sd_prdata;
 wire        sd_pready;
 wire        sd_pslverr;
 
+wire [W_DATA-1:0]  sd_phartid , uart_phartid, timer_phartid;
+
 ahbl_to_apb apb_bridge_u (
 	.clk               (clk),
 	.rst_n             (rst_n),
@@ -354,6 +357,7 @@ ahbl_to_apb apb_bridge_u (
 	.ahbls_hmastlock   (bridge_hmastlock),
 	.ahbls_hwdata      (bridge_hwdata),
 	.ahbls_hrdata      (bridge_hrdata),
+	.ahbls_hartid	   (bridge_hartid),
 
 	.apbm_paddr        (bridge_paddr),
 	.apbm_psel         (bridge_psel),
@@ -362,7 +366,8 @@ ahbl_to_apb apb_bridge_u (
 	.apbm_pwdata       (bridge_pwdata),
 	.apbm_pready       (bridge_pready),
 	.apbm_prdata       (bridge_prdata),
-	.apbm_pslverr      (bridge_pslverr)
+	.apbm_pslverr      (bridge_pslverr),
+	.apbm_phartid      (bridge_phartid)
 );
 
 apb_splitter #(
@@ -380,6 +385,7 @@ apb_splitter #(
 	.apbs_pready  (bridge_pready),
 	.apbs_prdata  (bridge_prdata),
 	.apbs_pslverr (bridge_pslverr),
+	.apbs_phartid (bridge_phartid),
 
 	.apbm_paddr   ({sd_paddr   , uart_paddr  , timer_paddr}),
 	.apbm_psel    ({sd_psel    , uart_psel   , timer_psel}),
@@ -388,7 +394,8 @@ apb_splitter #(
 	.apbm_pwdata  ({sd_pwdata  , uart_pwdata , timer_pwdata}),
 	.apbm_pready  ({sd_pready  , uart_pready , timer_pready}),
 	.apbm_prdata  ({sd_prdata  , uart_prdata , timer_prdata}),
-	.apbm_pslverr ({sd_pslverr , uart_pslverr, timer_pslverr})
+	.apbm_pslverr ({sd_pslverr , uart_pslverr, timer_pslverr}),
+	.apbm_hartid  ({sd_phartid , uart_phartid, timer_phartid})
 );
 
 // ----------------------------------------------------------------------------
@@ -479,7 +486,7 @@ uart_mini uart_u (
 	.apbs_prdata  (uart_prdata),
 	.apbs_pready  (uart_pready),
 	.apbs_pslverr (uart_pslverr),
-
+	.apbs_phartid (uart_phartid),
 	.rx           (uart_rx),
 	.tx           (uart_tx),
 	.cts          (1'b0),

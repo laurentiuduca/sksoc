@@ -14,6 +14,7 @@ module apb_splitter #(
 	output wire                       apbs_pready,
 	output wire [W_DATA-1:0]          apbs_prdata,
 	output wire                       apbs_pslverr,
+	input wire [W_DATA-1:0]           apbs_phartid,
 
 	output wire [N_SLAVES*W_ADDR-1:0] apbm_paddr,
 	output wire [N_SLAVES-1:0]        apbm_psel,
@@ -22,7 +23,8 @@ module apb_splitter #(
 	output wire [N_SLAVES*W_DATA-1:0] apbm_pwdata,
 	input wire  [N_SLAVES-1:0]        apbm_pready,
 	input wire  [N_SLAVES*W_DATA-1:0] apbm_prdata,
-	input wire  [N_SLAVES-1:0]        apbm_pslverr 
+	input wire  [N_SLAVES-1:0]        apbm_pslverr,
+	output wire [N_SLAVES*W_DATA-1:0] apbm_hartid
 );
 
 integer i;
@@ -44,6 +46,8 @@ assign apbm_psel = slave_mask & {N_SLAVES{apbs_psel}};
 assign apbm_penable = slave_mask & {N_SLAVES{apbs_penable}};
 assign apbm_pwrite = slave_mask & {N_SLAVES{apbs_pwrite}};
 assign apbm_pwdata = {N_SLAVES{apbs_pwdata}};
+
+assign apbm_hartid = {N_SLAVES{apbs_phartid}};
 
 onehot_mux #(
 	.N_INPUTS(N_SLAVES),

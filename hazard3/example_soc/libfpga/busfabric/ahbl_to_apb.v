@@ -18,6 +18,7 @@ module ahbl_to_apb #(
 	input  wire               ahbls_hmastlock,
 	input  wire [W_DATA-1:0]  ahbls_hwdata,
 	output reg  [W_DATA-1:0]  ahbls_hrdata,
+	input wire  [W_DATA-1:0]  ahbls_hartid,
 
 	output reg  [W_PADDR-1:0] apbm_paddr,
 	output reg                apbm_psel,
@@ -26,7 +27,8 @@ module ahbl_to_apb #(
 	output reg  [W_DATA-1:0]  apbm_pwdata,
 	input wire                apbm_pready,
 	input wire  [W_DATA-1:0]  apbm_prdata,
-	input wire                apbm_pslverr 
+	input wire                apbm_pslverr,
+	output reg  [W_DATA-1:0]  apbm_phartid
 );
 
 // Transfer state machine
@@ -46,23 +48,35 @@ localparam S_ERR1  = 4'd9; // AHBL error response, and accept new address phase 
 reg [W_APB_STATE-1:0] apb_state;
 
 wire [W_APB_STATE-1:0] aphase_to_dphase =
-	ahbls_htrans[1] &&  ahbls_hwrite ? S_WR0 :
-	ahbls_htrans[1] && !ahbls_hwrite ? S_RD0 : S_IDLE;
+	ahbls_htrans[1] &&  ahbls_hwrite && ahbls_hready ? S_WR0 :
+	ahbls_htrans[1] && !ahbls_hwrite && ahbls_hready ? S_RD0 : S_IDLE;
 
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		apb_state <= S_IDLE;
 	end else case (apb_state)
-		S_IDLE: if (ahbls_hready) apb_state <= aphase_to_dphase;
+		S_IDLE: if (ahbls_hready) begin 
+			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 		S_WR0:                    apb_state <= S_WR1;
 		S_WR1:                    apb_state <= S_WR2;
 		S_WR2:  if (apbm_pready)  apb_state <= apbm_pslverr ? S_ERR0 : S_WR3;
-		S_WR3:                    apb_state <= aphase_to_dphase;
+		S_WR3:  begin
+      			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 		S_RD0:                    apb_state <= S_RD1;
 		S_RD1:  if (apbm_pready)  apb_state <= apbm_pslverr ? S_ERR0 : S_RD2;
-		S_RD2:                    apb_state <= aphase_to_dphase;
+		S_RD2:  begin
+			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 		S_ERR0:                   apb_state <= S_ERR1;
-		S_ERR1:                   apb_state <= aphase_to_dphase;
+		S_ERR1: begin
+      			apb_state <= aphase_to_dphase;
+			apbm_phartid <= ahbls_hartid;
+		end
 	endcase
 end
 
@@ -72,8 +86,8 @@ always @ (*) begin
 	case (apb_state)
 		S_RD0:   {apbm_psel, apbm_penable, apbm_pwrite} = 3'b100;
 		S_RD1:   {apbm_psel, apbm_penable, apbm_pwrite} = 3'b110;
-		S_WR1:   {apbm_psel, apbm_penable, apbm_pwrite} = 3'b101;
-		S_WR2:   {apbm_psel, apbm_penable, apbm_pwrite} = 3'b111;
+		S_WR1:   {apbm_psel, apbm_penable, apbm_pwrite} = 3'b111;
+		//S_WR2:   {apbm_psel, apbm_penable, apbm_pwrite} = 3'b111;
 		default: {apbm_psel, apbm_penable, apbm_pwrite} = 3'b000;
 	endcase
 end
@@ -82,11 +96,14 @@ always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		apbm_paddr <= {W_PADDR{1'b0}};
 		apbm_pwdata <= {W_DATA{1'b0}};
+		apbm_phartid <= 0;
 	end else begin
 		if (ahbls_htrans[1] && ahbls_hready)
 			apbm_paddr <= ahbls_haddr[W_PADDR-1:0];
-		if (apb_state == S_WR0)
+		if (apb_state == S_WR0) begin
+			//$display("apb_state == S_WR0 prev=%x ahbls_hwdata=%x %d", $past(apb_state), ahbls_hwdata, $time);
 			apbm_pwdata <= ahbls_hwdata;
+		end
 	end
 end
 
@@ -101,6 +118,8 @@ assign ahbls_hready_resp =
 assign ahbls_hresp =
 	apb_state == S_ERR0 ||
 	apb_state == S_ERR1;
+
+//assign apbm_phartid=ahbls_hartid;
 
 always @ (posedge clk or negedge rst_n)
 	if (!rst_n)

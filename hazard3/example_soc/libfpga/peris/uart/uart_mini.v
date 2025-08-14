@@ -18,6 +18,7 @@ module uart_mini (
 	output wire [31:0] apbs_prdata,
 	output wire apbs_pready,
 	output wire apbs_pslverr,
+	input wire [31:0] apbs_phartid,
 
 	input wire rx,
 	output wire tx,
@@ -32,32 +33,29 @@ assign apbs_prdata=32'h0;
 assign apbs_pslverr=0;
 
 reg [7:0] state;
-reg r_tx_ready, r_was_write;
+reg r_tx_ready;
 
 wire w_tx_ready;
 reg         r_uart_we;
 reg   [7:0] r_uart_data;
 
+wire wr_cmd;
+assign wr_cmd = apbs_psel && apbs_penable && apbs_pwrite;
 always @(posedge clk or negedge rst_n) begin
 	if(!rst_n) begin
 		r_uart_we <= 0;
 		r_uart_data <= 0;
 		state <= 0;
 		r_tx_ready <= 0;
-		r_was_write <= 0;
 	end else if(state == 0) begin	
-		if(apbs_psel && apbs_penable && apbs_pwrite) begin
-			//$display("---uart-write %x r_was_write=%x %d", apbs_pwdata, r_was_write, $time);
-		        if(r_was_write == 0) begin
+		if(wr_cmd) begin
+			//$display("---uart-write h%1x %x", apbs_phartid, apbs_pwdata, $time);
 				if(w_tx_ready) begin
 					r_uart_data <= apbs_pwdata[7:0];
 	                       		r_uart_we <= 1;
 					state <= 1;
-					r_was_write <= 1;
 				end
-			end
-		end else
-			r_was_write <= 0;
+		end
 		r_tx_ready <= 0;
 	end else if(state == 1) begin
 		if(!w_tx_ready) begin
@@ -65,7 +63,7 @@ always @(posedge clk or negedge rst_n) begin
 			state <= 2;
 		end
 	end else if(state == 2) begin
-		if(w_tx_ready) begin
+		if(w_tx_ready && !wr_cmd) begin
 			r_tx_ready <= 1;
 			state <= 0;
 		end

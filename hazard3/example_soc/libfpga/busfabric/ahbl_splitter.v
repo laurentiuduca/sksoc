@@ -135,17 +135,19 @@ end
 reg [N_PORTS-1:0] slave_sel_d;
 reg decode_err_d;
 reg err_ph1;
-
+reg waswr;
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		slave_sel_d <= {N_PORTS{1'b0}};
 		decode_err_d <= 1'b0;
 		err_ph1 <= 1'b0;
+		waswr <= 0;
 	end else begin
 		if (src_hready) begin
 			slave_sel_d <= slave_sel_a;
 			decode_err_d <= decode_err_a;
 		end
+
 		if (decode_err_d) begin
 			err_ph1 <= !err_ph1;
 		end else begin
@@ -191,6 +193,9 @@ always @(posedge clk) begin
 		//$display("h%1x src_d_pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d",
                 //        src_hartid, src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
 	end
+        //if($past(src_hwrite) && $past(src_haddr == 32'h4000400c))
+        //   	$display("past h%1x src_haddr=%x src_hwdata=%x src/dst_hready_resp=%x/%x wr=%1x slave_sel_d=%x %8d", 
+	//		src_hartid, src_haddr, src_hwdata, src_hready_resp, dst_hready_resp, src_hwrite, slave_sel_d, $time);
         if(/*j < 20 &&*/ src_hready && 
         (osrc_haddr!= src_haddr || osrc_htrans != src_htrans ||//odst_hrdata[W_DATA-1:0] != dst_hrdata[W_DATA-1:0] || 
 		osrc_hready != src_hready || osrc_hwrite != src_hwrite)) begin
@@ -202,7 +207,7 @@ always @(posedge clk) begin
                 osrc_haddr <= src_haddr;
                 odst_hrdata[W_DATA-1:0] <= dst_hrdata[W_DATA-1:0];
 		osrc_htrans <= src_htrans;
-		if(j < 20 || (src_d_pc >= pc_trace_start && src_d_pc <= pc_trace_stop && li < 20))
+		if(j < 30 || (src_d_pc >= pc_trace_start && src_d_pc <= pc_trace_stop && li < 30))
                 $display("h%1x src_d_pc=%x hartid=%1x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d", 
 			src_hartid, src_d_pc, src_hartid, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
 		if(!closed && src_haddr > 0)

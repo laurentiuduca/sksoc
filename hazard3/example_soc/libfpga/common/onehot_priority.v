@@ -20,12 +20,14 @@
 // e.g. 'b011100 -> 'b000100
 // If HIGHEST_WINS is 1, it will instead be the most-significant bit of the output.
 
+`default_nettype none
+
 module onehot_priority #(
 	parameter W_INPUT = 8
 	//parameter HIGHEST_WINS = 0
 ) (
-	input clk,
-	input rst_n,
+	input wire clk,
+	input wire rst_n,
 	input wire canchange,
 	input wire [W_INPUT-1:0] in,
 	output reg [W_INPUT-1:0] out
@@ -69,3 +71,7 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 endmodule
+
+`ifndef YOSYS
+`default_nettype wire
+`endif

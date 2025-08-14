@@ -203,6 +203,7 @@ always @ (posedge clk or negedge rst_n) begin
 		end
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			if (buf_wen[i]) begin
+				//$display("i=%1x buf wen %d", i, $time);
 				buf_valid    [i] <= 1'b1;
 				buf_htrans   [i] <= src_htrans   [i * 2 +: 2];
 				buf_d_pc     [i] <= src_d_pc     [i * W_ADDR +: W_ADDR];
