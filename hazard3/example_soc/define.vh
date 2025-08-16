@@ -3,7 +3,8 @@
 
 `define NCORES 2
 
-//`define DUMP_VCD
+`define DUMP_VCD
+`define dbgsclr
 
 `define TN_DRAM_REFRESH // for tang nano
 `define SIM_TNSRAM // tang nano not only sim ram

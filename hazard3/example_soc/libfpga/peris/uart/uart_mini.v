@@ -49,7 +49,9 @@ always @(posedge clk or negedge rst_n) begin
 		r_tx_ready <= 0;
 	end else if(state == 0) begin	
 		if(wr_cmd) begin
-			//$display("---uart-write h%1x %x", apbs_phartid, apbs_pwdata, $time);
+			`ifdef dbgsclr
+			$display("---uart-write h%1x %x", apbs_phartid, apbs_pwdata, $time);
+			`endif
 				if(w_tx_ready) begin
 					r_uart_data <= apbs_pwdata[7:0];
 	                       		r_uart_we <= 1;

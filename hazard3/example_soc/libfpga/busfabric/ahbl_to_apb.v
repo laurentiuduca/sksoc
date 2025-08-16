@@ -101,7 +101,9 @@ always @ (posedge clk or negedge rst_n) begin
 		if (ahbls_htrans[1] && ahbls_hready)
 			apbm_paddr <= ahbls_haddr[W_PADDR-1:0];
 		if (apb_state == S_WR0) begin
-			//$display("apb_state == S_WR0 prev=%x ahbls_hwdata=%x %d", $past(apb_state), ahbls_hwdata, $time);
+			`ifdef dbgsclr
+			$display("apb_state == S_WR0 prev=%x ahbls_hwdata=%x %d", $past(apb_state), ahbls_hwdata, $time);
+			`endif
 			apbm_pwdata <= ahbls_hwdata;
 		end
 	end

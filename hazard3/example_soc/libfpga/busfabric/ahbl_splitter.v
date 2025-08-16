@@ -159,7 +159,7 @@ end
 // Data-phase passthrough
 
 assign dst_hwdata = {N_PORTS{src_hwdata}};
-assign dst_hready = {N_PORTS{src_hready}};
+assign dst_hready = {N_PORTS{src_hready}}; // & slave_sel_a;
 
 onehot_mux #(
 	.N_INPUTS(N_PORTS),
@@ -193,9 +193,11 @@ always @(posedge clk) begin
 		//$display("h%1x src_d_pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x src_hready_resp=%1x,ok=%1x %08d",
                 //        src_hartid, src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, src_hready_resp, src_hexokay, $time);
 	end
-        //if($past(src_hwrite) && $past(src_haddr == 32'h4000400c))
-        //   	$display("past h%1x src_haddr=%x src_hwdata=%x src/dst_hready_resp=%x/%x wr=%1x slave_sel_d=%x %8d", 
-	//		src_hartid, src_haddr, src_hwdata, src_hready_resp, dst_hready_resp, src_hwrite, slave_sel_d, $time);
+	`ifdef dbgsclr
+        if($past(src_hwrite) && $past(src_haddr == 32'h4000400c))
+           	$display("past h%1x src_haddr=%x src_hwdata=%x src/dst_hready_resp=%x/%x wr=%1x slave_sel_d=%x %8d", 
+			src_hartid, src_haddr, src_hwdata, src_hready_resp, dst_hready_resp, src_hwrite, slave_sel_d, $time);
+	`endif
         if(/*j < 20 &&*/ src_hready && 
         (osrc_haddr!= src_haddr || osrc_htrans != src_htrans ||//odst_hrdata[W_DATA-1:0] != dst_hrdata[W_DATA-1:0] || 
 		osrc_hready != src_hready || osrc_hwrite != src_hwrite)) begin
