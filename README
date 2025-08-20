@@ -1,4 +1,4 @@
-skSoC: RISC-V Hazard3 based open SoC skeleton
+skSoC: a RISC-V Hazard3 based SoC skeleton
 ====
 
 -2. dual core was tested in simulation
