@@ -53,10 +53,7 @@ cd ../hazard3
 - please see flags in define.vh and set SIM_MODE
 ./run-nuttx2.sh
 
-5. notes
-wb cache is wip, use wt
-
-6. implementation on tang nano 20k
+5. implementation on tang nano 20k
 comment SIM_MODE in define.vh
 make gwsynth
 if FAT32_SD is in define.vh
