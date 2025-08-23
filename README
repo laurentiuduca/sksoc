@@ -1,8 +1,6 @@
 skSoC: a RISC-V Hazard3 based SoC skeleton
 ====
 
--2. dual core was tested in simulation
-
 -1.
 Download the latest RISCV GCC toolchain prebuilt by xPack for nuttx and add .../riscv-none-elf-gcc/bin to PATH
 RUN mkdir riscv-none-elf-gcc && \
