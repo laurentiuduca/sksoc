@@ -180,9 +180,8 @@ assign dst_hready1 = mast_gnt_d ? |(src_hready & mast_gnt_d) :
 				 |(src_hready & mast_gnt_a); //1'b1;
 assign dst_hready = 	// if h0 is waiting for memory op (and its next inst is to print on i/o)
 			// and h1 just finishes printing then avoid h0 to have two operations simultaneously
-			((mast_gnt_d != mast_gnt_a) && 
-			!(src_hready & mast_gnt_a) && 
-			!(split_slave_sel_d & mast_gnt_a)) ? 0 : dst_hready1;
+			((mast_gnt_d != mast_gnt_a) && 	!(src_hready & mast_gnt_a) && 
+			!(split_slave_sel_d & mast_gnt_a) && mast_gnt_a && mast_gnt_d) ? 0 : dst_hready1;
 
 // see spliter
 wire [N_PORTS-1:0] mast_aphase_ends = mast_req_a & src_hready;
