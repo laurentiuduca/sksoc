@@ -175,13 +175,14 @@ onehot_priority #(
 // AHB State Machine
 
 reg [N_PORTS-1:0] mast_gnt_d;
-wire dst_hready1;
+wire dst_hready1, fake;
 assign dst_hready1 = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
 				 |(src_hready & mast_gnt_a); //1'b1;
+assign fake = ((mast_gnt_d != mast_gnt_a) &&  !(src_hready & mast_gnt_a) &&
+                        !(split_slave_sel_d & mast_gnt_a) && mast_gnt_a && mast_gnt_d);
 assign dst_hready = 	// if h0 is waiting for memory op (and its next inst is to print on i/o)
 			// and h1 just finishes printing then avoid h0 to have two operations simultaneously
-			((mast_gnt_d != mast_gnt_a) && 	!(src_hready & mast_gnt_a) && 
-			!(split_slave_sel_d & mast_gnt_a) && mast_gnt_a && mast_gnt_d) ? 0 : dst_hready1;
+			fake ? 0 : dst_hready1;
 
 // see spliter
 wire [N_PORTS-1:0] mast_aphase_ends = mast_req_a & src_hready;
@@ -209,7 +210,8 @@ always @ (posedge clk or negedge rst_n) begin
 		if (dst_hready) begin
 			mast_gnt_d <= mast_gnt_a;
 			buf_valid <= buf_valid & ~mast_gnt_a;
-		end
+		end else if (fake)
+			mast_gnt_d <= mast_gnt_a;
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			if (buf_wen[i]) begin
 				`ifdef dbgsclr
