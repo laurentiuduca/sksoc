@@ -115,14 +115,7 @@ integer i=0, j=0, k=0, l=0, m=0, lj=0;
     reg [W_ADDR-1:0] r_excl_addr[0:N_HARTS-1];
     reg r_excl_addr_valid[0:N_HARTS-1];
     reg exclwrdisplay;
-    reg [W_DATA-1:0] exclwrhaddr;
 task check_new_req;
-			`ifdef laur0
-			if(exclwrhaddr == 32'h3b340) begin
-				exclwrhaddr <= 0;
-                                //$display("--exclusive read res at addr %x h%1x data=%x", ahbls_haddr, hartid, w_dram_odata);
-			end
-			`endif
 			if (ahb_read_aphase) begin
                                 state <= 0;
 				//r_ahbls_haddr <= ahbls_haddr;
@@ -132,8 +125,10 @@ task check_new_req;
 					r_ahbls_hexokay <= 1;
 					r_excl_addr[hartid] <= ahbls_haddr;
 					r_excl_addr_valid[hartid] <= 1;
-					//$display("--exclusive read res at addr %x h%1x", ahbls_haddr, hartid);
-					exclwrhaddr <= ahbls_haddr;
+					`ifdef dbghexcl
+					if(d_pc == 32'h1a5c)
+						$display("--exclusive read res at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
+					`endif
 				end
 			end else if(ahb_write_aphase) begin
 				if(ahbls_hexcl) begin
@@ -142,17 +137,19 @@ task check_new_req;
 						for(i = 0; i < N_HARTS; i=i+1)
 							if(r_excl_addr[i] == ahbls_haddr)
                                                         	r_excl_addr_valid[i] <= 0;
-                                        	//r_excl_addr_valid[hartid] <= 0;
-						//if(r_excl_addr[1-hartid] == ahbls_haddr)
-						//	r_excl_addr_valid[1-hartid] <= 0;
 						r_ahbls_haddr <= ahbls_haddr;
 	                                        state <= 22;
         	                                r_mask <= wmask;
                 	                        r_ahbls_hwdata <= ahbls_hwdata; // this must also be in state 22
-						//$display("--exclusive write succ at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
+						`ifdef dbghexcl
+						if(d_pc == 32'h1a5c)
+							$display("--exclusive write succ at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
+						`endif
 						exclwrdisplay <= 1;
 					end else begin
+						`ifdef dbghexcl
 						$display("--exclusive write fail at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc);
+						`endif
 						state <= 30;
 						r_ahbls_hexokay <= 0;
 					end
@@ -193,7 +190,6 @@ always @ (posedge clk or negedge rst_n) begin
 		for(i = 0; i < N_HARTS; i=i+1)
                         r_excl_addr_valid[i] <= 0;
 		exclwrdisplay <= 0;
-		exclwrhaddr <= 0;
 	end else begin
 		r_ahbls_hexokay <= 1;
 		if(state == 0) begin
@@ -217,17 +213,19 @@ always @ (posedge clk or negedge rst_n) begin
 				$display("ahb_read_aphase or write aphase in write dphase");
 				$finish;
 			end
+			`ifdef dbghexcl
 			if(exclwrdisplay) begin
 				exclwrdisplay <= 0;
-				//$display("--exclusive write succ at addr %x h%1x pc=%x data=%x", ahbls_haddr, hartid, d_pc, ahbls_hwdata);
+				$display("--exclusive write succ at addr %x h%1x pc=%x data=%x", ahbls_haddr, hartid, d_pc, ahbls_hwdata);
 			end
+			`endif
 		end else if (state == 30) begin
 			// excl write fail
-			 r_ahbls_hexokay <= 0;
-			 state <= 31;
+			r_ahbls_hexokay <= 0;
+			state <= 31;
 		end else if (state == 31) begin
                         // excl write fail
-                         check_new_req;
+                        check_new_req;
                 end
 
 		if(ahbls_htrans == 2'b01 || ahbls_htrans == 2'b11) begin

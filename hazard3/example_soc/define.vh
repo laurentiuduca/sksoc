@@ -6,6 +6,7 @@
 //`define DUMP_VCD
 //`define dbgsclr
 //`define dbgdhrystone
+//`define dbgexcl
 
 `define TN_DRAM_REFRESH // for tang nano
 `define SIM_TNSRAM // tang nano not only sim ram

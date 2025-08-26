@@ -179,7 +179,7 @@ wire dst_hready1, fake;
 assign dst_hready1 = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
 				 |(src_hready & mast_gnt_a); //1'b1;
 assign fake = ((mast_gnt_d != mast_gnt_a) &&  !(src_hready & mast_gnt_a) &&
-                        !(split_slave_sel_d & mast_gnt_a) && mast_gnt_a && mast_gnt_d);
+                        !(split_slave_sel_d & mast_gnt_a) && mast_gnt_a);
 assign dst_hready = 	// if h0 is waiting for memory op (and its next inst is to print on i/o)
 			// and h1 just finishes printing then avoid h0 to have two operations simultaneously
 			fake ? 0 : dst_hready1;
@@ -210,8 +210,7 @@ always @ (posedge clk or negedge rst_n) begin
 		if (dst_hready) begin
 			mast_gnt_d <= mast_gnt_a;
 			buf_valid <= buf_valid & ~mast_gnt_a;
-		end else if (fake)
-			mast_gnt_d <= mast_gnt_a;
+		end
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			if (buf_wen[i]) begin
 				`ifdef dbgsclr
