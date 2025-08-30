@@ -22,6 +22,7 @@ module ahbl_to_apb #(
 	input  wire [W_DATA-1:0]  ahbls_hwdata,
 	output reg  [W_DATA-1:0]  ahbls_hrdata,
 	input wire  [W_DATA-1:0]  ahbls_hartid,
+	input  wire [W_HADDR-1:0] ahbls_hd_pc,
 
 	output reg  [W_PADDR-1:0] apbm_paddr,
 	output reg                apbm_psel,
@@ -31,7 +32,8 @@ module ahbl_to_apb #(
 	input wire                apbm_pready,
 	input wire  [W_DATA-1:0]  apbm_prdata,
 	input wire                apbm_pslverr,
-	output reg  [W_DATA-1:0]  apbm_phartid
+	output reg  [W_DATA-1:0]  apbm_phartid,
+	output wire [W_PADDR-1:0] apbm_pd_pc
 );
 
 // Transfer state machine
@@ -53,6 +55,7 @@ reg [W_APB_STATE-1:0] apb_state;
 wire [W_APB_STATE-1:0] aphase_to_dphase =
 	ahbls_htrans[1] &&  ahbls_hwrite && ahbls_hready ? S_WR0 :
 	ahbls_htrans[1] && !ahbls_hwrite && ahbls_hready ? S_RD0 : S_IDLE;
+assign apbm_pd_pc = ahbls_hd_pc;
 
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin

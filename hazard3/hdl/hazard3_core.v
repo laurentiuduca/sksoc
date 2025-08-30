@@ -862,7 +862,7 @@ wire [W_DATA-1:0] x_pmp_cfg_rdata;
 
 generate
 if (PMP_REGIONS > 0) begin: have_pmp
-	
+
 	wire x_loadstore_pmp_badperm;
 	assign x_loadstore_pmp_fail = x_loadstore_pmp_badperm && x_memop_vld;
 

@@ -422,7 +422,7 @@ wire [3:0]         bridge_hprot;
 wire               bridge_hmastlock;
 wire [W_DATA-1:0]  bridge_hwdata;
 wire [W_DATA-1:0]  bridge_hrdata;
-wire [W_ADDR-1:0]  bridge_d_pc;
+wire [W_ADDR-1:0]  bridge_hd_pc;
 wire [W_DATA-1:0]  bridge_hartid;
 // exclusive access signaling
 wire               bridge_hexcl;
@@ -475,7 +475,7 @@ ahbl_splitter #(
 	.dst_hmastlock   ({bridge_hmastlock   , sram0_hmastlock  }),
 	.dst_hwdata      ({bridge_hwdata      , sram0_hwdata     }),
 	.dst_hrdata      ({bridge_hrdata      , sram0_hrdata     }),
-        .dst_d_pc        ({bridge_d_pc        , sram0_d_pc       }),
+        .dst_d_pc        ({bridge_hd_pc       , sram0_d_pc       }),
         .dst_hartid      ({bridge_hartid      , sram0_hartid     }),
         // exclusive access signaling
         .dst_hexcl       ({bridge_hexcl       , sram0_hexcl}),
@@ -530,13 +530,12 @@ ahbl_crossbar #(
         .dst_hmastlock   ({bridge_hmastlock   , sram0_hmastlock  }),
         .dst_hwdata      ({bridge_hwdata      , sram0_hwdata     }),
         .dst_hrdata      ({bridge_hrdata      , sram0_hrdata     }),
-        .dst_d_pc        ({bridge_d_pc        , sram0_d_pc       }),
-        .dst_hartid      ({bridge_hartid      , sram0_hartid     }),
+	.dst_d_pc	 ({bridge_hd_pc       , sram0_d_pc	 }),
+	.dst_hartid      ({bridge_hartid      , sram0_hartid     }),
         // exclusive access signaling
-        .dst_hexcl       ({bridge_hexcl       , sram0_hexcl}),
+        .dst_hexcl       ({bridge_hexcl	      , sram0_hexcl}),
         .dst_hmaster     ({bridge_hmaster     , sram0_hmaster}),
         .dst_hexokay     ({bridge_hexokay     , sram0_hexokay})
-	
 );
 `endif
 
@@ -551,6 +550,7 @@ wire [31:0] bridge_prdata;
 wire        bridge_pready;
 wire        bridge_pslverr;
 wire [W_DATA-1:0]  bridge_phartid;
+wire [W_ADDR-1:0]  bridge_pd_pc;
 
 wire        uart_psel;
 wire        uart_penable;
@@ -580,6 +580,7 @@ wire        sd_pready;
 wire        sd_pslverr;
 
 wire [W_DATA-1:0]  sd_phartid , uart_phartid, timer_phartid;
+wire [W_DATA-1:0]  sd_pd_pc , uart_pd_pc, timer_pd_pc;
 
 ahbl_to_apb apb_bridge_u (
 	.clk               (clk),
@@ -597,17 +598,19 @@ ahbl_to_apb apb_bridge_u (
 	.ahbls_hmastlock   (bridge_hmastlock),
 	.ahbls_hwdata      (bridge_hwdata),
 	.ahbls_hrdata      (bridge_hrdata),
-        .ahbls_hartid      (bridge_hartid),
+	.ahbls_hartid	   (bridge_hartid),
+	.ahbls_hd_pc	   (bridge_hd_pc),
 
-        .apbm_paddr        (bridge_paddr),
-        .apbm_psel         (bridge_psel),
-        .apbm_penable      (bridge_penable),
-        .apbm_pwrite       (bridge_pwrite),
-        .apbm_pwdata       (bridge_pwdata),
-        .apbm_pready       (bridge_pready),
-        .apbm_prdata       (bridge_prdata),
-        .apbm_pslverr      (bridge_pslverr),
-        .apbm_phartid      (bridge_phartid)
+	.apbm_paddr        (bridge_paddr),
+	.apbm_psel         (bridge_psel),
+	.apbm_penable      (bridge_penable),
+	.apbm_pwrite       (bridge_pwrite),
+	.apbm_pwdata       (bridge_pwdata),
+	.apbm_pready       (bridge_pready),
+	.apbm_prdata       (bridge_prdata),
+	.apbm_pslverr      (bridge_pslverr),
+	.apbm_phartid      (bridge_phartid),
+	.apbm_pd_pc	   (bridge_pd_pc)
 );
 
 apb_splitter #(
@@ -625,17 +628,19 @@ apb_splitter #(
 	.apbs_pready  (bridge_pready),
 	.apbs_prdata  (bridge_prdata),
 	.apbs_pslverr (bridge_pslverr),
-        .apbs_phartid (bridge_phartid),
+	.apbs_phartid (bridge_phartid),
+	.apbs_pd_pc   (bridge_pd_pc),
 
-        .apbm_paddr   ({sd_paddr   , uart_paddr  , timer_paddr}),
-        .apbm_psel    ({sd_psel    , uart_psel   , timer_psel}),
-        .apbm_penable ({sd_penable , uart_penable, timer_penable}),
-        .apbm_pwrite  ({sd_pwrite  , uart_pwrite , timer_pwrite}),
-        .apbm_pwdata  ({sd_pwdata  , uart_pwdata , timer_pwdata}),
-        .apbm_pready  ({sd_pready  , uart_pready , timer_pready}),
-        .apbm_prdata  ({sd_prdata  , uart_prdata , timer_prdata}),
-        .apbm_pslverr ({sd_pslverr , uart_pslverr, timer_pslverr}),
-        .apbm_hartid  ({sd_phartid , uart_phartid, timer_phartid})
+	.apbm_paddr   ({sd_paddr   , uart_paddr  , timer_paddr}),
+	.apbm_psel    ({sd_psel    , uart_psel   , timer_psel}),
+	.apbm_penable ({sd_penable , uart_penable, timer_penable}),
+	.apbm_pwrite  ({sd_pwrite  , uart_pwrite , timer_pwrite}),
+	.apbm_pwdata  ({sd_pwdata  , uart_pwdata , timer_pwdata}),
+	.apbm_pready  ({sd_pready  , uart_pready , timer_pready}),
+	.apbm_prdata  ({sd_prdata  , uart_prdata , timer_prdata}),
+	.apbm_pslverr ({sd_pslverr , uart_pslverr, timer_pslverr}),
+	.apbm_hartid  ({sd_phartid , uart_phartid, timer_phartid}),
+	.apbm_pd_pc   ({sd_pd_pc , uart_pd_pc, timer_pd_pc})
 );
 
 // ----------------------------------------------------------------------------
@@ -725,8 +730,7 @@ uart_mini uart_u (
 	.apbs_prdata  (uart_prdata),
 	.apbs_pready  (uart_pready),
 	.apbs_pslverr (uart_pslverr),
-        .apbs_phartid (uart_phartid),
-
+	.apbs_phartid (uart_phartid),
 	.rx           (uart_rx),
 	.tx           (uart_tx),
 	.cts          (1'b0),
@@ -766,12 +770,14 @@ hazard3_riscv_timer timer_u (
 	.prdata    (timer_prdata),
 	.pready    (timer_pready),
 	.pslverr   (timer_pslverr),
+	.phartid   (timer_phartid),
+	.pd_pc	   (timer_pd_pc),
 
 	.dbg_halt  (&hart_halted),
 
 	.tick      (timer_tick),
 
-        .soft_irq  (soft_irq),	
+	.soft_irq  (soft_irq),
 	.timer_irq (timer_irq)
 );
 

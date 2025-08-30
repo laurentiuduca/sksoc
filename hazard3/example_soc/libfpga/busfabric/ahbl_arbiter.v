@@ -245,9 +245,9 @@ wire [N_PORTS-1:0] mast_in_dphase = buf_valid | mast_gnt_d;
 // - the master is currently not in data phase with the arbiter (IDLE)
 // - the master is in data phase with both arbiter and slave, and slave is ready
 assign src_hready_resp = mast_gnt_d == {N_PORTS{1'b1}} ? 0 : ~mast_in_dphase | (mast_gnt_d & {N_PORTS{dst_hready_resp}});
-assign src_hresp = mast_gnt_d & {N_PORTS{dst_hresp}};
+assign src_hresp = mast_gnt_d == {N_PORTS{1'b1}} ? 0 : mast_gnt_d & {N_PORTS{dst_hresp}};
 assign src_hrdata = {N_PORTS{dst_hrdata}};
-assign src_hexokay = mast_gnt_d & {N_PORTS{dst_hexokay}};
+assign src_hexokay = mast_gnt_d == {N_PORTS{1'b1}} ? {N_PORTS{1'b1}} : mast_gnt_d & {N_PORTS{dst_hexokay}};
 
 onehot_mux #(
 	.W_INPUT(W_DATA),

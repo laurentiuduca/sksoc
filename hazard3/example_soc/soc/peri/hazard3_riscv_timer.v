@@ -28,6 +28,8 @@ module hazard3_riscv_timer #(
 	output reg  [31:0]        prdata,
 	output reg                pready,
 	output wire               pslverr,
+	input wire [W_DATA-1:0]	  phartid,
+	input wire [W_ADDR-1:0]	  pd_pc,
 
 	input  wire               dbg_halt,
 	input  wire               tick,
@@ -64,14 +66,14 @@ always @ (posedge clk or negedge rst_n) begin
 	end else begin
 	    if (bus_write && paddr == ADDR_IPI && !state) begin
 		// laur - nuttx sends ipi at this addr
-		$display("bus_write && paddr == ADDR_IPI %x && pwdata=%x soft_irq was %x t%d", paddr, pwdata, soft_irq, $time);
+		$display("\t h%1x pc=%x iowrite && paddr == ADDR_IPI %x && pwdata=%x soft_irq was %x t%d", phartid, pd_pc, paddr, pwdata, soft_irq, $time);
 		if(pwdata == 0)
 			soft_irq[0] <= 0;
 		else
 			soft_irq[0] <= 1;
 	    end else if (bus_write && paddr == (ADDR_IPI+4) && !state) begin
                 // laur - nuttx sends ipi at this addr
-		$display("bus_write && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d", paddr, pwdata, soft_irq, $time);
+		$display("\t h%1x pc=%x iowrite && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d", phartid, pd_pc, paddr, pwdata, soft_irq, $time);
                 if(pwdata == 0)
                         soft_irq[1] <= 0;
                 else
