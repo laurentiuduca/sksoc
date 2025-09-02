@@ -22,6 +22,7 @@ module uart_mini (
 	output wire apbs_pready,
 	output wire apbs_pslverr,
 	input wire [31:0] apbs_phartid,
+	input wire [31:0] apbs_pd_pc,
 
 	input wire rx,
 	output wire tx,
@@ -53,7 +54,7 @@ always @(posedge clk or negedge rst_n) begin
 	end else if(state == 0) begin	
 		if(wr_cmd) begin
 			`ifdef dbgsclr
-			$display("---uart-write h%1x %x", apbs_phartid, apbs_pwdata, $time);
+			$display("---uart-write h%1x pc=%x %x", apbs_phartid, apbs_pwdata, apbs_pd_pc, $time);
 			`endif
 				if(w_tx_ready) begin
 					r_uart_data <= apbs_pwdata[7:0];

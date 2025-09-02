@@ -497,6 +497,7 @@ uart_mini uart_u (
 	.apbs_pready  (uart_pready),
 	.apbs_pslverr (uart_pslverr),
 	.apbs_phartid (uart_phartid),
+	.apbs_pd_pc   (uart_pd_pc),
 	.rx           (uart_rx),
 	.tx           (uart_tx),
 	.cts          (1'b0),
