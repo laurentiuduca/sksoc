@@ -33,7 +33,7 @@ module ahbl_to_apb #(
 	input wire  [W_DATA-1:0]  apbm_prdata,
 	input wire                apbm_pslverr,
 	output reg  [W_DATA-1:0]  apbm_phartid,
-	output wire [W_PADDR-1:0] apbm_pd_pc
+	output wire [W_HADDR-1:0] apbm_pd_pc
 );
 
 // Transfer state machine

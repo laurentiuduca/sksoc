@@ -405,8 +405,14 @@ apb_splitter #(
 	.apbm_prdata  ({sd_prdata  , uart_prdata , timer_prdata}),
 	.apbm_pslverr ({sd_pslverr , uart_pslverr, timer_pslverr}),
 	.apbm_hartid  ({sd_phartid , uart_phartid, timer_phartid}),
-	.apbm_pd_pc   ({sd_pd_pc , uart_pd_pc, timer_pd_pc})
+	.apbm_pd_pc   ({sd_pd_pc   , uart_pd_pc  , timer_pd_pc})
 );
+
+`ifdef laur0
+always @(posedge clk)
+	if({sd_pd_pc , uart_pd_pc, timer_pd_pc})
+		$display("{sd_pd_pc , uart_pd_pc, timer_pd_pc}=%x %d", {sd_pd_pc , uart_pd_pc, timer_pd_pc}, $time);
+`endif
 
 // ----------------------------------------------------------------------------
 // Memory and peripherals
