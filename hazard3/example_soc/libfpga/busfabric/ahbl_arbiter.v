@@ -163,8 +163,8 @@ always @ (*) begin
 end
 
 wire canchange;
-assign canchange = dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && 
-			     (src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]);
+assign canchange = 0; //dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && !src_hwrite[active];
+			     //(src_d_pc[W_ADDR*active +: W_ADDR] + 4 == (src_haddr[W_ADDR*active +: W_ADDR]));
 
 onehot_priority #(
 	.W_INPUT(N_PORTS)
