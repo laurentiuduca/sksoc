@@ -162,18 +162,24 @@ always @ (*) begin
 	end
 end
 
+wire canchange;
+assign canchange = dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && 
+			     (src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]);
+
 onehot_priority #(
 	.W_INPUT(N_PORTS)
 ) arb_priority (
 	.clk(clk),
 	.rst_n(rst_n),
-	.canchange(1'b0),
+	.canchange(canchange),
 	.in(mast_req_a),
 	.out(mast_gnt_a)
 );
 
 // AHB State Machine
 
+reg [W_ADDR-1:0] dd_pc;
+reg [N_PORTS-1:0] active;
 reg [N_PORTS-1:0] mast_gnt_d;
 wire dst_hready1, fake;
 assign dst_hready1 = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
@@ -190,6 +196,8 @@ wire [N_PORTS-1:0] buf_wen = mast_aphase_ends & ~(mast_gnt_a & {N_PORTS{dst_hrea
 
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
+		dd_pc <= 0;
+		active <= 0;
 		mast_gnt_d <= {N_PORTS{1'b0}};
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			buf_valid[i]     <= 1'b0;
@@ -210,6 +218,16 @@ always @ (posedge clk or negedge rst_n) begin
 		if (dst_hready) begin
 			mast_gnt_d <= mast_gnt_a;
 			buf_valid <= buf_valid & ~mast_gnt_a;
+			if(!mast_gnt_a) begin
+				active <= 0;
+                                dd_pc <= 0;
+			end else
+			for (i = 0; i < N_PORTS; i = i + 1) begin
+				if(mast_gnt_a[i]) begin
+					active <= i;
+					dd_pc <= actual_d_pc[i];
+				end
+			end
 		end else if (fake)
 			mast_gnt_d <= {N_PORTS{1'b1}};
 		for (i = 0; i < N_PORTS; i = i + 1) begin

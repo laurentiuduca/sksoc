@@ -38,10 +38,12 @@ module onehot_priority #(
 integer i;
 reg deny;
 reg [W_INPUT-1:0] osel, sel;
+wire selchg;
+assign selchg = (sel > 1 && !canchange) || (sel <= 1 && canchange);
 
 always @ (*) begin
 	deny = 1'b0;
-	if(sel > 1) begin //if (HIGHEST_WINS) begin
+	if(selchg) begin //if (HIGHEST_WINS) begin
 		for (i = W_INPUT - 1; i >= 0; i = i - 1) begin
                         out[i] = in[i] && !deny;
                         deny = deny || in[i];
@@ -67,7 +69,8 @@ always @(posedge clk or negedge rst_n) begin
 			gntcnt <= 0;
 		osel <= sel;
 		/* verilator lint_off CMPCONST */
-		sel <= canchange ? (sel > 1 ? 1 : 2) : out; 
+		//sel <= canchange ? (sel > 1 ? 1 : 2) : out;
+	        sel <= out;	
 		/* verilator lint_on CMPCONST */
 	end
 end
