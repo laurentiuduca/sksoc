@@ -164,8 +164,8 @@ end
 
 wire canchange;
 assign canchange = //dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && !src_hwrite[active];
-			     (src_d_pc[W_ADDR*active +: W_ADDR] + 4) == src_haddr[W_ADDR*active +: W_ADDR] || 
-			     (src_d_pc[W_ADDR*active +: W_ADDR])     == src_haddr[W_ADDR*active +: W_ADDR]; 
+			SLAVE_ID != 0 ? 0 :
+			     (src_d_pc[W_ADDR*active +: W_ADDR]) == src_haddr[W_ADDR*active +: W_ADDR];// || 
 `ifdef laur0
 always @ (posedge clk or negedge rst_n) begin
 	if(canchange)
