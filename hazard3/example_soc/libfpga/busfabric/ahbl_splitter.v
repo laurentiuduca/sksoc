@@ -220,13 +220,16 @@ always @(posedge clk) begin
                 osrc_haddr <= src_haddr;
                 odst_hrdata[W_DATA-1:0] <= dst_hrdata[W_DATA-1:0];
 		osrc_htrans <= src_htrans;
-		if(j < 20 || (src_d_pc >= pc_trace_start && src_d_pc <= pc_trace_stop && li < 20))
-                $display("h%1x osrc_d_pc=%x hartid=%1x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=,%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x slave_sel_a,d=%x,%x src_hready_resp=%1x,ok=%1x %08d", 
-			src_hartid, $past(src_d_pc), src_hartid, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, slave_sel_a, slave_sel_d, src_hready_resp, src_hexokay, $time);
+		if(j < 20 || (src_d_pc >= pc_trace_start && src_d_pc <= pc_trace_stop && li < 20)) 
+                $display("h%1x src_d_pc=%x hartid=%1x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=,%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x slave_sel_a,d=%x,%x src_hready_resp=%1x,ok=%1x %08d", 
+			src_hartid, src_d_pc, src_hartid, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, slave_sel_a, slave_sel_d, src_hready_resp, src_hexokay, $time);
 		if(!closed && src_haddr > 0)
 			$fwrite(f, "pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x src_hrdata=%x src_hwrite=%x,o=%x src_hwdata=%x src_hready_resp=%x\n",
                         src_d_pc, src_haddr, osrc_haddr, src_hready, osrc_hready, src_hrdata, src_hwrite, osrc_hwrite, (src_hwrite|osrc_hwrite)?src_hwdata:0, src_hready_resp);
         end
+		if(($time > 7690 && $time < 8000 && src_hartid==1))
+                $display("h%1x src_d_pc=%x hartid=%1x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=,%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x slave_sel_a,d=%x,%x src_hready_resp=%1x,ok=%1x %08d",
+                        src_hartid, src_d_pc, src_hartid, src_haddr, osrc_haddr, src_hready, osrc_hready, dst_hrdata[W_DATA-1:0], src_hrdata, src_hwrite, osrc_hwrite, src_hwdata, src_hexcl, slave_sel_a, slave_sel_d, src_hready_resp, src_hexokay, $time);
 		if(timecnt > 40000000) begin
                         closed <= 1;
                         $fclose(f);

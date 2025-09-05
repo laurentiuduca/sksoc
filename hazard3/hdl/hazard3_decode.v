@@ -190,7 +190,9 @@ assign debug_dpc_rdata = pc;
 reg [31:0] li=0, lj=0;
 reg [31:0] oldpc=~0;
 always@(posedge clk) begin
-	if((li < 20 || (pc >= pc_trace_start && pc <= pc_trace_stop && lj < 10)) && oldpc != pc) begin
+	if(((li < 20 || (pc >= pc_trace_start && pc <= pc_trace_stop && lj < 10)) && oldpc != pc) ||
+		($time > 2000 && $time < 7800 && MHARTID_VAL==1 && oldpc != pc))
+	begin
 		oldpc <= pc;
 		li <= li + 1;
 		if(pc >= pc_trace_start && pc <= pc_trace_stop)

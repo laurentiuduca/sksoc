@@ -3,7 +3,7 @@
 
 `define NCORES 2
 
-//`define DUMP_VCD
+`define DUMP_VCD
 //`define dbgsclr
 //`define dbgdhrystone
 //`define dbghexcl
