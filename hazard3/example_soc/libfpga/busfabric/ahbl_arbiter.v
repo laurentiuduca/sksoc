@@ -165,7 +165,10 @@ end
 wire canchange;
 assign canchange = //dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && !src_hwrite[active];
 			SLAVE_ID != 0 ? 0 :
-			     (src_d_pc[W_ADDR*active +: W_ADDR]) == src_haddr[W_ADDR*active +: W_ADDR];// || 
+			     dst_hready_resp && !src_hwrite[active] && src_hready_resp && //[active] && (mast_gnt_d != {N_PORTS{1'b1}}) &&
+			     ((src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]) || 
+			     ((src_d_pc[W_ADDR*active +: W_ADDR] + 4) == src_haddr[W_ADDR*active +: W_ADDR])); 
+			     //((src_d_pc[W_ADDR*active +: W_ADDR] + 8) == src_haddr[W_ADDR*active +: W_ADDR]));
 `ifdef laur0
 always @ (posedge clk or negedge rst_n) begin
 	if(canchange)
@@ -235,8 +238,10 @@ always @ (posedge clk or negedge rst_n) begin
 					dd_pc <= actual_d_pc[i];
 				end
 			end
-		end else if (fake)
+		end else if (fake) begin
 			mast_gnt_d <= {N_PORTS{1'b1}};
+			//$display("fake");
+		end
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			if (buf_wen[i]) begin
 				`ifdef dbgsclr
