@@ -229,7 +229,7 @@ always @ (posedge clk or negedge rst_n) begin
 			mast_gnt_d <= mast_gnt_a;
 			buf_valid <= buf_valid & ~mast_gnt_a;
 			if(!mast_gnt_a) begin
-				active <= 0;
+				//active <= 0;
                                 dd_pc <= 0;
 			end else
 			for (i = 0; i < N_PORTS; i = i + 1) begin
