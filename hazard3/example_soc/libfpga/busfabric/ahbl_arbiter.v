@@ -165,7 +165,7 @@ end
 wire canchange;
 assign canchange = //dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && !src_hwrite[active];
 			SLAVE_ID != 0 ? 0 :
-			     dst_hready_resp && !src_hwrite[active] && src_hready_resp && //[active] && (mast_gnt_d != {N_PORTS{1'b1}}) &&
+			     dst_hready_resp && !src_hwrite[active] && src_hready_resp && //[active] &&
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]) || 
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] + 4) == src_haddr[W_ADDR*active +: W_ADDR])); 
 			     //((src_d_pc[W_ADDR*active +: W_ADDR] + 8) == src_haddr[W_ADDR*active +: W_ADDR]));

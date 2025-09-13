@@ -70,7 +70,7 @@ always @(posedge clk or negedge rst_n) begin
 		osel <= sel;
 		/* verilator lint_off CMPCONST */
 		//sel <= canchange ? (sel > 1 ? 1 : 2) : out;
-	        sel <= out;	
+	        sel <= out;
 		/* verilator lint_on CMPCONST */
 	end
 end
