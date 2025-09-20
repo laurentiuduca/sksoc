@@ -154,18 +154,17 @@ end
 
 reg  [N_PORTS-1:0] mast_req_a;
 wire [N_PORTS-1:0] mast_gnt_a;
-
 always @ (*) begin
 	for (i = 0; i < N_PORTS; i = i + 1) begin
 		// HTRANS == 2'b10, 2'b11 when active
-		mast_req_a[i] = actual_htrans[i * 2 + 1] && CONN_MASK[i];
+		mast_req_a[i] = actual_htrans[i * 2 + 1] && CONN_MASK[i] && 
+				!(!mast_gnt_d[i] && !src_hready[i] && !split_slave_sel_d[i]);
 	end
 end
 
 wire canchange;
-assign canchange = //dd_pc && (dd_pc != src_d_pc[W_ADDR*active +: W_ADDR]) && !src_hwrite[active];
-			SLAVE_ID != 0 ? 0 :
-			     dst_hready_resp && !src_hwrite[active] && src_hready_resp && //[active] &&
+assign canchange = SLAVE_ID != 0 ? 0 :
+			     dst_hready_resp && !src_hwrite[active] && src_hready_resp &&
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]) || 
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] + 4) == src_haddr[W_ADDR*active +: W_ADDR])); 
 			     //((src_d_pc[W_ADDR*active +: W_ADDR] + 8) == src_haddr[W_ADDR*active +: W_ADDR]));
@@ -192,13 +191,8 @@ reg [W_ADDR-1:0] dd_pc;
 reg [N_PORTS-1:0] active;
 reg [N_PORTS-1:0] mast_gnt_d;
 wire dst_hready1, fake;
-assign dst_hready1 = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
+assign dst_hready = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
 				 |(src_hready & mast_gnt_a); //1'b1;
-assign fake = ((mast_gnt_d != mast_gnt_a) &&  !(src_hready & mast_gnt_a) &&
-                        !(split_slave_sel_d & mast_gnt_a) && mast_gnt_a && split_slave_sel_d);
-assign dst_hready = 	// if h0 is waiting for memory op (and its next inst is to print on i/o)
-			// and h1 just finishes printing then avoid h0 to have two operations simultaneously
-			fake ? 0 : dst_hready1;
 
 // see spliter
 wire [N_PORTS-1:0] mast_aphase_ends = mast_req_a & src_hready;
@@ -238,14 +232,11 @@ always @ (posedge clk or negedge rst_n) begin
 					dd_pc <= actual_d_pc[i];
 				end
 			end
-		end else if (fake) begin
-			mast_gnt_d <= {N_PORTS{1'b1}};
-			//$display("fake");
-		end
+		end 
 		for (i = 0; i < N_PORTS; i = i + 1) begin
 			if (buf_wen[i]) begin
 				`ifdef dbgsclr
-				$display("i=%1x buf wen %d", i, $time);
+				//$display("i=%1x buf wen %d", i, $time);
 				`endif
 				buf_valid    [i] <= 1'b1;
 				buf_htrans   [i] <= src_htrans   [i * 2 +: 2];

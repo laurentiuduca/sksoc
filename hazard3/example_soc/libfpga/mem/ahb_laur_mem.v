@@ -152,7 +152,7 @@ task check_new_req;
 						`endif
 						state <= 30;
 						r_ahbls_hexokay <= 0;
-						$finish;
+						//$finish;
 					end
 				end else begin
 					r_ahbls_hexokay <= 0;

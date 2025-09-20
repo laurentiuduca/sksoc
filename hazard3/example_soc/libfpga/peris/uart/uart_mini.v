@@ -105,9 +105,9 @@ module UartTx(CLK, RST_X, DATA, WE, TXD, READY);
             if( WE )begin
 		`ifdef SIM_MODE
                 $write("%c", DATA);
-                `ifdef dbgsclr
+                //`ifdef dbgsclr
                 $fflush();
-                `endif
+                //`endif
 		`endif
                 READY <= 1'b0;
                 cmd   <= {DATA, 1'b0};
