@@ -101,7 +101,6 @@ always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		apbm_paddr <= {W_PADDR{1'b0}};
 		apbm_pwdata <= {W_DATA{1'b0}};
-		apbm_phartid <= 0;
 	end else begin
 		if (ahbls_htrans[1] && ahbls_hready)
 			apbm_paddr <= ahbls_haddr[W_PADDR-1:0];
@@ -125,8 +124,6 @@ assign ahbls_hready_resp =
 assign ahbls_hresp =
 	apb_state == S_ERR0 ||
 	apb_state == S_ERR1;
-
-//assign apbm_phartid=ahbls_hartid;
 
 always @ (posedge clk or negedge rst_n)
 	if (!rst_n)
