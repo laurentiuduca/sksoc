@@ -158,7 +158,7 @@ always @ (*) begin
 	for (i = 0; i < N_PORTS; i = i + 1) begin
 		// HTRANS == 2'b10, 2'b11 when active
 		mast_req_a[i] = actual_htrans[i * 2 + 1] && CONN_MASK[i] && 
-				!(!mast_gnt_d[i] && !src_hready[i] && !split_slave_sel_d[i]);
+				(mast_gnt_d[i] || src_hready[i] || split_slave_sel_d[i]);
 	end
 end
 
@@ -168,12 +168,6 @@ assign canchange = SLAVE_ID != 0 ? 0 :
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]) || 
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] + 4) == src_haddr[W_ADDR*active +: W_ADDR])); 
 			     //((src_d_pc[W_ADDR*active +: W_ADDR] + 8) == src_haddr[W_ADDR*active +: W_ADDR]));
-`ifdef laur0
-always @ (posedge clk or negedge rst_n) begin
-	if(canchange)
-		$display("canchange");	
-end
-`endif
 
 onehot_priority #(
 	.W_INPUT(N_PORTS)
@@ -190,7 +184,6 @@ onehot_priority #(
 reg [W_ADDR-1:0] dd_pc;
 reg [N_PORTS-1:0] active;
 reg [N_PORTS-1:0] mast_gnt_d;
-wire dst_hready1, fake;
 assign dst_hready = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
 				 |(src_hready & mast_gnt_a); //1'b1;
 
