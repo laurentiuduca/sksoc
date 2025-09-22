@@ -32,7 +32,7 @@
 #include <string.h>
 
 #include <debug.h>
-
+#include <nuttx/semaphore.h>
 /****************************************************************************
  * Pre-processor Definitions
  ****************************************************************************/
@@ -40,6 +40,14 @@
 #define HOG_MSEC       10 // 1000
 #define YIELD_MSEC     10 // 100
 #define IMPOSSIBLE_CPU -1
+
+sem_t nsem;
+#define dbginfo(str, ...) \
+	do { \
+		nxsem_wait(&nsem); \
+		_info(str, ##__VA_ARGS__); \
+		nxsem_post(&nsem); \
+	} while(0);
 
 /****************************************************************************
  * Private Data
@@ -64,7 +72,7 @@ static volatile int g_thread_cpu[CONFIG_TESTING_SMP_NBARRIER_THREADS + 1];
 static void show_cpu(FAR const char *caller, int threadno)
 {
   g_thread_cpu[threadno] = sched_getcpu();
-  _info("%s[%d]: Running on CPU%d\n",
+  dbginfo("%s[%d]: Running on CPU%d\n",
          caller, threadno, g_thread_cpu[threadno]);
 }
 
@@ -75,7 +83,7 @@ static void show_cpu_conditional(FAR const char *caller, int threadno)
   if (cpu != g_thread_cpu[threadno])
     {
       g_thread_cpu[threadno] = cpu;
-      _info("%s[%d]: Now running on CPU%d\n", caller, threadno, cpu);
+      dbginfo("%s[%d]: Now running on CPU%d\n", caller, threadno, cpu);
     }
 }
 
@@ -143,7 +151,7 @@ static pthread_addr_t barrier_thread(pthread_addr_t parameter)
   int threadno  = (int)((intptr_t)parameter);
   int ret;
 
-  _info("Thread[%d]: Started\n",  threadno);
+  dbginfo("Thread[%d]: Started\n",  threadno);
   show_cpu("Thread", threadno);
 
   /* Hog some CPU time */
@@ -152,7 +160,7 @@ static pthread_addr_t barrier_thread(pthread_addr_t parameter)
 
   /* Wait at the barrier until all threads are synchronized. */
 
-  _info("Thread[%d]: Calling pthread_barrier_wait()\n",
+  dbginfo("Thread[%d]: Calling pthread_barrier_wait()\n",
          threadno);
   fflush(stdout);
   show_cpu_conditional("Thread", threadno);
@@ -160,18 +168,18 @@ static pthread_addr_t barrier_thread(pthread_addr_t parameter)
   ret = pthread_barrier_wait(&g_smp_barrier);
   if (ret == 0)
     {
-      _info("Thread[%d]: Back with ret=0 (I am not special)\n",
+      dbginfo("Thread[%d]: Back with ret=0 (I am not special)\n",
              threadno);
     }
   else if (ret == PTHREAD_BARRIER_SERIAL_THREAD)
     {
-      _info("Thread[%d]: Back with "
+      dbginfo("Thread[%d]: Back with "
              "ret=PTHREAD_BARRIER_SERIAL_THREAD (I AM SPECIAL)\n",
              threadno);
     }
   else
     {
-      _info("Thread[%d]: ERROR could not get semaphore value\n",
+      dbginfo("Thread[%d]: ERROR could not get semaphore value\n",
              threadno);
     }
 
@@ -184,7 +192,7 @@ static pthread_addr_t barrier_thread(pthread_addr_t parameter)
 
   /* Then exit */
 
-  _info("Thread[%d]: Done\n",  threadno);
+  dbginfo("Thread[%d]: Done\n",  threadno);
   fflush(stdout);
   show_cpu_conditional("Thread", threadno);
   return NULL;
@@ -208,8 +216,9 @@ int main(int argc, FAR char *argv[])
   int ret;
   int i;
 
-  _info("main\n");
   //while(1);
+
+  nxsem_init(&nsem, 0, 1);
 
   /* Initialize data */
 
@@ -226,14 +235,14 @@ int main(int argc, FAR char *argv[])
     }
 
   show_cpu("  Main", 0);
-  _info("  Main[0]: Initializing barrier\n");
+  dbginfo("  Main[0]: Initializing barrier\n");
 
   /* Create the barrier */
 
   ret = pthread_barrierattr_init(&barrierattr);
   if (ret != OK)
     {
-      _info("  Main[0]: pthread_barrierattr_init failed, ret=%d\n",
+      dbginfo("  Main[0]: pthread_barrierattr_init failed, ret=%d\n",
               ret);
 
       errcode = EXIT_FAILURE;
@@ -244,7 +253,7 @@ int main(int argc, FAR char *argv[])
                              CONFIG_TESTING_SMP_NBARRIER_THREADS);
   if (ret != OK)
     {
-      _info("  Main[0]: pthread_barrier_init failed, ret=%d\n",
+      dbginfo("  Main[0]: pthread_barrier_init failed, ret=%d\n",
              ret);
 
       errcode = EXIT_FAILURE;
@@ -252,12 +261,12 @@ int main(int argc, FAR char *argv[])
     }
 
   /* Start CONFIG_TESTING_SMP_NBARRIER_THREADS thread instances */
-  _info("Start CONFIG_TESTING_SMP_NBARRIER_THREADS thread instances");
+  dbginfo("Start CONFIG_TESTING_SMP_NBARRIER_THREADS thread instances");
 
   ret = pthread_attr_init(&attr);
   if (ret != OK)
     {
-      _info("  Main[0]: pthread_attr_init failed, ret=%d\n", ret);
+      dbginfo("  Main[0]: pthread_attr_init failed, ret=%d\n", ret);
 
       errcode = EXIT_FAILURE;
       goto errout_with_barrier;
@@ -269,16 +278,16 @@ int main(int argc, FAR char *argv[])
                            (pthread_addr_t)((uintptr_t)i + 1));
       if (ret != 0)
         {
-          _info("  Main[0]: Error in thread %d create, ret=%d\n",
+          dbginfo("  Main[0]: Error in thread %d create, ret=%d\n",
                   i + 1, ret);
-          _info("  Main[0]: Test aborted with waiting threads\n");
+          dbginfo("  Main[0]: Test aborted with waiting threads\n");
 
           errcode = EXIT_FAILURE;
           break;
         }
       else
         {
-          _info("  Main[0]: Thread %d created\n", i + 1);
+          dbginfo("  Main[0]: Thread %d created\n", i + 1);
         }
 
       show_cpu_conditional("  Main", 0);
@@ -288,7 +297,7 @@ int main(int argc, FAR char *argv[])
   show_cpu_conditional("  Main", 0);
 
   /* Wait for all thread instances to complete */
-  _info("Wait for all thread instances to complete");
+  dbginfo("Wait for all thread instances to complete");
 
   for (i = 0; i < CONFIG_TESTING_SMP_NBARRIER_THREADS; i++)
     {
@@ -299,17 +308,19 @@ int main(int argc, FAR char *argv[])
 
           if (ret != 0)
             {
-              _info("  Main[0]: Error in thread %d join, ret=%d\n",
+              dbginfo("  Main[0]: Error in thread %d join, ret=%d\n",
                      i + 1, ret);
               errcode = EXIT_FAILURE;
             }
           else
             {
-              _info("  Main[0]: Thread %d completed with result=%p\n",
+              dbginfo("  Main[0]: Thread %d completed with result=%p\n",
                      i + 1, result);
             }
         }
     }
+
+  nxsem_destroy(&nsem);
 
   /* Destroy the barrier */
 
@@ -317,19 +328,20 @@ errout_with_barrier:
   ret = pthread_barrier_destroy(&g_smp_barrier);
   if (ret != OK)
     {
-      _info("  Main[0]: pthread_barrier_destroy failed, ret=%d\n", ret);
+      dbginfo("  Main[0]: pthread_barrier_destroy failed, ret=%d\n", ret);
     }
 
 errout_with_attr:
   ret = pthread_barrierattr_destroy(&barrierattr);
   if (ret != OK)
     {
-      _info("  Main[0]: pthread_barrierattr_destroy failed, ret=%d\n",
+      dbginfo("  Main[0]: pthread_barrierattr_destroy failed, ret=%d\n",
              ret);
     }
 
 errout:
   fflush(stdout);
   show_cpu_conditional("  Main", 0);
+
   return errcode;
 }
