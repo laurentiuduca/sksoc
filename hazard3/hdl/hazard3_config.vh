@@ -3,6 +3,8 @@
 |                     SPDX-License-Identifier: Apache-2.0                     |
 \*****************************************************************************/
 
+//`define dbgstart
+
 // To configure Hazard3 you can either edit this file, or set parameters on
 // your top-level instantiation, it's up to you. These parameters are all
 // plumbed through Hazard3's internal hierarchy to the appropriate places.

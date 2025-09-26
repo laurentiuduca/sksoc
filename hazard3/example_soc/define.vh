@@ -4,6 +4,7 @@
 `define NCORES 2
 
 //`define DUMP_VCD
+// dbgstart may be defined in hazard3_config.vh, not here
 //`define dbgsclr
 //`define dbgdhrystone
 //`define dbghexcl

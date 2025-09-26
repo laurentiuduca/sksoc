@@ -216,8 +216,7 @@ int main(int argc, FAR char *argv[])
   int ret;
   int i;
 
-  //while(1);
-
+  // do not print before this
   nxsem_init(&nsem, 0, 1);
 
   /* Initialize data */

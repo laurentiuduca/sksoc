@@ -65,15 +65,19 @@ always @ (posedge clk or negedge rst_n) begin
 		tcnt <= 0;
 	end else begin
 	    if (bus_write && paddr == ADDR_IPI && !state) begin
-		// laur - nuttx sends ipi at this addr
+		// nuttx sends ipi at this addr
+		`ifdef dbgstart
 		$display("\t h%1x pc=%x iowrite && paddr == ADDR_IPI %x && pwdata=%x soft_irq was %x t%d", phartid, pd_pc, paddr, pwdata, soft_irq, $time);
+		`endif
 		if(pwdata == 0)
 			soft_irq[0] <= 0;
 		else
 			soft_irq[0] <= 1;
 	    end else if (bus_write && paddr == (ADDR_IPI+4) && !state) begin
                 // laur - nuttx sends ipi at this addr
+		`ifdef dbgstart
 		$display("\t h%1x pc=%x iowrite && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d", phartid, pd_pc, paddr, pwdata, soft_irq, $time);
+		`endif
                 if(pwdata == 0)
                         soft_irq[1] <= 0;
                 else

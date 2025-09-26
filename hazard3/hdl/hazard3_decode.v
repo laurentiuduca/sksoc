@@ -195,7 +195,9 @@ always@(posedge clk) begin
 		li <= li + 1;
 		if(pc >= pc_trace_start && pc <= pc_trace_stop)
 			lj <= lj + 1;
+		`ifdef dbgstart
 		$display("  d_pc=%x hartid=%1x d_instr_is_32bit=%1x d_instr=%x fd_cir=%x time=%8d", d_pc, MHARTID_VAL, d_instr_is_32bit, d_instr, fd_cir, $time);
+		`endif
 		//$display("pc=%x d_instr_is_32bit=%1x d_instr=%x fd_cir=%x", pc, d_instr_is_32bit, d_instr, fd_cir);
 	end
 end

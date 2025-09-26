@@ -180,7 +180,7 @@ hazard3_frontend #(
 );
 
 wire [W_EXCEPT-1:0] x_except;
-// laur
+`ifdef dbgstart 
 integer j=0;
 reg orst_n=1;
 reg [W_ADDR-1:0] obus_haddr_i=0, obus_haddr_d=0;
@@ -196,7 +196,7 @@ always @(posedge clk) begin
 		$display("%d d_pc=%x bus_haddr_i=%x bus_haddr_d=%x x_except=%x fd_cir=%x", $time, d_pc, bus_haddr_i, bus_haddr_d, x_except, fd_cir);
 	end
 end
-
+`endif
 
 // ----------------------------------------------------------------------------
 // Pipe Stage X (Decode Logic)

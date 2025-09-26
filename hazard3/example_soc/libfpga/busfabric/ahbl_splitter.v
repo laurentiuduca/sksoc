@@ -183,6 +183,7 @@ assign src_hresp = decode_err_d || |(slave_sel_d & dst_hresp);
 assign src_hexokay = |(slave_sel_d & dst_hexokay);
 
 `ifdef SIM_MODE
+`ifdef dbgstart
 integer f;
 reg opened=0, closed=0;
 reg [31:0] timecnt=0;
@@ -245,6 +246,7 @@ always @(posedge clk) begin
             end
     end
 end
+`endif
 `endif
 
 endmodule

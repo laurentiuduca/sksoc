@@ -167,11 +167,13 @@ task check_new_req;
 endtask
 task check_debug;
 			`ifdef SIM_MODE
+			`ifdef dbgstart
 			if((ahb_read_aphase || ahb_write_aphase) && k < 10) begin
                                 $display("d_pc=%x hartid=%1x ahb_read_aphase=%x || ahb_write_aphase=%x state=%d ahbls_haddr=%x time %8d",
                                         d_pc, hartid, ahb_read_aphase, ahb_write_aphase, state, ahbls_haddr, $time);
                                 k <= k+1;
                         end
+			`endif
 			`endif
 endtask
 
