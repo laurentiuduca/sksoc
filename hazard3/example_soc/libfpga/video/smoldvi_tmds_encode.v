@@ -64,61 +64,57 @@
 // two cycles (it's not registered here)
 
 module smoldvi_tmds_encode (
-	input  wire       clk,
-	input  wire       rst_n,
+    input wire clk,
+    input wire rst_n,
 
-	input  wire [1:0] c,
-	input  wire [7:0] d,
-	input  wire       den,
+    input wire [1:0] c,
+    input wire [7:0] d,
+    input wire       den,
 
-	output reg  [9:0] q
+    output reg [9:0] q
 );
 
-reg [2:0] popcount;
-wire low_balance = !popcount[2];
+    reg [2:0] popcount;
+    wire low_balance = !popcount[2];
 
-always @ (*) begin: count_d_pop
-	integer i;
-	popcount = 3'd0;
-	// Ignore d[0] as it's implicitly masked
-	for (i = 1; i < 8; i = i + 1)
-		popcount = popcount + {2'h0, d[i]};
-end
+    always @(*) begin : count_d_pop
+        integer i;
+        popcount = 3'd0;
+        // Ignore d[0] as it's implicitly masked
+        for (i = 1; i < 8; i = i + 1) popcount = popcount + {2'h0, d[i]};
+    end
 
-reg [7:0] d_reduced;
-reg symbol_is_second;
+    reg [7:0] d_reduced;
+    reg symbol_is_second;
 
-always @ (*) begin: reduce_d
-	integer i;
-	d_reduced = 8'h0;
-	for (i = 1; i < 8; i = i + 1)
-		d_reduced[i] = d_reduced[i - 1] ^ d[i];
-end
+    always @(*) begin : reduce_d
+        integer i;
+        d_reduced = 8'h0;
+        for (i = 1; i < 8; i = i + 1) d_reduced[i] = d_reduced[i-1] ^ d[i];
+    end
 
-wire [9:0] pixel_q = {
-	!low_balance,
-	low_balance,
-	d_reduced ^ (8'h55 & {8{!low_balance}}) ^ {8{symbol_is_second}}
-};
+    wire [9:0] pixel_q = {
+        !low_balance, low_balance, d_reduced ^ (8'h55 & {8{!low_balance}}) ^ {8{symbol_is_second}}
+    };
 
-always @ (posedge clk or negedge rst_n) begin
-	if (!rst_n) begin
-		symbol_is_second <= 1'b0;
-		q <= 10'd0;
-	end else begin
-		if (den) begin
-			symbol_is_second <= !symbol_is_second;
-			q <= pixel_q;
-		end else begin
-			symbol_is_second <= 1'b0;
-			case (c)
-				2'b00: q <= 10'b1101010100;
-				2'b01: q <= 10'b0010101011;
-				2'b10: q <= 10'b0101010100;
-				2'b11: q <= 10'b1010101011;
-			endcase
-		end
-	end
-end
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            symbol_is_second <= 1'b0;
+            q <= 10'd0;
+        end else begin
+            if (den) begin
+                symbol_is_second <= !symbol_is_second;
+                q <= pixel_q;
+            end else begin
+                symbol_is_second <= 1'b0;
+                case (c)
+                    2'b00: q <= 10'b1101010100;
+                    2'b01: q <= 10'b0010101011;
+                    2'b10: q <= 10'b0101010100;
+                    2'b11: q <= 10'b1010101011;
+                endcase
+            end
+        end
+    end
 
 endmodule

@@ -2,16 +2,15 @@
 // diamond 3.8-3.9 is untested
 // diamond 3.10 or higher is likely to abort with error about unable to use feedback signal
 // cause of this could be from wrong CPHASE/FPHASE parameters
-module pll_25_40
-(
-    input clkin, // 25 MHz, 0 deg
-    output clkout0, // 40 MHz, 0 deg
+module pll_25_40 (
+    input  clkin,    // 25 MHz, 0 deg
+    output clkout0,  // 40 MHz, 0 deg
     output locked
 );
-(* FREQUENCY_PIN_CLKI="25" *)
+    (* FREQUENCY_PIN_CLKI="25" *)
 (* FREQUENCY_PIN_CLKOP="40" *)
 (* ICP_CURRENT="12" *) (* LPF_RESISTOR="8" *) (* MFG_ENABLE_FILTEROPAMP="1" *) (* MFG_GMCREF_SEL="2" *)
-EHXPLLL #(
+    EHXPLLL #(
         .PLLRST_ENA("DISABLED"),
         .INTFB_WAKE("DISABLED"),
         .STDBY_ENABLE("DISABLED"),
@@ -42,5 +41,5 @@ EHXPLLL #(
         .PLLWAKESYNC(1'b0),
         .ENCLKOP(1'b0),
         .LOCK(locked)
-	);
+    );
 endmodule

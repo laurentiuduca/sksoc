@@ -23,42 +23,42 @@
 // pseudodifferential pixel clock using DDR outputs.
 
 module dvi_clock_driver (
-	input  wire       clk_x5,
-	input  wire       rst_n_x5,
+    input wire clk_x5,
+    input wire rst_n_x5,
 
-	output wire       qp,
-	output wire       qn
+    output wire qp,
+    output wire qn
 );
 
-reg [9:0] ring_ctr;
+    reg [9:0] ring_ctr;
 
-always @ (posedge clk_x5 or negedge rst_n_x5) begin
-	if (!rst_n_x5) begin
-		ring_ctr <= 10'b11111_00000;
-	end else begin
-		ring_ctr <= {ring_ctr[1:0], ring_ctr[9:2]};
-	end
-end
+    always @(posedge clk_x5 or negedge rst_n_x5) begin
+        if (!rst_n_x5) begin
+            ring_ctr <= 10'b11111_00000;
+        end else begin
+            ring_ctr <= {ring_ctr[1:0], ring_ctr[9:2]};
+        end
+    end
 
 
-ddr_out ddrp (
-	.clk    (clk_x5),
-	.rst_n  (rst_n_x5),
+    ddr_out ddrp (
+        .clk  (clk_x5),
+        .rst_n(rst_n_x5),
 
-	.d_rise (ring_ctr[0]),
-	.d_fall (ring_ctr[1]),
-	.e      (1'b1),
-	.q      (qp)
-);
+        .d_rise(ring_ctr[0]),
+        .d_fall(ring_ctr[1]),
+        .e     (1'b1),
+        .q     (qp)
+    );
 
-ddr_out ddrn (
-	.clk    (clk_x5),
-	.rst_n  (rst_n_x5),
+    ddr_out ddrn (
+        .clk  (clk_x5),
+        .rst_n(rst_n_x5),
 
-	.d_rise (ring_ctr[5]),
-	.d_fall (ring_ctr[6]),
-	.e      (1'b1),
-	.q      (qn)
-);
+        .d_rise(ring_ctr[5]),
+        .d_fall(ring_ctr[6]),
+        .e     (1'b1),
+        .q     (qn)
+    );
 
 endmodule

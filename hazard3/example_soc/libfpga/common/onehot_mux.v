@@ -20,25 +20,25 @@
 // The selector must be one-hot, else the result is meaningless.
 
 module onehot_mux #(
-	parameter N_INPUTS = 2,
-	parameter W_INPUT = 32
+    parameter N_INPUTS = 2,
+    parameter W_INPUT  = 32
 ) (
-	input wire  [N_INPUTS*W_INPUT-1:0] in,
-	input wire  [N_INPUTS-1:0]         sel,
-	output wire [W_INPUT-1:0]          out
+    input  wire [N_INPUTS*W_INPUT-1:0] in,
+    input  wire [        N_INPUTS-1:0] sel,
+    output wire [         W_INPUT-1:0] out
 );
 
-integer i;
+    integer i;
 
-reg [W_INPUT-1:0] mux_accum;
+    reg [W_INPUT-1:0] mux_accum;
 
-always @ (*) begin
-	mux_accum = {W_INPUT{1'b0}};
-	for (i = 0; i < N_INPUTS; i = i + 1) begin
-		mux_accum = mux_accum | (in[i * W_INPUT +: W_INPUT] & {W_INPUT{sel[i]}});
-	end
-end
+    always @(*) begin
+        mux_accum = {W_INPUT{1'b0}};
+        for (i = 0; i < N_INPUTS; i = i + 1) begin
+            mux_accum = mux_accum | (in[i*W_INPUT+:W_INPUT] & {W_INPUT{sel[i]}});
+        end
+    end
 
-assign out = mux_accum;
+    assign out = mux_accum;
 
 endmodule

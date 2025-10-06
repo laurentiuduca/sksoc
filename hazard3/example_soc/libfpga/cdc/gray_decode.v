@@ -15,18 +15,17 @@
  *                                                                    *
  *********************************************************************/
 
- module gray_decode #(
- 	parameter N = 4
- ) (
- 	input  wire [N-1:0] i,
- 	output reg  [N-1:0] o
- );
+module gray_decode #(
+    parameter N = 4
+) (
+    input  wire [N-1:0] i,
+    output reg  [N-1:0] o
+);
 
-always @ (*) begin: decode
-	integer j;
-	o[N-1] = i[N-1];
-	for (j = N - 2; j >= 0; j = j - 1)
-		o[j] = i[j] ^ o[j + 1];
-end
+    always @(*) begin : decode
+        integer j;
+        o[N-1] = i[N-1];
+        for (j = N - 2; j >= 0; j = j - 1) o[j] = i[j] ^ o[j+1];
+    end
 
 endmodule

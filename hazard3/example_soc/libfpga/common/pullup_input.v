@@ -16,43 +16,43 @@
  *********************************************************************/
 
 module pullup_input #(
-	parameter INVERT = 1
+    parameter INVERT = 1
 ) (
-	output wire in,
-	inout wire pad
+    output wire in,
+    inout  wire pad
 );
 
 `ifdef FPGA_ICE40
 
-wire padin;
-assign in = padin ^ INVERT;
+    wire padin;
+    assign in = padin ^ INVERT;
 
-SB_IO #(
-	.PIN_TYPE(6'b00_00_01),
-	//           |  |  |
-	//           |  |  \----- Unregistered input
-	//           |  \-------- Registered output (don't care)
-	//           \----------- Permanent output disable
-	.PULLUP(1'b1)
-) input_buffer (
-	.PACKAGE_PIN (pad),
-	.D_IN_0      (padin)
-);
+    SB_IO #(
+        .PIN_TYPE(6'b00_00_01),
+        //           |  |  |
+        //           |  |  \----- Unregistered input
+        //           |  \-------- Registered output (don't care)
+        //           \----------- Permanent output disable
+        .PULLUP  (1'b1)
+    ) input_buffer (
+        .PACKAGE_PIN(pad),
+        .D_IN_0     (padin)
+    );
 
 `elsif FPGA_ECP5
 
-wire padin;
-assign in = padin ^ INVERT;
+    wire padin;
+    assign in = padin ^ INVERT;
 
-IBPU input_buffer(
-	.I (pad),
-	.O (padin)
-);
+    IBPU input_buffer (
+        .I(pad),
+        .O(padin)
+    );
 
 `else
 
-assign (pull0, pull1) pad = 1'b1;
-assign in = pad ^ INVERT;
+    assign (pull0, pull1) pad = 1'b1;
+    assign in = pad ^ INVERT;
 
 `endif
 

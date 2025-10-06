@@ -20,23 +20,21 @@
 // The implementation provided here is... ok... but you should use
 // this wrapper to inject your own FPGA- or library-specific cells.
 
- module sync_1bit #(
-	parameter N_STAGES = 2 // Should be >=2
+module sync_1bit #(
+    parameter N_STAGES = 2  // Should be >=2
 ) (
-	input wire clk,
-	input wire rst_n,
-	input wire i,
-	output wire o
+    input  wire clk,
+    input  wire rst_n,
+    input  wire i,
+    output wire o
 );
 
-(* keep = 1'b1 *) reg [N_STAGES-1:0] sync_flops;
+    (* keep = 1'b1 *) reg [N_STAGES-1:0] sync_flops;
 
-always @ (posedge clk or negedge rst_n)
-	if (!rst_n)
-		sync_flops <= {N_STAGES{1'b0}};
-	else
-		sync_flops <= {sync_flops[N_STAGES-2:0], i};
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) sync_flops <= {N_STAGES{1'b0}};
+        else sync_flops <= {sync_flops[N_STAGES-2:0], i};
 
-assign o = sync_flops[N_STAGES-1];
+    assign o = sync_flops[N_STAGES-1];
 
 endmodule

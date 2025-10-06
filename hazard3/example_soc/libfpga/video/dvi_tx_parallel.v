@@ -24,127 +24,127 @@
 // 10:1 serialiser.
 
 module dvi_tx_parallel #(
-	// Defaults are for 640x480p 60 Hz (from CEA 861D).
-	// All horizontal timings are in pixels.
-	// All vertical timings are in scanlines.
-	parameter H_SYNC_POLARITY   = 1'b0, // 0 for active-low pulse
-	parameter H_FRONT_PORCH     = 16,
-	parameter H_SYNC_WIDTH      = 96,
-	parameter H_BACK_PORCH      = 48,
-	parameter H_ACTIVE_PIXELS   = 640,
+    // Defaults are for 640x480p 60 Hz (from CEA 861D).
+    // All horizontal timings are in pixels.
+    // All vertical timings are in scanlines.
+    parameter H_SYNC_POLARITY = 1'b0,  // 0 for active-low pulse
+    parameter H_FRONT_PORCH   = 16,
+    parameter H_SYNC_WIDTH    = 96,
+    parameter H_BACK_PORCH    = 48,
+    parameter H_ACTIVE_PIXELS = 640,
 
-	parameter V_SYNC_POLARITY   = 1'b0, // 0 for active-low pulse
-	parameter V_FRONT_PORCH     = 10,
-	parameter V_SYNC_WIDTH      = 2,
-	parameter V_BACK_PORCH      = 33,
-	parameter V_ACTIVE_LINES    = 480,
+    parameter V_SYNC_POLARITY = 1'b0,  // 0 for active-low pulse
+    parameter V_FRONT_PORCH   = 10,
+    parameter V_SYNC_WIDTH    = 2,
+    parameter V_BACK_PORCH    = 33,
+    parameter V_ACTIVE_LINES  = 480,
 
-	// If 1, use the much smaller pixel-doubled encoder:
-	parameter SMOL_TMDS_ENCODE  = 0
+    // If 1, use the much smaller pixel-doubled encoder:
+    parameter SMOL_TMDS_ENCODE = 0
 ) (
-	input wire clk,
-	input wire rst_n,
-	input wire en, // synchronous reset if low
+    input wire clk,
+    input wire rst_n,
+    input wire en,  // synchronous reset if low
 
-	input  wire [7:0] r,
-	input  wire [7:0] g,
-	input  wire [7:0] b,
-	output wire       rgb_rdy,
+    input  wire [7:0] r,
+    input  wire [7:0] g,
+    input  wire [7:0] b,
+    output wire       rgb_rdy,
 
-	output wire [9:0]  tmds2,
-	output wire [9:0]  tmds1,
-	output wire [9:0]  tmds0
+    output wire [9:0] tmds2,
+    output wire [9:0] tmds1,
+    output wire [9:0] tmds0
 );
 
-wire hsync;
-wire vsync;
-wire den;
+    wire hsync;
+    wire vsync;
+    wire den;
 
-dvi_timing #(
-	.H_SYNC_POLARITY (H_SYNC_POLARITY),
-	.H_FRONT_PORCH   (H_FRONT_PORCH),
-	.H_SYNC_WIDTH    (H_SYNC_WIDTH),
-	.H_BACK_PORCH    (H_BACK_PORCH),
-	.H_ACTIVE_PIXELS (H_ACTIVE_PIXELS),
+    dvi_timing #(
+        .H_SYNC_POLARITY(H_SYNC_POLARITY),
+        .H_FRONT_PORCH  (H_FRONT_PORCH),
+        .H_SYNC_WIDTH   (H_SYNC_WIDTH),
+        .H_BACK_PORCH   (H_BACK_PORCH),
+        .H_ACTIVE_PIXELS(H_ACTIVE_PIXELS),
 
-	.V_SYNC_POLARITY (V_SYNC_POLARITY),
-	.V_FRONT_PORCH   (V_FRONT_PORCH),
-	.V_SYNC_WIDTH    (V_SYNC_WIDTH),
-	.V_BACK_PORCH    (V_BACK_PORCH),
-	.V_ACTIVE_LINES  (V_ACTIVE_LINES)
-) inst_dvi_timing (
-	.clk   (clk),
-	.rst_n (rst_n),
-	.en    (en),
+        .V_SYNC_POLARITY(V_SYNC_POLARITY),
+        .V_FRONT_PORCH  (V_FRONT_PORCH),
+        .V_SYNC_WIDTH   (V_SYNC_WIDTH),
+        .V_BACK_PORCH   (V_BACK_PORCH),
+        .V_ACTIVE_LINES (V_ACTIVE_LINES)
+    ) inst_dvi_timing (
+        .clk  (clk),
+        .rst_n(rst_n),
+        .en   (en),
 
-	.vsync (vsync),
-	.hsync (hsync),
-	.den   (den)
-);
+        .vsync(vsync),
+        .hsync(hsync),
+        .den  (den)
+    );
 
-generate
-if (SMOL_TMDS_ENCODE) begin: smol_encode
+    generate
+        if (SMOL_TMDS_ENCODE) begin : smol_encode
 
-	smoldvi_tmds_encode tmds2_encoder (
-		.clk   (clk),
-		.rst_n (rst_n),
-		.c     (2'b00),
-		.d     (r),
-		.den   (den),
-		.q     (tmds2)
-	);
+            smoldvi_tmds_encode tmds2_encoder (
+                .clk  (clk),
+                .rst_n(rst_n),
+                .c    (2'b00),
+                .d    (r),
+                .den  (den),
+                .q    (tmds2)
+            );
 
-	smoldvi_tmds_encode tmds1_encoder (
-		.clk   (clk),
-		.rst_n (rst_n),
-		.c     (2'b00),
-		.d     (g),
-		.den   (den),
-		.q     (tmds1)
-	);
+            smoldvi_tmds_encode tmds1_encoder (
+                .clk  (clk),
+                .rst_n(rst_n),
+                .c    (2'b00),
+                .d    (g),
+                .den  (den),
+                .q    (tmds1)
+            );
 
-	smoldvi_tmds_encode tmds0_encoder (
-		.clk   (clk),
-		.rst_n (rst_n),
-		.c     ({vsync, hsync}),
-		.d     (b),
-		.den   (den),
-		.q     (tmds0)
-	);
+            smoldvi_tmds_encode tmds0_encoder (
+                .clk  (clk),
+                .rst_n(rst_n),
+                .c    ({vsync, hsync}),
+                .d    (b),
+                .den  (den),
+                .q    (tmds0)
+            );
 
-end else begin: full_encode
+        end else begin : full_encode
 
 
-	tmds_encode tmds2_encoder (
-		.clk   (clk),
-		.rst_n (rst_n),
-		.c     (2'b00),
-		.d     (r),
-		.den   (den),
-		.q     (tmds2)
-	);
+            tmds_encode tmds2_encoder (
+                .clk  (clk),
+                .rst_n(rst_n),
+                .c    (2'b00),
+                .d    (r),
+                .den  (den),
+                .q    (tmds2)
+            );
 
-	tmds_encode tmds1_encoder (
-		.clk   (clk),
-		.rst_n (rst_n),
-		.c     (2'b00),
-		.d     (g),
-		.den   (den),
-		.q     (tmds1)
-	);
+            tmds_encode tmds1_encoder (
+                .clk  (clk),
+                .rst_n(rst_n),
+                .c    (2'b00),
+                .d    (g),
+                .den  (den),
+                .q    (tmds1)
+            );
 
-	tmds_encode tmds0_encoder (
-		.clk   (clk),
-		.rst_n (rst_n),
-		.c     ({vsync, hsync}),
-		.d     (b),
-		.den   (den),
-		.q     (tmds0)
-	);
+            tmds_encode tmds0_encoder (
+                .clk  (clk),
+                .rst_n(rst_n),
+                .c    ({vsync, hsync}),
+                .d    (b),
+                .den  (den),
+                .q    (tmds0)
+            );
 
-end
-endgenerate
+        end
+    endgenerate
 
-assign rgb_rdy = den;
+    assign rgb_rdy = den;
 
 endmodule

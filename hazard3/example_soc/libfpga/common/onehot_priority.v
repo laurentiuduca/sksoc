@@ -25,55 +25,53 @@
 `default_nettype none
 
 module onehot_priority #(
-	parameter W_INPUT = 8
-	//parameter HIGHEST_WINS = 0
+    parameter W_INPUT = 8
+    //parameter HIGHEST_WINS = 0
 ) (
-	input wire clk,
-	input wire rst_n,
-	input wire canchange,
-	input wire [W_INPUT-1:0] in,
-	output reg [W_INPUT-1:0] out
+    input wire clk,
+    input wire rst_n,
+    input wire canchange,
+    input wire [W_INPUT-1:0] in,
+    output reg [W_INPUT-1:0] out
 );
 
-integer i;
-reg deny;
-reg [W_INPUT-1:0] osel, sel;
-wire selchg;
-assign selchg = (sel > 1 && !canchange) || (sel <= 1 && canchange);
+    integer i;
+    reg deny;
+    reg [W_INPUT-1:0] osel, sel;
+    wire selchg;
+    assign selchg = (sel > 1 && !canchange) || (sel <= 1 && canchange);
 
-always @ (*) begin
-	deny = 1'b0;
-	if(selchg) begin //if (HIGHEST_WINS) begin
-		for (i = W_INPUT - 1; i >= 0; i = i - 1) begin
-                        out[i] = in[i] && !deny;
-                        deny = deny || in[i];
-		end
-	end else begin
-		for (i = 0; i < W_INPUT; i = i + 1) begin
-			out[i] = in[i] && !deny;
-			deny = deny || in[i];
-		end
-	end
-end
+    always @(*) begin
+        deny = 1'b0;
+        if (selchg) begin  //if (HIGHEST_WINS) begin
+            for (i = W_INPUT - 1; i >= 0; i = i - 1) begin
+                out[i] = in[i] && !deny;
+                deny   = deny || in[i];
+            end
+        end else begin
+            for (i = 0; i < W_INPUT; i = i + 1) begin
+                out[i] = in[i] && !deny;
+                deny   = deny || in[i];
+            end
+        end
+    end
 
-reg [7:0] gntcnt;
-always @(posedge clk or negedge rst_n) begin
-	if(!rst_n) begin
-		osel <= 1;
-		sel <= 1;
-		gntcnt <= 0;
-	end else begin
-		if(osel == sel)
-			gntcnt <= gntcnt+1;
-		else
-			gntcnt <= 0;
-		osel <= sel;
-		/* verilator lint_off CMPCONST */
-		//sel <= canchange ? (sel > 1 ? 1 : 2) : out;
-	        sel <= out;
-		/* verilator lint_on CMPCONST */
-	end
-end
+    reg [7:0] gntcnt;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            osel <= 1;
+            sel <= 1;
+            gntcnt <= 0;
+        end else begin
+            if (osel == sel) gntcnt <= gntcnt + 1;
+            else gntcnt <= 0;
+            osel <= sel;
+            /* verilator lint_off CMPCONST */
+            //sel <= canchange ? (sel > 1 ? 1 : 2) : out;
+            sel  <= out;
+            /* verilator lint_on CMPCONST */
+        end
+    end
 
 endmodule
 
