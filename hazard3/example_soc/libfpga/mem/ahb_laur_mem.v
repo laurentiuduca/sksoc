@@ -125,12 +125,6 @@ module ahb_sync_sram #(
                 r_ahbls_hexokay <= 1;
                 r_excl_addr[hartid] <= ahbls_haddr;
                 r_excl_addr_valid[hartid] <= 1;
-`ifdef dbghexcl
-                if (d_pc == 32'h1a5c)
-                    $display(
-                        "--exclusive read res at addr %x h%1x pc=%x", ahbls_haddr, hartid, d_pc
-                    );
-`endif
             end
         end else if (ahb_write_aphase) begin
             if (ahbls_hexcl) begin
@@ -142,15 +136,6 @@ module ahb_sync_sram #(
                     state <= 22;
                     r_mask <= wmask;
                     r_ahbls_hwdata <= ahbls_hwdata;  // this must also be in state 22
-`ifdef dbghexcl
-                    if (d_pc == 32'h1a5c)
-                        $display(
-                            "--exclusive write succ at addr %x h%1x pc=%x",
-                            ahbls_haddr,
-                            hartid,
-                            d_pc
-                        );
-`endif
                     exclwrdisplay <= 1;
                 end else begin
 `ifdef dbghexcl
