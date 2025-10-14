@@ -82,6 +82,28 @@ module hazard3_sd #(
         firstbyte, sdserror_code, sdserror, 3'd0, sdsbusy, ctrlstate[7:0], state[7:0]
     };
 
+`ifdef SIM_MODE
+`define SIMSDSIZE (10*1024*1024)
+`define SIMSDNAME "simsd.fat32"
+reg [7:0] simsdmem[0:`SIMSDSIZE-1];
+
+initial begin
+	reg [7:0] b;
+	integer i, fid, n;
+	fid = $fopen(`SIMSDNAME, "rb");
+	n = $fread(simsdmem, fid);
+	$display("fread %s n=%d", `SIMSDNAME, n);
+	`ifdef laur0
+    for (i = 0; i < SIMSDSIZE; i = i+1) begin
+		if(!feof(f)) begin
+	        f = $fread(b, fid); 
+    	    simsdmem[i] =  b;   
+		end
+    end
+	`endif
+end
+`endif
+
     `define CTRLSTATERDBLK 2
     `define CTRLSTATEWRBLK 12
 
