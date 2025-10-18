@@ -638,21 +638,27 @@ int main(int argc, FAR char *argv[])
       show_statfs(g_mntdir);
       show_statfs(g_target);
 
-        succeed_unlink(g_testfilel);
       	write_test_file(g_testfilel);
-	show_directories("", 0);
+		show_directories("", 0);
       	succeed_stat(g_testfilel);
       	show_statfs(g_testfilel);
-	read_test_file(g_testfilel);
+		read_test_file(g_testfilel);
+		succeed_unlink(g_testfilel);
 
-#if 0
 #ifdef CONFIG_EXAMPLES_MOUNT_DEVNAME
+      succeed_mkdir(g_testdir1);
+      show_directories("", 0);
+      succeed_stat(g_testdir1);
+      show_statfs(g_testdir1);
+
       /* Read a test file that is already on the test file system image */
 
+	  write_test_file(g_testfile1);
       show_directories("", 0);
       succeed_stat(g_testfile1);
       show_statfs(g_testfile1);
       read_test_file(g_testfile1);
+	  //succeed_unlink(g_testfile1);
 #else
       /* Create the test directory that would have been on the canned
        * filesystem
@@ -745,6 +751,7 @@ int main(int argc, FAR char *argv[])
 
       fail_mkdir(g_testdir2, EEXIST);
 
+
       /* Write a test file into a new directory on the test file system */
 
       fail_stat(g_testfile3, ENOENT);
@@ -774,19 +781,19 @@ int main(int argc, FAR char *argv[])
       fail_rename(g_testdir4, g_testdir3, ENOENT);
 
       /* Try rename() to a non-existing directory.  Should succeed */
-
+	  _info("Try rename() to a non-existing directory.  Should succeed\n");
       fail_stat(g_testdir4, ENOENT);
       succeed_rename(g_testdir3, g_testdir4);
-      show_directories("", 0);
+      //show_directories("", 0);
       fail_stat(g_testdir3, ENOENT);
       succeed_stat(g_testdir4);
       show_statfs(g_testdir4);
 
       /* Try rename() of file.  Should work. */
-
+	  _info("Try rename() of file.  Should work.\n");
       fail_stat(g_testfile4, ENOENT);
       succeed_rename(g_testfile3, g_testfile4);
-      show_directories("", 0);
+      //show_directories("", 0);
       fail_stat(g_testfile3, ENOENT);
       succeed_stat(g_testfile4);
       show_statfs(g_testfile4);
@@ -794,7 +801,8 @@ int main(int argc, FAR char *argv[])
       /* Make sure that we can still read the renamed file */
 
       read_test_file(g_testfile4);
-#endif
+
+	  //show_directories("", 0);
 
       /* Unmount the file system */
 
