@@ -80,31 +80,32 @@ module hazard3_sd #(
     reg [7:0] firstbyte = 0, first = 0;
 
 `ifdef SIM_MODE
-`define dbgsimsd1
-`define SIMSDSIZE (10*1024*1024)
-`define SIMSDNAME "simsd.fat32"
-reg [7:0] simsdmem[0:`SIMSDSIZE-1];
-integer i;
-initial begin
-	reg [7:0] b;
-	integer fid, n;
-	fid = $fopen(`SIMSDNAME, "rb");
-	n = $fread(simsdmem, fid);
-	$display("fread %s n=%d", `SIMSDNAME, n);
-	`ifdef laur0
-    for (i = 0; i < SIMSDSIZE; i = i+1) begin
-		if(!feof(f)) begin
-	        f = $fread(b, fid); 
-    	    simsdmem[i] =  b;   
-		end
+    `define dbgsimsd1
+    `define SIMSDSIZE (10*1024*1024)
+    `define SIMSDNAME "simsd.fat32"
+    reg [7:0] simsdmem[0:`SIMSDSIZE-1];
+    integer i;
+    initial begin
+        reg [7:0] b;
+        integer fid, n;
+        fid = $fopen(`SIMSDNAME, "rb");
+        n   = $fread(simsdmem, fid);
+        $display("fread %s n=%d", `SIMSDNAME, n);
+        if (n != `SIMSDSIZE) $finish;
+`ifdef laur0
+        for (i = 0; i < SIMSDSIZE; i = i + 1) begin
+            if (!feof(f)) begin
+                f = $fread(b, fid);
+                simsdmem[i] = b;
+            end
+        end
+`endif
     end
-	`endif
-end
 `endif
 
 `ifdef SIM_MODE
-	assign sdspi_status = {
-        firstbyte, sdserror_code, sdserror, 3'd0, 1'b0, ctrlstate[7:0], state[7:0]
+    assign sdspi_status = {
+        firstbyte, sdserror_code, sdserror, 3'd0, !(ctrlstate == 1), ctrlstate[7:0], state[7:0]
     };
 `else
     assign sdspi_status = {
@@ -125,6 +126,8 @@ end
             mr1 <= 0;
             mcnt <= 0;
             sdsbaddr <= 0;
+            prdata <= 0;
+            pready <= 0;
         end else if (ctrlstate == 0) begin
             pready <= 0;
             if (bus_write && pready == 0) begin
@@ -168,22 +171,25 @@ end
             pready <= 1;
             prdata <= sdspi_status;
             ctrlstate <= 0;
-			$display("ctrlstate = 1, sdspi_status=%x", sdspi_status);
+            $display("ctrlstate = 1, sdspi_status=%x", sdspi_status);
         end else if (ctrlstate == `CTRLSTATERDBLK) begin
-			`ifdef dbgsimsd1
-			for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1) 
-				br.m[i] = simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)];
-			$display("rd block done");
-			`endif
+`ifdef dbgsimsd1
+            for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1) begin
+                br.m[i] = simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)];
+                //$write("%x ", br.m[i]);
+            end
+            //$write("\n");
+            $display("rd block done");
+`endif
             // read block command 
             ctrlstate <= 0;
             pready <= 1;
         end else if (ctrlstate == `CTRLSTATEWRBLK) begin
-            `ifdef dbgsimsd1 
+`ifdef dbgsimsd1
             for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1)
-                simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)] = br.m[i];
-			$display("wr block done");
-            `endif
+            simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)] = br.m[i];
+            $display("wr block done");
+`endif
             // write block command
             ctrlstate <= 0;
             pready <= 1;
@@ -194,7 +200,7 @@ end
             midata1 <= auxdata[15:8];
             maddr1 <= maddr1 + 1;
             if (mcnt == 0) begin
-				//if(midata1)
+                //if(midata1)
                 //	$display("\tbus w addr=%x data=%x", maddr1, midata1);
                 ctrlstate <= 6;
                 mw1 <= 0;
@@ -209,12 +215,12 @@ end
         end else if (ctrlstate == 16) begin
             mcnt   <= mcnt + 1;
             maddr1 <= maddr1 + 1;
-            //prdata <= {prdata[23:0], mout};
-            //prdata <= {24'h0, mout};  // single char
-			prdata <= {mout, mout, mout, mout};
+	    // chars are contiguous in mem
+            //prdata <= {mout, mout, mout, mout};
+	    prdata <= mout << ((maddr1 & 3) << 3);
             if (mcnt == 0) begin
                 //if(mout)
-				//	$display("\tbus r paddr=%x data=%x", maddr1, mout);
+                //	$display("\tbus r paddr=%x data=%x", maddr1, mout);
                 pready <= 1;
                 ctrlstate <= 0;
                 mr1 <= 0;
@@ -232,14 +238,14 @@ end
             state <= 0;
         end else if (state == 0) begin
             oecnt <= 0;
-			`ifdef dbgsimsd1
-			`else
+`ifdef dbgsimsd1
+`else
             if (ctrlstate == `CTRLSTATERDBLK && sdsbusy == 0) begin
                 state <= 1;
             end else if (ctrlstate == `CTRLSTATEWRBLK && sdsbusy == 0) begin
                 state <= 10;
             end
-			`endif
+`endif
         end else if (state == 1) begin
             sdsrd <= 1;
             state <= 2;
