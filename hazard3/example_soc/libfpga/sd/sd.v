@@ -216,8 +216,8 @@ module hazard3_sd #(
             mcnt   <= mcnt + 1;
             maddr1 <= maddr1 + 1;
 	    // chars are contiguous in mem
-            //prdata <= {mout, mout, mout, mout};
-	    prdata <= mout << ((maddr1 & 3) << 3);
+            prdata <= {mout, mout, mout, mout};
+	    //prdata <= mout << ((maddr1 & 3) << 3);
             if (mcnt == 0) begin
                 //if(mout)
                 //	$display("\tbus r paddr=%x data=%x", maddr1, mout);
