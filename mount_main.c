@@ -67,6 +67,9 @@ static const char g_testdir4[]       = "/mnt/fs/NewDir3";
 #ifdef CONFIG_EXAMPLES_MOUNT_DEVNAME
 static const char g_testfile1[]      = "/mnt/fs/TestDir/TestFile.txt";
 #endif
+static const char g_testdiri[]      = "/mnt/fs/i";
+static const char g_testdirj[]      = "/mnt/fs/j";
+static const char g_testfilej[]      = "/mnt/fs/j/j.txt";
 static const char g_testfilel[]      = "/mnt/fs/WrTest1.txt";
 static const char g_testfile2[]      = "/mnt/fs/TestDir/WrTest1.txt";
 static const char g_testfile3[]      = "/mnt/fs/NewDir1/WrTest2.txt";
@@ -635,16 +638,21 @@ int main(int argc, FAR char *argv[])
       _info("mount errno=%d\n", errno);
   } else if (ret == 0)
     {
-      show_statfs(g_mntdir);
-      show_statfs(g_target);
-
+      //show_statfs(g_mntdir);
+      //show_statfs(g_target);
+#if 0
+      succeed_mkdir(g_testdirj);
+	  write_test_file(g_testfilej);
+	  succeed_rename(g_testdirj, g_testdiri);
+      show_directories("", 0);
+#endif
       	write_test_file(g_testfilel);
-		show_directories("", 0);
-      	succeed_stat(g_testfilel);
-      	show_statfs(g_testfilel);
+		//show_directories("", 0);
+      	//succeed_stat(g_testfilel);
+      	//show_statfs(g_testfilel);
 		read_test_file(g_testfilel);
 		succeed_unlink(g_testfilel);
-
+//#if 0
 #ifdef CONFIG_EXAMPLES_MOUNT_DEVNAME
       succeed_mkdir(g_testdir1);
       show_directories("", 0);
@@ -784,7 +792,7 @@ int main(int argc, FAR char *argv[])
 	  _info("Try rename() to a non-existing directory.  Should succeed\n");
       fail_stat(g_testdir4, ENOENT);
       succeed_rename(g_testdir3, g_testdir4);
-      //show_directories("", 0);
+      show_directories("", 0);
       fail_stat(g_testdir3, ENOENT);
       succeed_stat(g_testdir4);
       show_statfs(g_testdir4);
@@ -793,7 +801,7 @@ int main(int argc, FAR char *argv[])
 	  _info("Try rename() of file.  Should work.\n");
       fail_stat(g_testfile4, ENOENT);
       succeed_rename(g_testfile3, g_testfile4);
-      //show_directories("", 0);
+      show_directories("", 0);
       fail_stat(g_testfile3, ENOENT);
       succeed_stat(g_testfile4);
       show_statfs(g_testfile4);
@@ -803,6 +811,7 @@ int main(int argc, FAR char *argv[])
       read_test_file(g_testfile4);
 
 	  //show_directories("", 0);
+//#endif
 
       /* Unmount the file system */
 

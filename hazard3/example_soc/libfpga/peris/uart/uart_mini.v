@@ -121,7 +121,7 @@ module UartTx (
 `ifdef SIM_MODE
                 $write("%c", DATA);
                 //`ifdef dbgsclr
-                $fflush();
+                //$fflush();
                 //`endif
 `endif
                 READY <= 1'b0;
