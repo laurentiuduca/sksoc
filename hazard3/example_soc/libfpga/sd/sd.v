@@ -147,7 +147,7 @@ end
                     ctrlstate <= 5;
                     auxdata <= pwdata;
                     midata1 <= pwdata[7:0];
-                    maddr1 <= paddr - `SDSPI_BLOCKADDR;
+                    maddr1 <= {16'h0, paddr - `SDSPI_BLOCKADDR};
                     mw1 <= 1;
                     mcnt <= 0;
                 end
@@ -158,7 +158,7 @@ end
                 end else begin
                     // read from our block mem
                     ctrlstate <= 15;
-                    maddr1 <= paddr - `SDSPI_BLOCKADDR;
+                    maddr1 <= {16'h0, paddr - `SDSPI_BLOCKADDR};
                     mr1 <= 1;
                     mcnt <= 0;
                     prdata <= 0;
@@ -210,7 +210,8 @@ end
             mcnt   <= mcnt + 1;
             maddr1 <= maddr1 + 1;
             //prdata <= {prdata[23:0], mout};
-            prdata <= {mout, mout, mout, mout};  // single char
+            //prdata <= {24'h0, mout};  // single char
+			prdata <= {mout, mout, mout, mout};
             if (mcnt == 0) begin
                 //if(mout)
 				//	$display("\tbus r paddr=%x data=%x", maddr1, mout);
