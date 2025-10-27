@@ -345,18 +345,6 @@ end
 
 assign jump_target_rdy = !mem_addr_hold;
 
-// laur
-`ifdef laur0
-integer tcnt=0;
-always @(posedge clk) begin
-        tcnt <= tcnt+1;
-end
-always @(mem_addr_hold or jump_target_vld or reset_holdoff or debug_mode or fetch_stall) begin
-        if(tcnt > 442822 && tcnt < 442900)
-                $display("  hid=%x {mem_addr_hold, jump_target_vld, reset_holdoff, debug_mode, !fetch_stall} = %b mem_addr_vld_r=%b",
-                        MHARTID_VAL, {mem_addr_hold, jump_target_vld, reset_holdoff, debug_mode, !fetch_stall}, mem_addr_vld_r);
-end
-`endif
 // ----------------------------------------------------------------------------
 // Bus Pipeline Tracking
 
