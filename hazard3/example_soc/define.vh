@@ -18,6 +18,7 @@
 `define SDSPI_BLOCKSIZE 16'd512
 `define SDSPI_BLOCKADDR (`SDSPI_DEVADDR + `SDSPI_BLOCKSIZE)
 `define SDSPI_ADDRUH 16'h4000
+//`define simsdspi
 `else
 `define SDCARD_CLK_DIV 2 // clk is between 25-50mhz
 `endif

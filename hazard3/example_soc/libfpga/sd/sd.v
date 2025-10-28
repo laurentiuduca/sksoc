@@ -80,6 +80,7 @@ module hazard3_sd #(
     reg [7:0] firstbyte = 0, first = 0;
 
 `ifdef SIM_MODE
+`ifdef simsdspi
     `define dbgsimsd1
     `define SIMSDSIZE (10*1024*1024)
     `define SIMSDNAME "simsd.fat32"
@@ -101,6 +102,7 @@ module hazard3_sd #(
         end
 `endif
     end
+`endif
 `endif
 
 `ifdef SIM_MODE
