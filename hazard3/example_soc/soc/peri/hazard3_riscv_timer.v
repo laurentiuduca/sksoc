@@ -80,8 +80,8 @@ module hazard3_riscv_timer #(
                     "\t h%1x pc=%x iowrite && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d",
                     phartid, pd_pc, paddr, pwdata, soft_irq, $time);
 `endif
-                if (pwdata == 0) soft_irq[1] <= 0;
-                else soft_irq[1] <= 1;
+                if (pwdata == 0) soft_irq[N_HARTS-1] <= 0;
+                else soft_irq[N_HARTS-1] <= 1;
             end
             tcnt <= tcnt + 1;
             //if(tcnt > 466901 && tcnt < 472900) begin
@@ -134,7 +134,7 @@ module hazard3_riscv_timer #(
     always @(*) begin
         case (paddr)
             ADDR_IPI:            prdata = {31'd0, soft_irq[0]};
-            ADDR_IPI + 4:        prdata = {31'd0, soft_irq[1]};
+            ADDR_IPI + 4:        prdata = {31'd0, soft_irq[N_HARTS-1]};
             ADDR_MTIME:          prdata = mtime[31:0];
             ADDR_MTIMEH:         prdata = mtime[63:32];
             ADDR_MTIMECMP:       prdata = ~mtimecmp0[31:0];
