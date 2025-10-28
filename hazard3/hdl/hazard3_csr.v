@@ -316,7 +316,6 @@ reg  [3:0] mcause_code;
 wire       mcause_irq_next;
 wire [3:0] mcause_code_next;
 
-integer j=0;
 always @ (posedge clk or negedge rst_n) begin
 	if (!rst_n) begin
 		mcause_irq <= 1'b0;

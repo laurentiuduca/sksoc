@@ -1286,7 +1286,6 @@ always @ (*) begin
 		MEMOP_SB: bus_wdata_d = {4{m_wdata[7:0]}};
 		default:  bus_wdata_d = m_wdata;
 	endcase
-`ifndef laur0
 	casez ({xm_memop, xm_addr_align[1:0]})
 		{MEMOP_LH  , 2'b0z}: m_rdata_pick_sext = {{16{bus_rdata_d[15]}}, bus_rdata_d[15: 0]};
 		{MEMOP_LH  , 2'b1z}: m_rdata_pick_sext = {{16{bus_rdata_d[31]}}, bus_rdata_d[31:16]};
@@ -1304,9 +1303,6 @@ always @ (*) begin
 		{MEMOP_LR_W, 2'bzz}: m_rdata_pick_sext = bus_rdata_d;
 		default:             m_rdata_pick_sext = 32'hxxxx_xxxx;
 	endcase
-`else
-	assign m_rdata_pick_sext = bus_rdata_d;
-`endif
 	if (|EXTENSION_A && x_amo_phase == 3'h1) begin
 		// Capture AMO read data into mw_result for feeding back through the ALU.
 		m_result = bus_rdata_d;

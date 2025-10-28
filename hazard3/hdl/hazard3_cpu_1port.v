@@ -10,7 +10,6 @@
 `default_nettype none
 
 module hazard3_cpu_1port #(
-	parameter W_MEMOP=5,
 `include "hazard3_config.vh"
 ) (
 	// Global signals
@@ -112,6 +111,7 @@ wire              core_priv_d;
 wire              core_hwrite_d;
 wire [W_DATA-1:0] core_wdata_d;
 wire [W_DATA-1:0] core_rdata_d;
+
 
 hazard3_core #(
 `include "hazard3_config_inst.vh"
@@ -220,19 +220,6 @@ assign {bus_gnt_i, bus_gnt_d, bus_gnt_s} =
 	dbg_sbus_vld && !bus_active_dph_s ? 3'b001 :
 	core_aph_req_i                    ? 3'b100 :
 	                                    3'b000 ;
-// laur
-`ifdef laur0
-integer tcnt=0;
-always @(posedge clk) begin
-	tcnt <= tcnt+1;
-end
-always @(bus_gnt_i or bus_gnt_d or bus_gnt_s or core_aph_panic_i or core_aph_req_i) begin
-	if(tcnt > 442822 && tcnt < 442900)
-		$display("  hid=%x {bus_gnt_i, bus_gnt_d, bus_gnt_s}=%x {bus_hold_aph, core_aph_req_d, core_aph_panic_i, core_aph_req_i}=%x ", 
-			MHARTID_VAL, {bus_gnt_i, bus_gnt_d, bus_gnt_s}, {bus_hold_aph, core_aph_req_d, core_aph_panic_i, core_aph_req_i});
-end
-`endif
-
 reg bus_active_dph_i;
 reg bus_active_dph_d;
 
@@ -283,7 +270,7 @@ always @ (*) begin
 		hsize   = {1'b0, dbg_sbus_size};
 		hwrite  = dbg_sbus_write;
 		hprot   = hprot_sbus;
-		hmaster = 8'h10; // 8'h01
+		hmaster = N_HARTS; // 8'h01
 	end else if (bus_gnt_d) begin
 		htrans  = HTRANS_NSEQ;
 		hexcl   = core_aph_excl_d;

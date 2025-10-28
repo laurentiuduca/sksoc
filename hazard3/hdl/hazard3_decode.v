@@ -463,6 +463,7 @@ end
 // Then gate key signals based on CIR fullness, fetch faults etc. The split
 // helps to avoid an event scheduling feedback loop that makes simulators
 // unhappy and slow, particularly verilator
+
 always @ (*) begin
 	// Pass through by default
 	d_rs1             = raw_rs1;
