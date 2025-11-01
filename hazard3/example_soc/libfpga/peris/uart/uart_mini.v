@@ -57,13 +57,22 @@ module uart_mini (
                 $display("---uart-write h%1x pc=%x %x", apbs_phartid, apbs_pwdata, apbs_pd_pc,
                          $time);
 `endif
-                if (w_tx_ready) begin
+`ifdef SIM_MODE
+		if(apbs_paddr == 16'h4020)
+			$finish;
+		else if(apbs_paddr == 16'h4010) begin
+			$display("---uart-write h%1x pc=%x data=%x %d", apbs_phartid, apbs_pd_pc, apbs_pwdata, 
+                         $time);
+		 	r_tx_ready <= 1;
+		end else 
+`endif
+		if (w_tx_ready) begin
                     r_uart_data <= apbs_pwdata[7:0];
                     r_uart_we <= 1;
                     state <= 1;
                 end
-            end
-            r_tx_ready <= 0;
+            end else
+            	r_tx_ready <= 0;
         end else if (state == 1) begin
             if (!w_tx_ready) begin
                 r_uart_we <= 0;
