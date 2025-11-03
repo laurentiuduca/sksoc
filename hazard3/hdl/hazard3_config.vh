@@ -16,7 +16,6 @@
 parameter pc_trace_start = 32'h79c,
 parameter pc_trace_stop = 32'ha08,
 
-// identical to NCORES from define.vh
 parameter N_HARTS = 1,
 
 // ----------------------------------------------------------------------------
