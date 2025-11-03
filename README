@@ -48,6 +48,7 @@ cd ../hazard3
 - in Makefile and run.tcl, set
   for single core example_soc.v
   for dual core example_soc-dual.v
+  and adjust N_HARTS and NCORES accordingly
 - please see flags in define.vh and set SIM_MODE
 ./run-nuttx2.sh
 
