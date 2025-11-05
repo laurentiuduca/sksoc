@@ -86,8 +86,6 @@ module hazard3_riscv_timer #(
 		end
             end
             tcnt <= tcnt + 1;
-            //if(tcnt > 466901 && tcnt < 472900) begin
-            //	$display("soft_irq=%x", soft_irq);
         end
     end
 
@@ -116,18 +114,13 @@ module hazard3_riscv_timer #(
         end else begin
             if (bus_write && paddr == ADDR_MTIMECMP) begin
                 mtimecmp0[31:0] <= ~pwdata;
-                //$display("ADDR_MTIMECMP pwdata=%8d", pwdata);
             end else if (bus_write && paddr == ADDR_MTIMECMPH) begin
                 mtimecmp0[63:32] <= ~pwdata;
-                //$display("ADDR_MTIMECMPH pwdata=%8d", pwdata);
             end
             if (bus_write && paddr == ADDR_MTIMECMP + 8) begin
-                // laur
                 mtimecmp1[31:0] <= ~pwdata;
-                //$display("ADDR_MTIMECMP+8 pwdata=%8d", pwdata);
             end else if (bus_write && paddr == ADDR_MTIMECMPH + 8) begin
                 mtimecmp1[63:32] <= ~pwdata;
-                //$display("ADDR_MTIMECMPH+8 pwdata=%8d", pwdata);
             end
             timer_irq <= {cmp_diff1[64], cmp_diff0[64]};
         end

@@ -61,7 +61,7 @@ module uart_mini (
 		if(apbs_paddr == 16'h4020)
 			$finish;
 		else if(apbs_paddr == 16'h4010) begin
-			$display("---uart-write h%1x pc=%x data=%x %d", apbs_phartid, apbs_pd_pc, apbs_pwdata, 
+			$display("---dbg-write h%1x pc=%x data=%x %d", apbs_phartid, apbs_pd_pc, apbs_pwdata, 
                          $time);
 		 	r_tx_ready <= 1;
 		end else 
