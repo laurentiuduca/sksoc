@@ -20,6 +20,7 @@ with instructions similar to the rlsoc-nuttx repository
 
 1. config nuttx
 cd -
+rm -rf .config
 ./tools/configure.sh rv-virt:nsh
 cp ../config-nuttx-12.8.0 ../nuttx/.config
 make
