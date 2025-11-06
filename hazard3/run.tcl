@@ -5,7 +5,7 @@ set_device -name GW2AR-18C GW2AR-LV18QN88C8/I7
 add_file example_soc/m_topsim.v
 add_file example_soc/libfpga/mem/gowin_rpll.v
 
-add_file example_soc/soc/example_soc.v 
+add_file example_soc/soc/example_soc-dual.v 
 add_file example_soc/libfpga/common/reset_sync.v 
 add_file example_soc/libfpga/common/fpga_reset.v 
 add_file example_soc/libfpga/common/activity_led.v 
