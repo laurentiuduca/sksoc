@@ -47,7 +47,7 @@ module hazard3_ethernet #(
     assign mw = mw1;
     assign midata = midata1;
 
-    ethernetbram brtx (
+    txbram brtx (
         .clk(clk),
         .maddr(maddr),
         .midata(midata),
@@ -139,7 +139,7 @@ module hazard3_ethernet #(
 
 endmodule
 
-module ethernetbram (
+module txbram (
     input wire clk,
     input wire [31:0] maddr,
     input wire [7:0] midata,
@@ -147,9 +147,9 @@ module ethernetbram (
     output reg [7:0] mout
 );
 
-    reg [7:0] m[0:`SDSPI_BLOCKSIZE-1];
+    reg [7:0] m[0:`ETHERNET_MTU-1];
     integer i;
-    initial for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1) m[i] <= 0;
+    initial for (i = 0; i < `ETHERNET_MTU; i = i + 1) m[i] <= 0;
     always @(posedge clk) begin
         if (mw) m[maddr] <= midata;
         mout <= m[maddr];
