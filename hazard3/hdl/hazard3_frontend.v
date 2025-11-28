@@ -226,7 +226,8 @@ if (BRANCH_PREDICTOR) begin: have_btb
 		end
 	end
 end else begin: no_btb
-	always @ (*) begin
+	//always @(*) begin
+	always begin
 		btb_src_addr = {W_ADDR{1'b0}};
 		btb_target_addr = {W_ADDR{1'b0}};
 		btb_valid = 1'b0;

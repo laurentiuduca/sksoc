@@ -11,6 +11,9 @@
 `define SIM_TNSRAM // tang nano not only sim ram
 `define FREQ 27_000_000
 
+`define ETHERNET_DEVADDR 16'hc000
+`define ETHERNET_MTU 1500
+
 `define SDSPI
 `ifdef SDSPI
 `define SDSPI_DEVADDR 16'h8000

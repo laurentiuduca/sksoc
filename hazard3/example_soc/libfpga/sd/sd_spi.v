@@ -1114,7 +1114,7 @@ module sd_controller (
     /* sd_spi.vhd:270:25  */
     assign n172_o = reset ? last_din_valid : din_valid;
     /* sd_spi.vhd:389:17  */
-    always @* if (!1'b1) $fatal(1, "assertion failure n213");
+    //always @* if (!1'b1) $fatal(1, "assertion failure n213");
     /* sd_spi.vhd:425:17  */
     assign n215_o = state == 6'b000000;
     /* sd_spi.vhd:441:25  */
