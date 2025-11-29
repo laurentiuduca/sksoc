@@ -77,6 +77,7 @@ void print_bytes(uint8_t *data, uint32_t len) {
     printf("\n");
 }
 
+extern "C" void host_delay(int n);
 extern "C" void rxgotnew(int nbytes); 
 extern "C" void rxoctet(unsigned char octet);
 
@@ -161,7 +162,7 @@ extern "C" int ethdpiinit()
 	
         // check if data is available from TAP device
         if(FD_ISSET(tap_fd, &rd_set)) {
-            int nbytes = fd_read(tap_fd, &rxbuf[0], MTU_SIZE);
+            int nbytes = fd_read(tap_fd, (char*)&rxbuf[0], MTU_SIZE);
             if (nbytes) {
                 printf("HOST: TAP-RD: nbytes=%03d\n", nbytes);
                 // print bytes in wireshark style

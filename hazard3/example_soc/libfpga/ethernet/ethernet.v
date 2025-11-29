@@ -36,7 +36,8 @@ module hazard3_ethernet #(
 
     reg [31:0] auxdata;
     reg [ 3:0] mcnt = 0;
-    reg mr1 = 0, mw1 = 0;
+    // tx
+    reg mw1 = 0;
     reg [7:0] midata1 = 0;
     wire [7:0] midata;
     wire [7:0] mout;
@@ -46,6 +47,15 @@ module hazard3_ethernet #(
     wire mw;
     assign mw = mw1;
     assign midata = midata1;
+    // rx
+    reg rxmw1 = 0;
+    reg [7:0] rxmidata1 = 0;
+    wire [7:0] rxmidata;
+    reg [31:0] rxmaddra, rxmaddrb;
+    wire [7:0] rxmouta, rxmoutb;
+    wire rxmw;
+    assign rxmw = rxmw1;
+    assign rxmidata = rxmidata1;
 
     ethbram brtx (
         .clk(clk),
@@ -66,7 +76,7 @@ module hazard3_ethernet #(
 
     reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0;
     reg hostrx=0, receiving=0;
-    wire rxbusy = (ctrlstate == 0 && bus_write && pready == 0 && paddr == (`ETHERNET_MTU+8)) || hostrx;
+    assign rxbusy = (ctrlstate == 0 && bus_write && pready == 0 && paddr == (`ETHERNET_MTU+8)) || hostrx;
     `ifndef realeth
     integer ret, i;
     import "DPI-C" function int ethdpiinit();
@@ -76,9 +86,9 @@ module hazard3_ethernet #(
     export "DPI-C" task rxgotnew;
     export "DPI-C" task rxoctet;
     task host_delay(input int nclk);
-      repeat(nclk)
-        @(posedge clk_rx);
-    endtask
+      //repeat(nclk)
+        //@(posedge clk);
+    endtask 
     task rxgotnew(input int nbytes);
       if(rxbusy) 
 	rxdiscard = nbytes;
@@ -89,7 +99,7 @@ module hazard3_ethernet #(
 	rxcnt = 0;
       end
     endtask
-    task rxoctet(input char b);
+    task rxoctet(input logic[7:0] b);
       if(rxdiscard) begin
 	if(rxdiscard == 1)
 	  ndiscarded = ndiscarded + 1;
@@ -116,7 +126,6 @@ module hazard3_ethernet #(
             midata1 <= 0;
             maddr1 <= 0;
             mw1 <= 0;
-            mr1 <= 0;
             mcnt <= 0;
             prdata <= 0;
             pready <= 0;
@@ -129,7 +138,7 @@ module hazard3_ethernet #(
                 if(paddr == (`ETHERNET_MTU+4)) begin
 			txsize <= pwdata[15:0];
 			pready <= 1;
-		if(paddr == (`ETHERNET_MTU+12)) begin
+		end else if(paddr == (`ETHERNET_MTU+12)) begin
 			if(!receiving)
                           hostrx <= pwdata;
                         pready <= 1;
@@ -137,7 +146,6 @@ module hazard3_ethernet #(
                         // send block;
                         ctrlstate <= 7;
 			pready <= 1;
-                        mr1 <= 1; 
                         maddr1 <= 0;
 		end else begin
                     // write to our block mem
