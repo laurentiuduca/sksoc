@@ -1,3 +1,7 @@
+
+// modified by laurentiu cristian duca 20251128
+// Artem Voropaev author 20251106
+
 #include <stdio.h>          // printf, perror, ..
 #include <arpa/inet.h>      // sockaddr, inet_aton, ..
 #include <linux/if.h>       // ifreq, IFF_TAP, IFF_NO_PI, ..
@@ -19,7 +23,7 @@
 
 #define MTU_SIZE (1500) // MTU
 // 
-uint8_t buffer[MTU_SIZE];
+uint8_t buffer[MTU_SIZE], rxbuf[MTU_SIZE];
 int tap_fd=-1;
 
 /**
@@ -73,6 +77,9 @@ void print_bytes(uint8_t *data, uint32_t len) {
     printf("\n");
 }
 
+extern "C" void rxgotnew(int nbytes); 
+extern "C" void rxoctet(unsigned char octet);
+
 int pktlen=0;
 extern "C" int addbytetotxframe(unsigned char b)
 {
@@ -84,7 +91,7 @@ extern "C" int sendtxframe()
 {
 	fd_write(tap_fd, (char*)&buffer[0], pktlen);
     	printf("packet sent\n");
-    	close(tap_fd);
+    	//close(tap_fd);
 	return 0;
 }
 
@@ -125,7 +132,7 @@ extern "C" int ethdpiinit()
     fcntl(tap_fd, F_SETFL, flags | O_NONBLOCK);
 
     // MAIN LOOP
-#if 0
+
     while (1) {
         int ret;
         fd_set rd_set;
@@ -135,9 +142,6 @@ extern "C" int ethdpiinit()
         timeout.tv_usec=0;
         FD_ZERO(&rd_set);
         FD_SET(tap_fd, &rd_set);
-        
-        // HDL-dly
-        host_delay(1000);
         
         // wait for data from TAP device - no timeout
         ret = select(tap_fd + 1, &rd_set, NULL, NULL, &timeout); 
@@ -154,25 +158,25 @@ extern "C" int ethdpiinit()
                 return -5;
             }
         }
-        
+	
         // check if data is available from TAP device
         if(FD_ISSET(tap_fd, &rd_set)) {
-            int nbytes = fd_read(tap_fd, &buffer[0], MTU_SIZE);
+            int nbytes = fd_read(tap_fd, &rxbuf[0], MTU_SIZE);
             if (nbytes) {
                 printf("HOST: TAP-RD: nbytes=%03d\n", nbytes);
                 // print bytes in wireshark style
-                print_bytes(buffer, nbytes);
+                print_bytes(rxbuf, nbytes);
+		rxgotnew(nbytes);
                 // put bytes to TX queue
                 for (int i = 0; i < nbytes; i++) {
-                    host_tx_data_push(buffer[i]); 
+                    rxoctet(rxbuf[i]); 
                 }
-                // init send transaction to the DUT
-                host_tx_transfer_init(); 
             } else {
                 printf("HOST: !!! Bad packet !!!: nbytes=%x\n", nbytes);
             }
         }
-        
+
+#if 0	
         // check if there are any packets from DUT - thread safe mailbox
         int npkt;
         int pkt_len;
@@ -188,12 +192,15 @@ extern "C" int ethdpiinit()
                 host_rx_pkt_get_data(&buffer[i], i); 
             }
             fd_write(tap_fd, &buffer[0], pkt_len);
-        }        
-    }
+        }
 #endif
+	// HDL-dly
+        host_delay(1000);
+    }
 
-    //printf("HOST exiting...\n");
-    //close(tap_fd);
+
+    printf("HOST exiting...\n");
+    close(tap_fd);
     
     return 0;
 }

@@ -47,22 +47,66 @@ module hazard3_ethernet #(
     assign mw = mw1;
     assign midata = midata1;
 
-    txbram brtx (
+    ethbram brtx (
         .clk(clk),
         .maddr(maddr),
         .midata(midata),
         .mw(mw),
         .mout(mout)
     );
-    reg [15:0] txsize;
+    ethbram2 brrx (
+        .clk(clk), 
+        .maddra(rxmaddra),
+	.maddrb(rxmaddrb),
+        .midata(rxmidata),
+        .mw(rxmw),
+        .mouta(rxmouta),
+        .moutb(rxmoutb)	
+    );    
 
-    integer ret;
+    reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0;
+    reg hostrx=0, receiving=0;
+    wire rxbusy = (ctrlstate == 0 && bus_write && pready == 0 && paddr == (`ETHERNET_MTU+8)) || hostrx;
+    `ifndef realeth
+    integer ret, i;
     import "DPI-C" function int ethdpiinit();
     import "DPI-C" function int addbytetotxframe(input byte data);
     import "DPI-C" function int sendtxframe();
+    export "DPI-C" task host_delay;
+    export "DPI-C" task rxgotnew;
+    export "DPI-C" task rxoctet;
+    task host_delay(input int nclk);
+      repeat(nclk)
+        @(posedge clk_rx);
+    endtask
+    task rxgotnew(input int nbytes);
+      if(rxbusy) 
+	rxdiscard = nbytes;
+      else begin
+	rxdiscard = 0;
+	rxsize = nbytes;
+	receiving = 1;
+	rxcnt = 0;
+      end
+    endtask
+    task rxoctet(input char b);
+      if(rxdiscard) begin
+	if(rxdiscard == 1)
+	  ndiscarded = ndiscarded + 1;
+        rxdiscard = rxdiscard - 1;
+      end else begin
+	brrx.m[rxcnt] = b;
+	if(rxcnt == rxsize-1) begin
+	  receiving = 0;
+          rxcnt = 0;
+	end else
+          rxcnt = rxcnt + 1;
+      end
+    endtask
     initial begin
             ret = ethdpiinit();
     end
+    `endif
 
     // tx ctrl state machine
     always @(posedge clk or negedge rst_n) begin
@@ -77,6 +121,7 @@ module hazard3_ethernet #(
             prdata <= 0;
             pready <= 0;
             txsize <= 0;
+	    hostrx <= 0;
         end else if (ctrlstate == 0) begin
             pready <= 0;
             if (bus_write && pready == 0) begin
@@ -84,8 +129,12 @@ module hazard3_ethernet #(
                 if(paddr == (`ETHERNET_MTU+4)) begin
 			txsize <= pwdata[15:0];
 			pready <= 1;
+		if(paddr == (`ETHERNET_MTU+12)) begin
+			if(!receiving)
+                          hostrx <= pwdata;
+                        pready <= 1;
 		end else if (paddr >= `ETHERNET_MTU) begin
-                        // write block;
+                        // send block;
                         ctrlstate <= 7;
 			pready <= 1;
                         mr1 <= 1; 
@@ -100,10 +149,26 @@ module hazard3_ethernet #(
                     mcnt <= 0;
                 end
            end else if(bus_read && pready == 0) begin
-                   if(paddr == (`ETHERNET_MTU+4)) begin
+                   if(paddr == (`ETHERNET_MTU)) begin
 		       prdata <= txbusy;
 		       pready <= 1;
-		   end
+		   end else if(paddr == (`ETHERNET_MTU+4)) begin
+		       prdata <= rxbusy;
+                       pready <= 1;
+                   end else if(paddr == (`ETHERNET_MTU+8)) begin
+		       prdata <= rxsize;
+                       pready <= 1;
+		   end else if(paddr == (`ETHERNET_MTU+12)) begin
+                       prdata <= hostrx;
+		       pready <= 1;
+                   end else if(paddr < (`ETHERNET_MTU)) begin
+		       if(!receiving) begin
+  		         // read from rx packet
+		         mcnt <= 0;
+		         ctrlstate <= 10;
+		         rxmaddrb <= paddr;
+		       end
+	           end
 	   end
         end else if (ctrlstate == 5) begin
             // write to mem
@@ -123,23 +188,31 @@ module hazard3_ethernet #(
         end else if (ctrlstate == 7) begin
             // write packet command
             `ifndef txrealsend
-		ret = addbytetotxframe(mout);
-                if(maddr1 >= txsize-1) begin
-		    ctrlstate <= 9;
-		    ret = sendtxframe();
-		    mr1 <= 0;
-		end else  
-                    maddr1 <= maddr1 + 1;
+		for(i=0; i<txsize; i=i+1)
+			ret = addbytetotxframe(mout);
+		ret = sendtxframe();
+		ctrlstate <= 6;
     	    `endif
-        end else if (ctrlstate == 9) begin
-            ctrlstate <= 0;
-            pready <= 1;
+        end else if (ctrlstate == 10) begin
+	    `ifndef rxrealread
+	    prdata <= {brrx.m[rxmaddrb], brrx.m[rxmaddrb+1], brrx.m[rxmaddrb+2], brrx.m[rxmaddrb+3]};
+	    ctrlstate <= 6;
+            `else
+	    // read word from rxbuffer
+	    prdata <= {prdata[23:0], rxmout};
+	    mcnt <= mcnt + 1;
+            rxmaddrb <= rxmaddrb + 1;
+            if (mcnt == 3) begin
+                //if(midata1)
+                //      $display("\tbus w addr=%x data=%x", maddr1, midata1);
+                ctrlstate <= 6;
+            end
+           `endif
         end
     end
-
 endmodule
 
-module txbram (
+module ethbram (
     input wire clk,
     input wire [31:0] maddr,
     input wire [7:0] midata,
@@ -154,5 +227,24 @@ module txbram (
         if (mw) m[maddr] <= midata;
         mout <= m[maddr];
     end
-    //assign mout = m[maddr];
+endmodule
+
+module ethbram2 (
+    input wire clk,
+    input wire [31:0] maddra,
+    input wire [31:0] maddrb,
+    input wire [7:0] midata,
+    input wire mw,
+    output reg [7:0] mouta,
+    output reg [7:0] moutb
+);
+
+    reg [7:0] m[0:`ETHERNET_MTU-1];
+    integer i;
+    initial for (i = 0; i < `ETHERNET_MTU; i = i + 1) m[i] <= 0;
+    always @(posedge clk) begin
+        if (mw) m[maddra] <= midata;
+        mouta <= m[maddra];
+        moutb <= m[maddrb];
+    end
 endmodule
