@@ -85,9 +85,21 @@ module hazard3_ethernet #(
     export "DPI-C" task host_delay;
     export "DPI-C" task rxgotnew;
     export "DPI-C" task rxoctet;
+    reg posclk, pm=0;
+    always @(*)
+	    if(clk)
+		    posclk <= 1;
+	    else
+		    posclk <= 0;
     task host_delay(input int nclk);
       //repeat(nclk)
         //@(posedge clk);
+      while(nclk)
+      if(posclk && !pm) begin
+	      pm = 1;
+	      nclk = nclk -1;
+      end else
+	      pm = 0;
     endtask 
     task rxgotnew(input int nbytes);
       if(rxbusy) 
