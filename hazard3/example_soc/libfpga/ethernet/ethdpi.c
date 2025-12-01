@@ -171,9 +171,11 @@ extern "C" int ethdpiinit()
                 printf("HOST: TAP-RD: nbytes=%03d\n", nbytes);
                 // print bytes in wireshark style
                 print_bytes(rxbuf, nbytes);
+		//printf("HOST: rxgotnew\n");
 		rxgotnew(nbytes);
                 // put bytes to TX queue
                 for (int i = 0; i < nbytes; i++) {
+		    //printf("HOST: rxoctet i=%d\n", i);
                     rxoctet(rxbuf[i]); 
                 }
             } else {

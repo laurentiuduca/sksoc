@@ -101,23 +101,26 @@ module hazard3_ethernet #(
 	      pm = 0;
     endtask 
     task rxgotnew(input int nbytes);
-      if(rxread != rxwrote) 
+      if(rxread != rxwrote) begin 
 	rxdiscard = nbytes;
-      else begin
+	$display("rxgotnew discard");
+      end else begin
 	rxdiscard = 0;
 	rxsize = nbytes;
 	receiving = 1;
 	rxcnt = 0;
       end
     endtask
-    task rxoctet(input logic[7:0] b);
+    task rxoctet(input int b);
+      //$display("rxoctet b=%x", b);
       if(rxdiscard) begin
 	if(rxdiscard == 1)
 	  ndiscarded = ndiscarded + 1;
         rxdiscard = rxdiscard - 1;
       end else begin
+	//$display("brrx.m[rxcnt] = %x", b);
 	brrx.m[rxcnt] = b;
-	if(rxcnt == rxsize-1) begin
+	if(rxcnt == (rxsize-1)) begin
 	  receiving = 0;
           rxcnt = 0;
 	  rxwrote = rxwrote + 1;
