@@ -14,6 +14,7 @@
 #include <errno.h>          // errno, ..
 #include <stdlib.h>         // system, ..
 #include <svdpi.h>          // DPI-C
+#include <verilated.h>
 
 #include <assert.h>
 #include <unistd.h>  // For close().
@@ -104,6 +105,9 @@ extern "C" int sendtxframe()
  */
 extern "C" int ethdpiinit()
 {
+    Verilated::scopesDump();
+    svSetScope(svGetScopeFromName("TOP.m_topsim.es.eth0"));
+
     struct ifreq ifr;
     int err = -1;
     char tap_name[IFNAMSIZ] = "tap0";

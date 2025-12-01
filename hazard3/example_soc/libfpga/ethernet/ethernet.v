@@ -31,7 +31,7 @@ module hazard3_ethernet #(
     wire bus_read = !pwrite && psel && penable;
 
     assign pslverr = 0;
-    wire txbusy, rxbusy;
+    wire txbusy;
     assign txbusy = !|ctrlstate;
 
     reg [31:0] auxdata;
@@ -74,9 +74,8 @@ module hazard3_ethernet #(
         .moutb(rxmoutb)	
     );    
 
-    reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0;
+    reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0, rxread=0, rxwrote=0;
     reg hostrx=0, receiving=0;
-    assign rxbusy = (ctrlstate == 0 && bus_write && pready == 0 && paddr == (`ETHERNET_MTU+8)) || hostrx;
     `ifndef realeth
     integer ret, i;
     import "DPI-C" function int ethdpiinit();
@@ -102,7 +101,7 @@ module hazard3_ethernet #(
 	      pm = 0;
     endtask 
     task rxgotnew(input int nbytes);
-      if(rxbusy) 
+      if(rxread != rxwrote) 
 	rxdiscard = nbytes;
       else begin
 	rxdiscard = 0;
@@ -121,6 +120,7 @@ module hazard3_ethernet #(
 	if(rxcnt == rxsize-1) begin
 	  receiving = 0;
           rxcnt = 0;
+	  rxwrote = rxwrote + 1;
 	end else
           rxcnt = rxcnt + 1;
       end
@@ -151,8 +151,10 @@ module hazard3_ethernet #(
 			txsize <= pwdata[15:0];
 			pready <= 1;
 		end else if(paddr == (`ETHERNET_MTU+12)) begin
-			if(!receiving)
-                          hostrx <= pwdata;
+			if(!receiving) begin
+			  if(pwdata == 0)
+				  rxread <= rxwrote;
+			end
                         pready <= 1;
 		end else if (paddr >= `ETHERNET_MTU) begin
                         // send block;
@@ -172,9 +174,6 @@ module hazard3_ethernet #(
                    if(paddr == (`ETHERNET_MTU)) begin
 		       prdata <= txbusy;
 		       pready <= 1;
-		   end else if(paddr == (`ETHERNET_MTU+4)) begin
-		       prdata <= rxbusy;
-                       pready <= 1;
                    end else if(paddr == (`ETHERNET_MTU+8)) begin
 		       prdata <= rxsize;
                        pready <= 1;

@@ -189,7 +189,7 @@ module hazard3_sd #(
         end else if (ctrlstate == `CTRLSTATEWRBLK) begin
 `ifdef dbgsimsd1
             for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1)
-            simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)] = br.m[i];
+            	simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)] = br.m[i];
             $display("wr block done");
 `endif
             // write block command
@@ -240,14 +240,11 @@ module hazard3_sd #(
             state <= 0;
         end else if (state == 0) begin
             oecnt <= 0;
-`ifdef dbgsimsd1
-`else
             if (ctrlstate == `CTRLSTATERDBLK && sdsbusy == 0) begin
                 state <= 1;
             end else if (ctrlstate == `CTRLSTATEWRBLK && sdsbusy == 0) begin
                 state <= 10;
             end
-`endif
         end else if (state == 1) begin
             sdsrd <= 1;
             state <= 2;
