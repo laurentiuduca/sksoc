@@ -150,21 +150,21 @@ module hazard3_ethernet #(
             pready <= 0;
             if (bus_write && pready == 0) begin
                 //$display("bus w paddr=%x pwdata=%x pready=%x", paddr, pwdata, pready);
-                if(paddr == (`ETHERNET_MTU+4)) begin
+                if(paddr == (`ETHERNET_MTU+0)) begin
 			txsize <= pwdata[15:0];
 			pready <= 1;
-		end else if(paddr == (`ETHERNET_MTU+12)) begin
+		end else if(paddr == (`ETHERNET_MTU+4)) begin
 			if(!receiving) begin
 			  if(pwdata == 0)
 				  rxread <= rxwrote;
 			end
                         pready <= 1;
-		end else if (paddr >= `ETHERNET_MTU) begin
+		end else if (paddr == (`ETHERNET_MTU+8)) begin
                         // send block;
                         ctrlstate <= 7;
 			pready <= 1;
                         maddr1 <= 0;
-		end else begin
+		end else if(paddr < `ETHERNET_MTU) begin
                     // write to our block mem
                     ctrlstate <= 5;
                     auxdata <= pwdata;
@@ -174,16 +174,16 @@ module hazard3_ethernet #(
                     mcnt <= 0;
                 end
            end else if(bus_read && pready == 0) begin
-                   if(paddr == (`ETHERNET_MTU)) begin
+                   if(paddr == (`ETHERNET_MTU+12)) begin
 		       prdata <= txbusy;
 		       pready <= 1;
-                   end else if(paddr == (`ETHERNET_MTU+8)) begin
+                   end else if(paddr == (`ETHERNET_MTU+16)) begin
 		       prdata <= rxsize;
                        pready <= 1;
-		   end else if(paddr == (`ETHERNET_MTU+12)) begin
+		   end else if(paddr == (`ETHERNET_MTU+20)) begin
                        prdata <= hostrx;
 		       pready <= 1;
-                   end else if(paddr < (`ETHERNET_MTU)) begin
+                   end else if(paddr < `ETHERNET_MTU) begin
 		       if(!receiving) begin
   		         // read from rx packet
 		         mcnt <= 0;
