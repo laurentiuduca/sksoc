@@ -25,7 +25,7 @@ module hazard3_ethernet #(
     input wire tx_clk, rx_clk
 );
 
-    reg [7:0] ctrlstate;
+    reg [7:0] ctrlstate, rxstate;
 
     wire bus_write = pwrite && psel && penable;
     wire bus_read = !pwrite && psel && penable;
@@ -81,25 +81,10 @@ module hazard3_ethernet #(
     import "DPI-C" function int ethdpiinit();
     import "DPI-C" function int addbytetotxframe(input byte data);
     import "DPI-C" function int sendtxframe();
-    export "DPI-C" task host_delay;
+    import "DPI-C" function int checkrx();
     export "DPI-C" task rxgotnew;
     export "DPI-C" task rxoctet;
     reg posclk, pm=0;
-    always @(*)
-	    if(clk)
-		    posclk <= 1;
-	    else
-		    posclk <= 0;
-    task host_delay(input int nclk);
-      //repeat(nclk)
-        //@(posedge clk);
-      while(nclk)
-      if(posclk && !pm) begin
-	      pm = 1;
-	      nclk = nclk -1;
-      end else
-	      pm = 0;
-    endtask 
     task rxgotnew(input int nbytes);
       if(rxread != rxwrote) begin 
 	rxdiscard = nbytes;
@@ -133,7 +118,7 @@ module hazard3_ethernet #(
     end
     `endif
 
-    // tx ctrl state machine
+    // ctrl state machine
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             ctrlstate <= 0;
@@ -232,6 +217,23 @@ module hazard3_ethernet #(
            `endif
         end
     end
+
+    // rx
+    reg [15:0] rxcnt2;
+    always @(posedge clk or negedge rst_n) begin
+      if(!rst_n) begin
+        rxstate <= 0;
+	rxcnt2 <= 0;
+      end else if(rxstate == 0) begin
+	if(rxcnt2 < 1000)
+		rxcnt2 <= rxcnt2 + 1;
+	else begin
+		rxcnt2 <= 0;
+		ret = checkrx();
+	end
+      end
+    end
+
 endmodule
 
 module ethbram (

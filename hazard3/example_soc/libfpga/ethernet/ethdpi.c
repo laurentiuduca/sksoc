@@ -97,7 +97,54 @@ extern "C" int sendtxframe()
 	return 0;
 }
 
+extern "C" int checkrx()
+{
+        int ret;
+        fd_set rd_set;
+        struct timeval timeout;
+                
+        timeout.tv_sec=0; // no-wait, just check
+        timeout.tv_usec=0; 
+        FD_ZERO(&rd_set);
+        FD_SET(tap_fd, &rd_set);
+                
+        // wait for data from TAP device - no timeout
+        ret = select(tap_fd + 1, &rd_set, NULL, NULL, &timeout); 
+        if ( ret < 0 ) {
+            int errsv = errno;
+            if (errsv == EINTR) {
+                return 0;
+            } 
+            if (errsv == EAGAIN) {
+                return 0;
+            } else { 
+                printf("HOST: ERROR: failed to read from TAP device: fd=%x, errsv=%x :  %s\n", tap_fd, errsv, strerror(errsv));
+                close(tap_fd);
+                return -5;
+            }
+        }
 
+        // check if data is available from TAP device
+        if(FD_ISSET(tap_fd, &rd_set)) {
+            int nbytes = fd_read(tap_fd, (char*)&rxbuf[0], MTU_SIZE);
+            if (nbytes) {
+                printf("HOST: TAP-RD: nbytes=%03d\n", nbytes);
+                // print bytes in wireshark style
+                //print_bytes(rxbuf, nbytes);
+                //printf("HOST: rxgotnew\n");
+                rxgotnew(nbytes);
+                // put bytes to TX queue
+                for (int i = 0; i < nbytes; i++) {
+                    //printf("HOST: rxoctet i=%d\n", i);
+                    rxoctet(rxbuf[i]);
+                }
+            } else {
+                printf("HOST: !!! Bad packet !!!: nbytes=%x\n", nbytes);
+            }
+        }
+
+	return 0;
+}
 
 
 /**
@@ -131,13 +178,13 @@ extern "C" int ethdpiinit()
         return -2;
     }
 
-    printf("HOST: TAP device %s is ready\n", ifr.ifr_name);
-
     int flags = fcntl(tap_fd, F_GETFL, 0);
     fcntl(tap_fd, F_SETFL, flags | O_NONBLOCK);
 
-    // MAIN LOOP
+    printf("HOST: TAP device %s is ready\n", ifr.ifr_name);
 
+#if 0
+    // MAIN LOOP
     while (1) {
         int ret;
         fd_set rd_set;
@@ -170,7 +217,7 @@ extern "C" int ethdpiinit()
             if (nbytes) {
                 printf("HOST: TAP-RD: nbytes=%03d\n", nbytes);
                 // print bytes in wireshark style
-                print_bytes(rxbuf, nbytes);
+                //print_bytes(rxbuf, nbytes);
 		//printf("HOST: rxgotnew\n");
 		rxgotnew(nbytes);
                 // put bytes to TX queue
@@ -183,7 +230,6 @@ extern "C" int ethdpiinit()
             }
         }
 
-#if 0	
         // check if there are any packets from DUT - thread safe mailbox
         int npkt;
         int pkt_len;
@@ -200,14 +246,14 @@ extern "C" int ethdpiinit()
             }
             fd_write(tap_fd, &buffer[0], pkt_len);
         }
-#endif
-	// HDL-dly
-        host_delay(1000);
-    }
 
+	// HDL-dly
+        //host_delay(1000);
+    }
 
     printf("HOST exiting...\n");
     close(tap_fd);
+#endif
     
     return 0;
 }
