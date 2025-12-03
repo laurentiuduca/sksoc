@@ -625,7 +625,8 @@ module example_soc #(
         .pready (sdspi_pready),
         .pslverr(sdspi_pslverr),
 
-	.tx_clk(clk), .rx_clk(clk)
+	.tx_clk(clk), .rx_clk(clk),
+	.irq(irq[0])
     );
 
 endmodule

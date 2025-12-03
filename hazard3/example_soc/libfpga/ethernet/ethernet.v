@@ -22,7 +22,8 @@ module hazard3_ethernet #(
     output wire pslverr,
 
     // ethernet signals
-    input wire tx_clk, rx_clk
+    input wire tx_clk, rx_clk,
+    output wire irq
 );
 
     reg [7:0] ctrlstate, rxstate, txstate;
@@ -141,7 +142,7 @@ module hazard3_ethernet #(
 		end else if(paddr == (`ETHERNET_MTU+4)) begin
 			if(!receiving) begin
 			  if(pwdata == 0)
-				  rxread <= rxwrote;
+				  rxread <= {rxwrote, rxread};
 			end
                         pready <= 1;
 		end else if (paddr == (`ETHERNET_MTU+8)) begin
@@ -221,9 +222,11 @@ module hazard3_ethernet #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             txstate <= 0; 
+	    irqtx <= 0;
         end else if (txstate == 0) begin
 		if(ctrlstate == 7)
 			txstate <= 1;
+		irqtx <= 0;
 	end else if (txstate == 1) begin
             // write packet command
             `ifndef txrealsend
@@ -231,6 +234,7 @@ module hazard3_ethernet #(
                         ret = addbytetotxframe(brtx.m[i]);
                 ret = sendtxframe();
                 txstate <= 0;
+		irqtx <= 1;
             `endif
         end
     end
@@ -250,6 +254,11 @@ module hazard3_ethernet #(
 	end
       end
     end
+
+    wire irqrx;
+    reg irqtx;
+    assign irqrx = rxwrote != rxread;
+    assign irq=irqrx | irqtx;
 
 endmodule
 
