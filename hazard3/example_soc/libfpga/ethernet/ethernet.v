@@ -25,7 +25,7 @@ module hazard3_ethernet #(
     input wire tx_clk, rx_clk
 );
 
-    reg [7:0] ctrlstate, rxstate;
+    reg [7:0] ctrlstate, rxstate, txstate;
 
     wire bus_write = pwrite && psel && penable;
     wire bus_read = !pwrite && psel && penable;
@@ -145,10 +145,9 @@ module hazard3_ethernet #(
 			end
                         pready <= 1;
 		end else if (paddr == (`ETHERNET_MTU+8)) begin
-                        // send block;
+                        // send packet
                         ctrlstate <= 7;
-			pready <= 1;
-                        maddr1 <= 0;
+			pready <= 0;
 		end else if(paddr < `ETHERNET_MTU) begin
                     // write to our block mem
                     ctrlstate <= 5;
@@ -168,6 +167,9 @@ module hazard3_ethernet #(
 		   end else if(paddr == (`ETHERNET_MTU+20)) begin
                        prdata <= hostrx;
 		       pready <= 1;
+		   end else if(paddr == (`ETHERNET_MTU+24)) begin
+                       prdata <= txstate;
+                       pready <= 1;
                    end else if(paddr < `ETHERNET_MTU) begin
 		       if(!receiving) begin
   		         // read from rx packet
@@ -193,13 +195,9 @@ module hazard3_ethernet #(
             pready <= 1;
             ctrlstate <= 0;
         end else if (ctrlstate == 7) begin
-            // write packet command
-            `ifndef txrealsend
-		for(i=0; i<txsize; i=i+1)
-			ret = addbytetotxframe(mout);
-		ret = sendtxframe();
-		ctrlstate <= 6;
-    	    `endif
+	    // send packet
+	    pready <= 1;
+            ctrlstate <= 0;
         end else if (ctrlstate == 10) begin
 	    `ifndef rxrealread
 	    prdata <= {brrx.m[rxmaddrb], brrx.m[rxmaddrb+1], brrx.m[rxmaddrb+2], brrx.m[rxmaddrb+3]};
@@ -215,6 +213,25 @@ module hazard3_ethernet #(
                 ctrlstate <= 6;
             end
            `endif
+        end
+    end
+
+
+    // tx
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            txstate <= 0; 
+        end else if (txstate == 0) begin
+		if(ctrlstate == 7)
+			txstate <= 1;
+	end else if (txstate == 1) begin
+            // write packet command
+            `ifndef txrealsend
+                for(i=0; i<txsize; i=i+1)
+                        ret = addbytetotxframe(brtx.m[i]);
+                ret = sendtxframe();
+                txstate <= 0;
+            `endif
         end
     end
 
