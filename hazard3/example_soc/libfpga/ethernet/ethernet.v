@@ -76,7 +76,7 @@ module hazard3_ethernet #(
     );    
 
     reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0, rxread=0, rxwrote=0;
-    reg hostrx=0, receiving=0;
+    reg hostrx=0, receiving=0, enableirq, zerotxirq;
     `ifndef realeth
     integer ret, i;
     import "DPI-C" function int ethdpiinit();
@@ -132,6 +132,8 @@ module hazard3_ethernet #(
             pready <= 0;
             txsize <= 0;
 	    hostrx <= 0;
+	    enableirq <= 0;
+	    zerotxirq <= 0;
         end else if (ctrlstate == 0) begin
             pready <= 0;
             if (bus_write && pready == 0) begin
@@ -142,13 +144,20 @@ module hazard3_ethernet #(
 		end else if(paddr == (`ETHERNET_MTU+4)) begin
 			if(!receiving) begin
 			  if(pwdata == 0)
-				  rxread <= {rxwrote, rxread};
+				  rxread <= rxwrote;
 			end
                         pready <= 1;
 		end else if (paddr == (`ETHERNET_MTU+8)) begin
                         // send packet
                         ctrlstate <= 7;
 			pready <= 0;
+		end else if (paddr == (`ETHERNET_MTU+28)) begin
+                        enableirq <= pwdata;
+                        pready <= 1;
+			$display("enableirq");
+		end else if (paddr == (`ETHERNET_MTU+32)) begin
+                        zerotxirq <= pwdata;
+                        pready <= 1;
 		end else if(paddr < `ETHERNET_MTU) begin
                     // write to our block mem
                     ctrlstate <= 5;
@@ -170,6 +179,9 @@ module hazard3_ethernet #(
 		       pready <= 1;
 		   end else if(paddr == (`ETHERNET_MTU+24)) begin
                        prdata <= txstate;
+                       pready <= 1;
+		   end else if(paddr == (`ETHERNET_MTU+32)) begin
+                       prdata <= {rxread, rxwrote};
                        pready <= 1;
                    end else if(paddr < `ETHERNET_MTU) begin
 		       if(!receiving) begin
@@ -226,7 +238,8 @@ module hazard3_ethernet #(
         end else if (txstate == 0) begin
 		if(ctrlstate == 7)
 			txstate <= 1;
-		irqtx <= 0;
+		if(zerotxirq)
+			irqtx <= 0;
 	end else if (txstate == 1) begin
             // write packet command
             `ifndef txrealsend
@@ -258,7 +271,7 @@ module hazard3_ethernet #(
     wire irqrx;
     reg irqtx;
     assign irqrx = rxwrote != rxread;
-    assign irq=irqrx | irqtx;
+    assign irq=enableirq && (irqrx | irqtx);
 
 endmodule
 
