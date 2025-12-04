@@ -32,8 +32,6 @@ module hazard3_ethernet #(
     wire bus_read = !pwrite && psel && penable;
 
     assign pslverr = 0;
-    wire txbusy;
-    assign txbusy = !|ctrlstate;
 
     reg [31:0] auxdata;
     reg [ 3:0] mcnt = 0;
@@ -76,7 +74,7 @@ module hazard3_ethernet #(
     );    
 
     reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0, rxread=0, rxwrote=0;
-    reg hostrx=0, receiving=0, enableirq, zerotxirq;
+    reg receiving=0, enableirq, acktxirq;
     `ifndef realeth
     integer ret, i;
     import "DPI-C" function int ethdpiinit();
@@ -119,6 +117,17 @@ module hazard3_ethernet #(
     end
     `endif
 
+    `define CTRLSTATE_SENDPACKET 7
+    `define REGETH_TXSIZE_W       (`ETHERNET_DEVADDR + `ETHERNET_MTU+0)
+    `define REGETH_RXREAD_W       (`ETHERNET_DEVADDR + `ETHERNET_MTU+4)
+    `define REGETH_SENDPACKET_W   (`ETHERNET_DEVADDR + `ETHERNET_MTU+8)
+    `define REGETH_ENABLEIRQ_W    (`ETHERNET_DEVADDR + `ETHERNET_MTU+28)
+    `define REGETH_ACKTXIRQ_W     (`ETHERNET_DEVADDR + `ETHERNET_MTU+32)
+    `define REGETH_ADDTOPACKET_W  (`ETHERNET_DEVADDR + `ETHERNET_MTU)
+    `define REGETH_TXSTATE_R      (`ETHERNET_DEVADDR + `ETHERNET_MTU+12)
+    `define REGETH_RXSIZE_R       (`ETHERNET_DEVADDR + `ETHERNET_MTU+16)
+    `define REGETH_RXWRITE_R      (`ETHERNET_DEVADDR + `ETHERNET_MTU+36)
+    `define REGETH_RDFROMPACKET_R (`ETHERNET_DEVADDR + `ETHERNET_MTU)
     // ctrl state machine
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -131,33 +140,32 @@ module hazard3_ethernet #(
             prdata <= 0;
             pready <= 0;
             txsize <= 0;
-	    hostrx <= 0;
 	    enableirq <= 0;
-	    zerotxirq <= 0;
+	    acktxirq <= 0;
         end else if (ctrlstate == 0) begin
             pready <= 0;
             if (bus_write && pready == 0) begin
                 $display("bus w paddr=%x pwdata=%x pready=%x", paddr, pwdata, pready);
-                if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+0)) begin
+                if(paddr == `REGETH_TXSIZE_W) begin
 			txsize <= pwdata[15:0];
 			pready <= 1;
-		end else if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+4)) begin
+		end else if(paddr == `REGETH_RXREAD_W) begin
 			if(!receiving) begin
 			    rxread <= rxwrote;
 			end
                         pready <= 1;
-		end else if (paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+8)) begin
+		end else if (paddr == `REGETH_SENDPACKET_W) begin
                         // send packet
-                        ctrlstate <= 7;
+                        ctrlstate <= `CTRLSTATE_SENDPACKET;
 			pready <= 0;
-		end else if (paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+28)) begin
+		end else if (paddr == `REGETH_ENABLEIRQ_W) begin
 			$display("enableirq");
                         enableirq <= pwdata;
                         pready <= 1;
-		end else if (paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+32)) begin
-                        zerotxirq <= pwdata;
+		end else if (paddr == `REGETH_ACKTXIRQ_W) begin
+                        acktxirq <= pwdata;
                         pready <= 1;
-		end else if(paddr < `ETHERNET_DEVADDR + `ETHERNET_MTU) begin
+		end else if(paddr < `REGETH_ADDTOPACKET_W) begin
                     // write to our block mem
                     ctrlstate <= 5;
                     auxdata <= pwdata;
@@ -167,22 +175,16 @@ module hazard3_ethernet #(
                     mcnt <= 0;
                 end
            end else if(bus_read && pready == 0) begin
-                   if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+12)) begin
-		       prdata <= txbusy;
+                   if(paddr == `REGETH_TXSTATE_R) begin
+		       prdata <= txstate;
 		       pready <= 1;
-                   end else if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+16)) begin
+                   end else if(paddr == `REGETH_RXSIZE_R) begin
 		       prdata <= rxsize;
                        pready <= 1;
-		   end else if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+20)) begin
-                       prdata <= hostrx;
-		       pready <= 1;
-		   end else if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+24)) begin
-                       prdata <= txstate;
-                       pready <= 1;
-		   end else if(paddr == (`ETHERNET_DEVADDR + `ETHERNET_MTU+32)) begin
+		   end else if(paddr == `REGETH_RXWRITE_R) begin
                        prdata <= {rxread, rxwrote};
                        pready <= 1;
-                   end else if(paddr < `ETHERNET_DEVADDR + `ETHERNET_MTU) begin
+                   end else if(paddr < `REGETH_RDFROMPACKET_R) begin
 		       if(!receiving) begin
   		         // read from rx packet
 		         mcnt <= 0;
@@ -206,7 +208,7 @@ module hazard3_ethernet #(
         end else if (ctrlstate == 6) begin
             pready <= 1;
             ctrlstate <= 0;
-        end else if (ctrlstate == 7) begin
+        end else if (ctrlstate == `CTRLSTATE_SENDPACKET) begin
 	    // send packet
 	    pready <= 1;
             ctrlstate <= 0;
@@ -235,9 +237,9 @@ module hazard3_ethernet #(
             txstate <= 0; 
 	    irqtx <= 0;
         end else if (txstate == 0) begin
-		if(ctrlstate == 7)
+		if(ctrlstate == `CTRLSTATE_SENDPACKET)
 			txstate <= 1;
-		if(zerotxirq)
+		if(acktxirq)
 			irqtx <= 0;
 	end else if (txstate == 1) begin
             // write packet command

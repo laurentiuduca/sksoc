@@ -96,7 +96,7 @@ module example_soc #(
     // applies whether the transfers are part of the same Exclusive access sequence or not.
 
     // Level-sensitive interrupt sources
-    wire [      NUM_IRQS-1:0] irq = 0;  // -> mip.meip
+    wire [      NUM_IRQS-1:0] irq=0;  // -> mip.meip
     wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
     wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
     wire [       N_HARTS-1:0] hart_halted;
@@ -202,12 +202,6 @@ module example_soc #(
         .hartids    (hartids)
     );
 
-`ifdef laur0
-    always @(hartids or bridge_hartid or sram0_hartid) begin
-        $display("hartid=%x {bridge_hartid      , sram0_hartid     }=%x", hartids, {bridge_hartid,
-                                                                                    sram0_hartid});
-    end
-`endif
     // ----------------------------------------------------------------------------
     // Bus fabric
 

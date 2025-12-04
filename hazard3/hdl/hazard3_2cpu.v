@@ -350,7 +350,7 @@ hazard3_cpu_1port #(
 	.dbg_sbus_wdata             (sbus_wdata),
 	.dbg_sbus_rdata             (sbus_rdata),
 
-	.irq                        (irq),
+	.irq                        (1'b0),
 	.soft_irq                   (soft_irq[1]),
 	.timer_irq                  (timer_irq[1]),
 	.hartid                     (hartids[2*W_DATA-1:W_DATA])
