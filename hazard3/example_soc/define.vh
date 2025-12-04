@@ -12,7 +12,7 @@
 `define FREQ 27_000_000
 
 `define ETHERNET_DEVADDR 16'hc000
-`define ETHERNET_MTU 1500
+`define ETHERNET_MTU 16'd1500
 
 `define SDSPI
 `ifdef SDSPI

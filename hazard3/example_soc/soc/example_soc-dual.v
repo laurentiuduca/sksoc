@@ -409,16 +409,16 @@ module example_soc #(
         .apbs_phartid(bridge_phartid),
         .apbs_pd_pc  (bridge_pd_pc),
 
-        .apbm_paddr  ({eth_paddr,   sd_paddr, uart_paddr, timer_paddr}),
-        .apbm_psel   ({eth_psel,    sd_psel, uart_psel, timer_psel}),
+        .apbm_paddr  ({eth_paddr,   sd_paddr,   uart_paddr,   timer_paddr}),
+        .apbm_psel   ({eth_psel,    sd_psel,    uart_psel,    timer_psel}),
         .apbm_penable({eth_penable, sd_penable, uart_penable, timer_penable}),
-        .apbm_pwrite ({eth_pwrite,  sd_pwrite, uart_pwrite, timer_pwrite}),
-        .apbm_pwdata ({eth_pwdata,  sd_pwdata, uart_pwdata, timer_pwdata}),
-        .apbm_pready ({eth_pready,  sd_pready, uart_pready, timer_pready}),
-        .apbm_prdata ({eth_prdata,  sd_prdata, uart_prdata, timer_prdata}),
+        .apbm_pwrite ({eth_pwrite,  sd_pwrite,  uart_pwrite,  timer_pwrite}),
+        .apbm_pwdata ({eth_pwdata,  sd_pwdata,  uart_pwdata,  timer_pwdata}),
+        .apbm_pready ({eth_pready,  sd_pready,  uart_pready,  timer_pready}),
+        .apbm_prdata ({eth_prdata,  sd_prdata,  uart_prdata,  timer_prdata}),
         .apbm_pslverr({eth_pslverr, sd_pslverr, uart_pslverr, timer_pslverr}),
         .apbm_hartid ({eth_phartid, sd_phartid, uart_phartid, timer_phartid}),
-        .apbm_pd_pc  ({eth_pd_pc,   sd_pd_pc, uart_pd_pc, timer_pd_pc})
+        .apbm_pd_pc  ({eth_pd_pc,   sd_pd_pc,   uart_pd_pc,   timer_pd_pc})
     );
 
     // ----------------------------------------------------------------------------
@@ -616,14 +616,14 @@ module example_soc #(
         .clk  (clk),
         .rst_n(rst_n),
     
-        .psel   (sdspi_psel),
-        .penable(sdspi_penable),
-        .pwrite (sdspi_pwrite),
-        .paddr  (sdspi_paddr),
-        .pwdata (sdspi_pwdata),
-        .prdata (sdspi_prdata),
-        .pready (sdspi_pready),
-        .pslverr(sdspi_pslverr),
+        .psel   (eth_psel),
+        .penable(eth_penable),
+        .pwrite (eth_pwrite),
+        .paddr  (eth_paddr),
+        .pwdata (eth_pwdata),
+        .prdata (eth_prdata),
+        .pready (eth_pready),
+        .pslverr(eth_pslverr),
 
 	.tx_clk(clk), .rx_clk(clk),
 	.irq(irq[0])
