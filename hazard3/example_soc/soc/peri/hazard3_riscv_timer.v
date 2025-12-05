@@ -34,6 +34,7 @@ module hazard3_riscv_timer #(
     input wire dbg_halt,
     input wire tick,
 
+    input reg [31:0] irq,
     output reg [N_HARTS-1:0] soft_irq,
     output reg [N_HARTS-1:0] timer_irq
 );
@@ -43,6 +44,7 @@ module hazard3_riscv_timer #(
     localparam ADDR_MTIMEH = 16'h000c;
     localparam ADDR_MTIMECMP = 16'h0010;
     localparam ADDR_MTIMECMPH = 16'h0014;
+    localparam ADDR_PLIC_CLAIM = 16'h0200;
 
     // ----------------------------------------------------------------------------
     // Timer tick logic
@@ -136,16 +138,42 @@ module hazard3_riscv_timer #(
             ADDR_MTIMECMPH:      prdata = ~mtimecmp0[63:32];
             ADDR_MTIMECMP + 8:   prdata = ~mtimecmp1[31:0];
             ADDR_MTIMECMPH + 12: prdata = ~mtimecmp1[63:32];
+	    ADDR_PLIC_CLAIM :    prdata = extint_num;
             default:             prdata = 32'h0;
         endcase
     end
 
+    wire [31:0] w_irq_t;
+    reg [31:0] extint_num;
+    assign w_irq_t = irq & (1 + ~irq);
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            extint_num <= 0;
+        end else begin
+            case (w_irq_t)
+                32'h00000001: extint_num <= 1;
+                32'h00000002: extint_num <= 2;
+                32'h00000004: extint_num <= 3;
+                32'h00000008: extint_num <= 4;
+                32'h00000010: extint_num <= 5;
+                32'h00000020: extint_num <= 6;
+                32'h00000040: extint_num <= 7;
+                32'h00000080: extint_num <= 8;
+                default:      extint_num <= 0;
+            endcase
+	    //if(w_irq_t)
+		//    $display("w_irq_t=%x", w_irq_t);
+	end
+    end
+    
     reg [1:0] state;
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pready <= 0;
             state  <= 0;
         end else if (state == 0) begin
+	    //if(paddr == ADDR_PLIC_CLAIM)
+		//    $display("ADDR_PLIC_CLAIM, extint_num=%x", extint_num);
             if (bus_read) begin
                 pready <= 1;
                 state  <= 1;

@@ -96,7 +96,8 @@ module example_soc #(
     // applies whether the transfers are part of the same Exclusive access sequence or not.
 
     // Level-sensitive interrupt sources
-    wire [      NUM_IRQS-1:0] irq=0;  // -> mip.meip
+    wire [/*NUM_IRQS-1*/31:0] irq={{(NUM_IRQS-1){1'b0}}, eth_irq};  // -> mip.meip
+    wire                      eth_irq;
     wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
     wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
     wire [       N_HARTS-1:0] hart_halted;
@@ -551,6 +552,7 @@ module example_soc #(
 
         .tick(timer_tick),
 
+	.irq(irq),
         .soft_irq (soft_irq),
         .timer_irq(timer_irq)
     );
@@ -620,7 +622,7 @@ module example_soc #(
         .pslverr(eth_pslverr),
 
 	.tx_clk(clk), .rx_clk(clk),
-	.irq(irq[0])
+	.irq(eth_irq)
     );
 
 endmodule
