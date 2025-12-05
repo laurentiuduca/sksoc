@@ -157,7 +157,7 @@ parameter BREAKPOINT_TRIGGERS = 0,
 // NUM_IRQS: Number of external IRQs. Minimum 1, maximum 512. Note that if
 // EXTENSION_XH3IRQ (Hazard3 interrupt controller) is disabled then multiple
 // external interrupts are simply OR'd into mip.meip.
-parameter NUM_IRQS            = 1,
+parameter NUM_IRQS            = 32,
 
 // IRQ_PRIORITY_BITS: Number of priority bits implemented for each interrupt
 // in meipra, if EXTENSION_XH3IRQ is enabled. The number of distinct levels

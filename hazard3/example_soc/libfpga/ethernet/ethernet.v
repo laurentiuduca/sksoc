@@ -23,7 +23,7 @@ module hazard3_ethernet #(
 
     // ethernet signals
     input wire tx_clk, rx_clk,
-    output wire irq
+    output wire irqtx, irqrx
 );
 
     reg [7:0] ctrlstate, rxstate, txstate;
@@ -159,7 +159,7 @@ module hazard3_ethernet #(
                         ctrlstate <= `CTRLSTATE_SENDPACKET;
 			pready <= 0;
 		end else if (paddr == `REGETH_ENABLEIRQ_W) begin
-			$display("enableirq");
+			$display("enableirq r_irqtx=%x (rxwrote != rxread)=%x", r_irqtx, (rxwrote != rxread));
                         enableirq <= pwdata;
                         pready <= 1;
 		end else if (paddr == `REGETH_ACKTXIRQ_W) begin
@@ -235,12 +235,12 @@ module hazard3_ethernet #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             txstate <= 0; 
-	    irqtx <= 0;
+	    r_irqtx <= 0;
         end else if (txstate == 0) begin
 		if(ctrlstate == `CTRLSTATE_SENDPACKET)
 			txstate <= 1;
 		if(acktxirq)
-			irqtx <= 0;
+			r_irqtx <= 0;
 	end else if (txstate == 1) begin
             // write packet command
             `ifndef txrealsend
@@ -248,7 +248,7 @@ module hazard3_ethernet #(
                         ret = addbytetotxframe(brtx.m[i]);
                 ret = sendtxframe();
                 txstate <= 0;
-		irqtx <= 1;
+		r_irqtx <= 1;
             `endif
         end
     end
@@ -269,10 +269,9 @@ module hazard3_ethernet #(
       end
     end
 
-    wire irqrx;
-    reg irqtx;
-    assign irqrx = rxwrote != rxread;
-    assign irq=enableirq && (irqrx | irqtx);
+    reg r_irqtx;
+    assign irqtx = enableirq && r_irqtx;
+    assign irqrx = enableirq && (rxwrote != rxread);
 
 endmodule
 

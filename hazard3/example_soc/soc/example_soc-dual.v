@@ -96,8 +96,8 @@ module example_soc #(
     // applies whether the transfers are part of the same Exclusive access sequence or not.
 
     // Level-sensitive interrupt sources
-    wire [/*NUM_IRQS-1*/31:0] irq={{(NUM_IRQS-1){1'b0}}, eth_irq};  // -> mip.meip
-    wire                      eth_irq;
+    wire [NUM_IRQS-1:0] irq={31'h0, eth_irqrx, eth_irqtx};  // -> mip.meip
+    wire                      eth_irqtx, eth_irqrx;
     wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
     wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
     wire [       N_HARTS-1:0] hart_halted;
@@ -110,7 +110,7 @@ module example_soc #(
         .CSR_M_MANDATORY    (1),
         .CSR_M_TRAP         (1),
         .DEBUG_SUPPORT      (1),
-        .NUM_IRQS           (1),
+        .NUM_IRQS           (NUM_IRQS),
         .RESET_REGFILE      (0),
         // Can be overridden from the defaults in hazard3_config.vh during
         // instantiation of example_soc():
@@ -622,7 +622,8 @@ module example_soc #(
         .pslverr(eth_pslverr),
 
 	.tx_clk(clk), .rx_clk(clk),
-	.irq(eth_irq)
+	.irqtx(eth_irqtx),
+	.irqrx(eth_irqrx)
     );
 
 endmodule
