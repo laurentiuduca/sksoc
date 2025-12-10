@@ -74,7 +74,7 @@ module hazard3_ethernet #(
     );    
 
     reg [15:0] txsize=0, rxsize=0, rxcnt=0, ndiscarded=0, rxdiscard=0, rxread=0, rxwrote=0;
-    reg receiving=0, enableirq, acktxirq;
+    reg receiving=0, rxenableirq, txenableirq, acktxirq;
     `ifndef realeth
     integer ret, i;
     import "DPI-C" function int ethdpiinit();
@@ -121,7 +121,8 @@ module hazard3_ethernet #(
     `define REGETH_TXSIZE_W       (`ETHERNET_DEVADDR + `ETHERNET_MTU+0)
     `define REGETH_RXREAD_W       (`ETHERNET_DEVADDR + `ETHERNET_MTU+4)
     `define REGETH_SENDPACKET_W   (`ETHERNET_DEVADDR + `ETHERNET_MTU+8)
-    `define REGETH_ENABLEIRQ_W    (`ETHERNET_DEVADDR + `ETHERNET_MTU+28)
+    `define REGETH_TXENABLEIRQ_W  (`ETHERNET_DEVADDR + `ETHERNET_MTU+24)
+    `define REGETH_RXENABLEIRQ_W  (`ETHERNET_DEVADDR + `ETHERNET_MTU+28)
     `define REGETH_ACKTXIRQ_W     (`ETHERNET_DEVADDR + `ETHERNET_MTU+32)
     `define REGETH_ADDTOPACKET_W  (`ETHERNET_DEVADDR + `ETHERNET_MTU)
     `define REGETH_TXSTATE_R      (`ETHERNET_DEVADDR + `ETHERNET_MTU+12)
@@ -140,12 +141,13 @@ module hazard3_ethernet #(
             prdata <= 0;
             pready <= 0;
             txsize <= 0;
-	    enableirq <= 0;
+	    txenableirq <= 0;
+	    rxenableirq <= 0;
 	    acktxirq <= 0;
         end else if (ctrlstate == 0) begin
             pready <= 0;
             if (bus_write && pready == 0) begin
-                $display("bus w paddr=%x pwdata=%x pready=%x", paddr, pwdata, pready);
+                //$display("bus w paddr=%x pwdata=%x pready=%x", paddr, pwdata, pready);
                 if(paddr == `REGETH_TXSIZE_W) begin
 			txsize <= pwdata[15:0];
 			pready <= 1;
@@ -158,9 +160,13 @@ module hazard3_ethernet #(
                         // send packet
                         ctrlstate <= `CTRLSTATE_SENDPACKET;
 			pready <= 0;
-		end else if (paddr == `REGETH_ENABLEIRQ_W) begin
-			$display("enableirq r_irqtx=%x (rxwrote != rxread)=%x", r_irqtx, (rxwrote != rxread));
-                        enableirq <= pwdata;
+		end else if (paddr == `REGETH_RXENABLEIRQ_W) begin
+			$display("rxenableirq <= %x (rxwrote != rxread)=%x", pwdata, (rxwrote != rxread));
+                        rxenableirq <= pwdata;
+                        pready <= 1;
+		end else if (paddr == `REGETH_TXENABLEIRQ_W) begin
+                        $display("txenableirq <= %x r_irqtx=%x", pwdata, r_irqtx);
+                        txenableirq <= pwdata;
                         pready <= 1;
 		end else if (paddr == `REGETH_ACKTXIRQ_W) begin
                         acktxirq <= pwdata;
@@ -214,7 +220,7 @@ module hazard3_ethernet #(
             ctrlstate <= 0;
         end else if (ctrlstate == 10) begin
 	    `ifndef rxrealread
-	    prdata <= {brrx.m[rxmaddrb], brrx.m[rxmaddrb+1], brrx.m[rxmaddrb+2], brrx.m[rxmaddrb+3]};
+	    prdata <= {brrx.m[rxmaddrb+3], brrx.m[rxmaddrb+2], brrx.m[rxmaddrb+1], brrx.m[rxmaddrb+0]};
 	    ctrlstate <= 6;
             `else
 	    // read word from rxbuffer
@@ -270,8 +276,8 @@ module hazard3_ethernet #(
     end
 
     reg r_irqtx;
-    assign irqtx = enableirq && r_irqtx;
-    assign irqrx = enableirq && (rxwrote != rxread);
+    assign irqtx = txenableirq && r_irqtx;
+    assign irqrx = rxenableirq && (rxwrote != rxread);
 
 endmodule
 
