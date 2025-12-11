@@ -12,7 +12,7 @@ echo "Creating tap0 interface..."
 ip tuntap add tap0 mode tap group netdev
 
 # Configure IP addresses
-ip addr add 192.168.79.2/24 dev tap0
+ip addr add 10.0.0.1/24 dev tap0
 
 # Set reverse path filter
 sysctl -w net.ipv4.conf.tap0.rp_filter=2

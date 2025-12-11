@@ -87,8 +87,9 @@ module hazard3_ethernet #(
     task rxgotnew(input int nbytes);
       if(rxread != rxwrote) begin 
 	rxdiscard = nbytes;
-	$display("rxgotnew discard");
+	$display("rxgotnew discard %d bytes", nbytes);
       end else begin
+	$display("start receiving %d bytes", nbytes);
 	rxdiscard = 0;
 	rxsize = nbytes;
 	receiving = 1;
@@ -102,12 +103,14 @@ module hazard3_ethernet #(
 	  ndiscarded = ndiscarded + 1;
         rxdiscard = rxdiscard - 1;
       end else begin
-	//$display("brrx.m[rxcnt] = %x", b);
+	//$display("brrx.m[rxcnt] = %2x", b);
 	brrx.m[rxcnt] = b;
+	//$write("rx[%d]=%2x ", rxcnt, brrx.m[rxcnt]);
 	if(rxcnt == (rxsize-1)) begin
 	  receiving = 0;
           rxcnt = 0;
 	  rxwrote = rxwrote + 1;
+	  $display("");
 	end else
           rxcnt = rxcnt + 1;
       end
@@ -176,7 +179,7 @@ module hazard3_ethernet #(
                     ctrlstate <= 5;
                     auxdata <= pwdata;
                     midata1 <= pwdata[7:0];
-                    maddr1 <= {16'h0, paddr};
+                    maddr1 <= {16'h0, (paddr-`ETHERNET_DEVADDR)};
                     mw1 <= 1;
                     mcnt <= 0;
                 end
@@ -195,7 +198,8 @@ module hazard3_ethernet #(
   		         // read from rx packet
 		         mcnt <= 0;
 		         ctrlstate <= 10;
-		         rxmaddrb <= paddr;
+		         rxmaddrb <= paddr-`ETHERNET_DEVADDR;
+			 //$display("read from rxmaddrb %x", paddr-`ETHERNET_DEVADDR);
 		       end
 	           end
 	   end
@@ -206,8 +210,6 @@ module hazard3_ethernet #(
             midata1 <= auxdata[15:8];
             maddr1 <= maddr1 + 1;
             if (mcnt == 3) begin
-                //if(midata1)
-                //	$display("\tbus w addr=%x data=%x", maddr1, midata1);
                 ctrlstate <= 6;
                 mw1 <= 0;
             end
@@ -228,8 +230,6 @@ module hazard3_ethernet #(
 	    mcnt <= mcnt + 1;
             rxmaddrb <= rxmaddrb + 1;
             if (mcnt == 3) begin
-                //if(midata1)
-                //      $display("\tbus w addr=%x data=%x", maddr1, midata1);
                 ctrlstate <= 6;
             end
            `endif
