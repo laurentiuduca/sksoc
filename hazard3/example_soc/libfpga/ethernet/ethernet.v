@@ -243,19 +243,32 @@ module hazard3_ethernet #(
             txstate <= 0; 
 	    r_irqtx <= 0;
         end else if (txstate == 0) begin
-		if(ctrlstate == `CTRLSTATE_SENDPACKET)
-			txstate <= 1;
-		if(acktxirq)
-			r_irqtx <= 0;
+            if(ctrlstate == `CTRLSTATE_SENDPACKET)
+		txstate <= 1;
 	end else if (txstate == 1) begin
             // write packet command
             `ifndef txrealsend
-                for(i=0; i<txsize; i=i+1)
-                        ret = addbytetotxframe(brtx.m[i]);
+		$display("sending %d-", txsize);
+                for(i=0; i<txsize; i=i+1) begin
+                  ret = addbytetotxframe(brtx.m[i]);
+		  if(ret != 0)
+		  $write("%x ", brtx.m[i]);
+		end
                 ret = sendtxframe();
-                txstate <= 0;
+                txstate <= 2;
 		r_irqtx <= 1;
+		$display("packet sent");
+		//$finish;
             `endif
+        end else if (txstate == 2) begin
+		if(acktxirq) begin
+                        r_irqtx <= 0;
+			txstate <= 3;
+		end
+        end else if (txstate == 3) begin
+                if(!acktxirq) begin
+                        txstate <= 0;
+                end
         end
     end
 

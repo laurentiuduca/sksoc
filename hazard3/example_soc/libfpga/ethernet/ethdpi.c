@@ -92,7 +92,8 @@ extern "C" int addbytetotxframe(unsigned char b)
 extern "C" int sendtxframe()
 {
 	fd_write(tap_fd, (char*)&buffer[0], pktlen);
-    	printf("packet sent\n");
+	pktlen = 0;
+    	//printf("packet sent\n");
     	//close(tap_fd);
 	return 0;
 }
