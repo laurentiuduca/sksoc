@@ -164,7 +164,7 @@ module hazard3_ethernet #(
                         ctrlstate <= `CTRLSTATE_SENDPACKET;
 			pready <= 0;
 		end else if (paddr == `REGETH_RXENABLEIRQ_W) begin
-			$display("rxenableirq <= %x (rxwrote != rxread)=%x", pwdata, (rxwrote != rxread));
+			//$display("rxenableirq <= %x (rxwrote != rxread)=%x", pwdata, (rxwrote != rxread));
                         rxenableirq <= pwdata;
                         pready <= 1;
 		end else if (paddr == `REGETH_TXENABLEIRQ_W) begin
@@ -248,7 +248,7 @@ module hazard3_ethernet #(
 	end else if (txstate == 1) begin
             // write packet command
             `ifndef txrealsend
-		$display("sending %d-", txsize);
+		$display("sending %d bytes", txsize);
                 for(i=0; i<txsize; i=i+1) begin
                   ret = addbytetotxframe(brtx.m[i]);
 		  if(ret != 0)
