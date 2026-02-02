@@ -1,6 +1,12 @@
 skSoC: a RISC-V Hazard3 based SoC skeleton
 ====
 
+-3.
+For original skSoC tang nano 20k check skSoC-tn repository
+
+-2.
+The newest version is at https://github.com/laurentiuduca/sksoc
+
 -1.
 Download the latest RISCV GCC toolchain prebuilt by xPack for nuttx and add .../riscv-none-elf-gcc/bin to PATH
 RUN mkdir riscv-none-elf-gcc && \
