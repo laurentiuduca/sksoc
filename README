@@ -78,3 +78,10 @@ Register	3081 / 15915	20%
   --Register as FF	3081 / 15915	20%
 BSRAM	28 / 46	61%
 
+if you use this work, please cite us
+skSoC: A RISC-V Hazard3 Based SoC Skeleton
+October 2025, DOI:10.1109/ATEE66006.2025.11299983
+2025 14th International Symposium on Advanced Topics in Electrical Engineering (ATEE)
+Authors: Laurentiu-Cristian Duca, Anton Duca, University Politehnica of Bucharest
+
+
