@@ -1,5 +1,5 @@
 // laur
-`define SIM_MODE
+//`define SIM_MODE
 
 //`define DUMP_VCD
 // dbgstart may be defined in hazard3_config.vh, not here

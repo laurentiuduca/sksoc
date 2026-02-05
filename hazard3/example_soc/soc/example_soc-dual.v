@@ -96,7 +96,11 @@ module example_soc #(
     // applies whether the transfers are part of the same Exclusive access sequence or not.
 
     // Level-sensitive interrupt sources
+    `ifdef ethon
     wire [NUM_IRQS-1:0] irq={31'h0, eth_irqrx, eth_irqtx};  // -> mip.meip
+    `else
+    wire [NUM_IRQS-1:0] irq=0;
+    `endif
     wire                      eth_irqtx, eth_irqrx;
     wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
     wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
@@ -608,6 +612,7 @@ module example_soc #(
         .sdspi_status(sdspi_status)
     );
 
+    `ifdef ethon
     hazard3_ethernet eth0 (
         .clk  (clk),
         .rst_n(rst_n),
@@ -625,5 +630,6 @@ module example_soc #(
 	.irqtx(eth_irqtx),
 	.irqrx(eth_irqrx)
     );
+    `endif
 
 endmodule

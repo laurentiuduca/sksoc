@@ -34,7 +34,7 @@ module hazard3_riscv_timer #(
     input wire dbg_halt,
     input wire tick,
 
-    input reg [31:0] irq,
+    input wire [31:0] irq,
     output reg [N_HARTS-1:0] soft_irq,
     output reg [N_HARTS-1:0] timer_irq
 );
