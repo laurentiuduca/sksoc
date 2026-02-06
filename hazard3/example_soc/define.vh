@@ -1,5 +1,5 @@
 // laur
-//`define SIM_MODE
+`define SIM_MODE
 
 //`define DUMP_VCD
 // dbgstart may be defined in hazard3_config.vh, not here
@@ -11,6 +11,7 @@
 `define SIM_TNSRAM // tang nano not only sim ram
 `define FREQ 27_000_000
 
+`define ethon
 `define ETHERNET_DEVADDR 16'hc000
 `define ETHERNET_MTU 16'd1500
 
