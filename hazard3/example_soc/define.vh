@@ -1,5 +1,5 @@
 // laur
-`define SIM_MODE
+//`define SIM_MODE
 
 //`define DUMP_VCD
 // dbgstart may be defined in hazard3_config.vh, not here
@@ -9,22 +9,31 @@
 
 `define TN_DRAM_REFRESH // for tang nano
 `define SIM_TNSRAM // tang nano not only sim ram
-`define FREQ 27_000_000
+`define FREQ 50_000_000
+/*
+CLK
+mmcm
+uart define.vh:`define SERIAL_WCNT (FREQ/115200)
+sd v and vhdl
+eth
+example_soc #( 
+        .CLK_MHZ   (40)        // For timer timebase
+sdram clk
+    ) 
+define.vh `define SDCARD_CLK_DIV 3 // clk is between 25-50mhz
+*/
 
-`define ethon
+//`define ethon
 `define ETHERNET_DEVADDR 16'hc000
 `define ETHERNET_MTU 16'd1500
 
 `define SDSPI
-`ifdef SDSPI
 `define SDSPI_DEVADDR 16'h8000
 `define SDSPI_BLOCKSIZE 16'd512
 `define SDSPI_BLOCKADDR (`SDSPI_DEVADDR + `SDSPI_BLOCKSIZE)
 `define SDSPI_ADDRUH 16'h4000
 //`define simsdspi
-`else
-`define SDCARD_CLK_DIV 2 // clk is between 25-50mhz
-`endif
+`define SDCARD_CLK_DIV 3 // clk is between 50mhz
 `define FAT32_SD
 
 `define CACHE_SIZE (32*1024)
@@ -44,8 +53,13 @@
 `endif
 
 `define MEM_SIZE (8*1024*1024)
-`define BBL_SIZE (1024*1024) //(1*1024*1024)
+`define BBL_SIZE (1024*1024) // initmem.bin
 `define BIN_BBL_SIZE   `BBL_SIZE
 `define BIN_DISK_SIZE 0
 `define BIN_SIZE       (`BIN_BBL_SIZE + `BIN_DISK_SIZE)
+
+// simulate sdram winbond
+`define winbaddrlen 24
+`define winbdatalen 16
+`define winbmasklen 2
 

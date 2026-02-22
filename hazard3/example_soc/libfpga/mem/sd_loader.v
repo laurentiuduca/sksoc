@@ -6,7 +6,7 @@
 `include "define.vh"
 
 module sd_loader (
-    input  wire         clk27mhz,
+    input  wire         clk,
     // rstn active-low, You can re-read SDcard by pushing the reset button.
     input  wire         resetn,
     input  wire [2:0]   w_main_init_state,
@@ -44,7 +44,7 @@ reg [7:0] state=0;
 reg [7:0] mem[0:`SD_SECTOR_SIZE - 1];
 reg [$clog2(`SD_SECTOR_SIZE):0] i=0;
 
-    always @(posedge clk27mhz) begin
+    always @(posedge clk) begin
         if(!resetn) begin
             rstart <= 0;
             rsector <= 0;
@@ -88,7 +88,7 @@ reg [$clog2(`SD_SECTOR_SIZE):0] i=0;
         end
     end
 
-    always @(posedge clk27mhz) begin
+    always @(posedge clk) begin
         if(!resetn) begin
             waddr <= 0;
         end else begin
@@ -106,10 +106,10 @@ wire [1:0] card_type;
 // sd_reader
 //----------------------------------------------------------------------------------------------------
 sd_reader #(
-    .CLK_DIV          ( `SDCARD_CLK_DIV )   // because clk=27MHz, CLK_DIV must ≥2
+    .CLK_DIV          ( `SDCARD_CLK_DIV )   // because clk=100MHz, CLK_DIV must ≥3
 ) u_sd_reader (
     .rstn             ( resetn         ),
-    .clk              ( clk27mhz      ),
+    .clk              ( clk      ),
     .sdclk            ( sdclk          ),
     .sdcmd            ( sdcmd          ),
     .sdcmd_i	      ( sdcmd_i	       ),

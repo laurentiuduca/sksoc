@@ -1,5 +1,6 @@
-// Modified by Laurentiu Cristian Duca, 2025/08
-// spdx license identifier - apache 2
+// modified by laurentiu cristian duca, 20250417
+// spdx license identifier apache2
+// works with sdspi_reader
 
 //--------------------------------------------------------------------------------------------------------
 // Module  : sd_file_reader
@@ -11,7 +12,9 @@
 //           Support FileSystem : FAT16 or FAT32
 //--------------------------------------------------------------------------------------------------------
 
-module sd_file_reader #(
+`include "define.vh"
+
+module sdspi_file_reader #(
     parameter            FILE_NAME_LEN = 11           , // length of FILE_NAME (in bytes). Since the length of "example.txt" is 11, so here is 11.
     parameter [52*8-1:0] FILE_NAME     = "example.txt", // file name to read, ignore upper and lower case
                                                         // For example, if you want to read a file named "HeLLo123.txt", this parameter can be "hello123.TXT", "HELLO123.txt" or "HEllo123.Txt"
@@ -26,12 +29,6 @@ module sd_file_reader #(
     input wire rstn,
     // clock
     input wire clk,
-    // SDcard signals (connect to SDcard), this design do not use sddat1~sddat3.
-    output wire sdclk,
-    inout wire sdcmd,
-    input wire sdcmd_i,
-    output wire sdcmd_oe,
-    input wire sddat0,  // FPGA only read SDDAT signal but never drive it
     // status output (optional for user)
     output wire [3:0] card_stat,  // show the sdcard initialize status
     output wire [1:0] card_type,  // 0=UNKNOWN    , 1=SDv1    , 2=SDv2  , 3=SDHCv2
@@ -39,10 +36,30 @@ module sd_file_reader #(
     output reg file_found,  // 0=file not found, 1=file found
     // file content data output (sync with clk)
     output reg outen,  // when outen=1, a byte of file content is read out from outbyte
-    output reg [7:0] outbyte  // a byte of file content
+    output reg [7:0] outbyte,  // a byte of file content
+    input wire [2:0] w_main_init_state,
+    input wire [7:0] w_ctrl_state,
+    output reg [31:0] DATA,
+    output reg WE,
+    output reg BOOTDONE,
+    output wire frbusy,
+    output wire [31:0] w_reader_status,
+    // signals connect to SD controller
+    output wire m_psel,
+    output wire m_penable,
+    output wire m_pwrite,
+    output wire [15:0] m_paddr,
+    output wire [31:0] m_pwdata,
+    input wire [31:0] m_prdata,
+    input wire m_pready,
+    input wire m_pslverr,
+    input wire m_sdsbusy,
+    input wire [31:0] m_sdspi_status,
+    output reg [31:0] file_size
 );
 
-
+    assign card_stat = 0;
+    assign card_type = 0;
 
     function [7:0] toUpperCase;
         input [7:0] in;
@@ -95,7 +112,7 @@ module sd_file_reader #(
         cluster_sector_offset = 8'h0, cluster_sector_offset_t;  // current sector number in cluster
 
     reg [31:0] file_cluster = 0;
-    reg [31:0] file_size = 0;
+    //reg [31:0] file_size = 0;
 
     reg [7:0] cluster_size = 0, cluster_size_t;
     reg [31:0] first_fat_sector_no = 0, first_fat_sector_no_t;
@@ -311,7 +328,7 @@ module sd_file_reader #(
                                 read_sector_no <= first_data_sector_no_t + cluster_size_t * curr_cluster_t + cluster_sector_offset_t;
                             end
                         end else begin
-                            if(target_cluster=='h0FFF_FFFF || target_cluster=='h0FFF_FFF8 || target_cluster=='hFFFF_FFFF || target_cluster<2) begin
+                            if(target_cluster=='h0FFF_FFFF || target_cluster=='h0FFF_FFF8 || target_cluster=='hFFFF_FFFF || target_cluster<2 || fptr>=`BIN_SIZE) begin
                                 filesystem_state <= DONE;  // read to the end of file, done
                             end else begin
                                 curr_cluster_t = target_cluster;
@@ -377,26 +394,28 @@ module sd_file_reader #(
     end
 
 
-    sd_reader #(
-        .CLK_DIV (CLK_DIV),
-        .SIMULATE(SIMULATE)
-    ) u_sd_reader (
-        .rstn     (rstn),
-        .clk      (clk),
-        .sdclk    (sdclk),
-        .sdcmd    (sdcmd),
-        .sdcmd_i  (sdcmd_i),
-        .sdcmd_oe (sdcmd_oe),
-        .sddat0   (sddat0),
-        .card_type(card_type),
-        .card_stat(card_stat),
-        .rstart   (read_start),
-        .rsector  (read_sector_no),
-        .rbusy    (),
-        .rdone    (read_done),
-        .outen    (rvalid),
-        .outaddr  (raddr),
-        .outbyte  (rdata)
+    sdspi_reader u_sdspi_reader (
+        .rstn           (rstn),
+        .clk            (clk),
+        .rstart         (read_start),
+        .rsector        (read_sector_no),
+        .rdone          (read_done),
+        .outen          (rvalid),
+        .outaddr        (raddr),
+        .outbyte        (rdata),
+        .frbusy         (frbusy),
+        .w_reader_status(w_reader_status_orig),
+        // signals connect to SD controller
+        .psel           (m_psel),
+        .penable        (m_penable),
+        .pwrite         (m_pwrite),
+        .paddr          (m_paddr),
+        .pwdata         (m_pwdata),
+        .prdata         (m_prdata),
+        .pready         (m_pready),
+        .pslverr        (m_pslverr),
+        .sdsbusy        (m_sdsbusy),
+        .sdspi_status   (m_sdspi_status)
     );
 
 
@@ -571,7 +590,7 @@ module sd_file_reader #(
             file_cluster <= 0;
             file_size <= 0;
         end else begin
-            if (fready && fnamelen == FILE_NAME_LEN) begin
+            if (fready && fnamelen == FILE_NAME_LEN && !file_found) begin
                 file_found <= 1'b1;
                 file_cluster <= fcluster;
                 file_size <= fsize;
@@ -590,18 +609,75 @@ module sd_file_reader #(
     //----------------------------------------------------------------------------------------------------------------------
     // output file content
     //----------------------------------------------------------------------------------------------------------------------
-    reg [31:0] fptr = 0;
+    reg [31:0] fptr = 0, dtowr=0;
+    reg [7:0] mw[0:3];
 
     always @(posedge clk or negedge rstn)
         if (~rstn) begin
             fptr <= 0;
             {outen, outbyte} <= 0;
+            send <= 0;
+	    dtowr=0;
         end else begin
             if (rvalid && filesystem_state == READ_A_FILE && ~search_fat && fptr < file_size) begin
                 fptr <= fptr + 1;
                 {outen, outbyte} <= {1'b1, rdata};
-            end else {outen, outbyte} <= 0;
+                mw[fptr[1:0]] <= rdata;
+                if (fptr[1:0] == 2'b11) begin
+                    dtowr <= {rdata, mw[2], mw[1], mw[0]};
+                    send <= 1;
+                end else send <= 0;
+            end else begin
+                {outen, outbyte} <= 0;
+		if(!frbusy)
+                	send <= 0;
+            end
         end
 
+    reg [7:0] state = 0;
+    reg [31:0] senti = 0;
+    reg send = 0;
+    assign frbusy = (w_main_init_state != 3) || (send && !(state == 0 && w_ctrl_state == 0));
+    always @(posedge clk or negedge rstn) begin
+        if (!rstn) begin
+            state <= 0;
+            WE <= 0;
+            BOOTDONE <= 0;
+            senti <= 0;
+        end else begin
+            if (state == 0) begin
+                if (BOOTDONE == 0) begin
+                    if (send) begin
+			DATA <= dtowr;
+                        state <= 20;
+                    end
+                end
+            end else if (state == 20) begin
+                if (w_ctrl_state == 0)
+                    if (senti < `BIN_SIZE) begin
+                        WE <= 1;
+                        senti <= senti + 4;
+                        state <= 21;
+                    end
+            end else if (state == 21) begin
+                if (w_ctrl_state != 0) begin
+                    WE <= 0;
+                    state <= 22;
+                end
+            end else if (state == 22) begin
+                if (w_ctrl_state == 0) begin
+                    state <= 0;
+                end
+                if (senti >= `BIN_SIZE) BOOTDONE <= 1;
+            end
+        end
+    end
+
+    wire [31:0] w_reader_status_orig;
+    assign w_reader_status = {
+        senti[23:0],  
+        //state[3:0], w_reader_status_orig[3:0],
+	m_sdspi_status[7:0] // ctrlstate[7:0], state[7:0]
+    };
 
 endmodule

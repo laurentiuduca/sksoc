@@ -7,74 +7,83 @@ module m_topsim (
 `ifndef ICARUS
     input  wire        clk,
 `endif
-    // tang nano 20k SDRAM
-    output wire        O_sdram_clk,
-    output wire        O_sdram_cke,
-    output wire        O_sdram_cs_n,   // chip select
-    output wire        O_sdram_cas_n,  // columns addrefoc select
-    output wire        O_sdram_ras_n,  // row address select
-    output wire        O_sdram_wen_n,  // write enable
-    inout  wire [31:0] IO_sdram_dq,    // 32 bit bidirectional data bus
-    output wire [10:0] O_sdram_addr,   // 11 bit multiplexed address bus
-    output wire [ 1:0] O_sdram_ba,     // two banks
-    output wire [ 3:0] O_sdram_dqm,    // 32/4
+    // SDRAM
+    output wire SDCLK0,
+    output wire SDCKE0,
+    output wire [1:0]DQM,
+    output wire CAS,
+    output wire RAS,
+    output wire SDWE,
+    output wire SDCS0,
+    inout [15:0]Data,
+    output wire [12:0]Address,
+    output wire [1:0]Bank,
 
     input  wire       i_rx,
     output wire       o_tx,
-    output wire [5:0] w_led,
+    output wire [1:0] w_led,
     input  wire       w_btnl,
     input  wire       w_btnr,
     // when sdcard_pwr_n = 0, SDcard power on
-    output wire       sdcard_pwr_n,
+    //output wire       sdcard_pwr_n,
     // signals connect to SD bus
     output wire       sdclk,
     inout  wire       sdcmd,
     inout  wire       sddat0,
-    inout  wire       sddat1,
-    sddat2,
-    sddat3,
+    //inout  wire       sddat1,
+    //inout  wire       sddat2,
+    inout  wire       sddat3,
     // display
     output wire       MAX7219_CLK,
     output wire       MAX7219_DATA,
     output wire       MAX7219_LOAD
 );
 
-`ifdef ICARUS
-    reg clk = 0;
-    always begin
-        clk = 0;
-        #5;
-        clk = 1;
-        #5;
-    end
-`endif
+wire sdcard_pwr_n;
+wire sddat1, sddat2;
 
-    wire pll_clk, clk_sdram;
+wire pll_clk;
+wire locked;
+reg [31:0] cnt=0;
+reg rst_n=0;
+always@(posedge clk)
+        if(cnt < 24) begin
+                rst_n <= 0;
+                cnt <= cnt + 1;
+	end else begin
+                rst_n <= 1;
+	        if (cnt >= 32'h2220) begin
+		`ifdef DUMP_VCD
+            		$display("time to finish %d", $time);
+            		$finish;
+		`endif
+        	end else cnt <= cnt + 1;
+	end
 `ifdef SIM_MODE
-    assign pll_clk   = clk;
-    assign clk_sdram = clk;
+assign pll_clk = clk;
+assign locked = rst_n;
 `else
-    Gowin_rPLL_nes pll_nes (
-        .clkin  (clk),
-        .clkout (pll_clk),   // FREQ main clock
-        .clkoutp(clk_sdram)  // FREQ main clock phase shifted
-    );
+mmcmclock mmcmlaur(
+    .clk_in(clk),     // 50 MHz input
+    .reset(~rst_n),       // active-high reset
+    .clk_outsys(pll_clk),
+    .clk_out100(clk_sdram),
+    .locked(locked)
+);
+//assign pll_clk = clk;
 `endif
-
     wire w_rxd = 1;
     wire w_txd, uart_tx;
     assign o_tx = w_init_done ? uart_tx : w_txd;
     wire w_init_done;
 
-    reg  RST_X = 0;
     example_soc #(
-        .SRAM_DEPTH(1 << 21),  // 2 Mwords x 4 -> 8MB
-        .CLK_MHZ   (27)        // For timer timebase
+        .CLK_MHZ   (50)        // For timer timebase
     ) es (
         // System clock + reset
         .clk(pll_clk),
-        .rst_n(RST_X),
-        .clk_sdram(clk_sdram),
+        .rst_n(locked),
+	.clk_sdram(clk_sdram),
 
         // JTAG port to RISC-V JTAG-DTM
         .tck(1'b0),
@@ -87,17 +96,17 @@ module m_topsim (
         .uart_tx(uart_tx),
         .uart_rx(1'b1),
 
-        // tang nano 20k SDRAM
-        .O_sdram_clk  (O_sdram_clk),
-        .O_sdram_cke  (O_sdram_cke),
-        .O_sdram_cs_n (O_sdram_cs_n),   // chip select
-        .O_sdram_cas_n(O_sdram_cas_n),  // columns addrefoc select
-        .O_sdram_ras_n(O_sdram_ras_n),  // row address select
-        .O_sdram_wen_n(O_sdram_wen_n),  // write enable
-        .IO_sdram_dq  (IO_sdram_dq),    // 32 bit bidirectional data bus
-        .O_sdram_addr (O_sdram_addr),   // 11 bit multiplexed address bus
-        .O_sdram_ba   (O_sdram_ba),     // two banks
-        .O_sdram_dqm  (O_sdram_dqm),    // 32/4
+	                        // SDRAM
+                                .SDCLK0(SDCLK0),
+                                .SDCKE0(SDCKE0),
+                                .DQM(DQM),
+                                .CAS(CAS),
+                                .RAS(RAS),
+                                .SDWE(SDWE),
+                                .SDCS0(SDCS0),
+                                .Data(Data),
+                                .Address(Address),
+                                .Bank(Bank),
 
         .w_rxd(w_rxd),
         .w_txd(w_txd),
@@ -119,20 +128,6 @@ module m_topsim (
         .MAX7219_DATA(MAX7219_DATA),
         .MAX7219_LOAD(MAX7219_LOAD)
     );
-
-    // reset
-    reg [31:0] cnt = 0;
-    always @(posedge clk) begin
-        if (cnt > 20) RST_X <= 1;
-        if (cnt >= 32'h2220) begin
-`ifdef DUMP_VCD
-            $display("time to finish %d", $time);
-            $finish;
-`else
-            ;
-`endif
-        end else cnt <= cnt + 1;
-    end
 
 `ifdef DUMP_VCD
     initial begin

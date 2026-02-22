@@ -32,21 +32,21 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
      output wire 			 w_init_done,
      input wire [31:0]             	 d_pc,
 
-    // tang nano 20k SDRAM
-    output wire O_sdram_clk,
-    output wire O_sdram_cke,
-    output wire O_sdram_cs_n,            // chip select
-    output wire O_sdram_cas_n,           // columns addrefoc select
-    output wire O_sdram_ras_n,           // row address select
-    output wire O_sdram_wen_n,           // write enable
-    inout wire [31:0] IO_sdram_dq,       // 32 bit bidirectional data bus
-    output wire [10:0] O_sdram_addr,     // 11 bit multiplexed address bus
-    output wire [1:0] O_sdram_ba,        // two banks
-    output wire [3:0] O_sdram_dqm,       // 32/4
+    // SDRAM
+    output wire SDCLK0,
+    output wire SDCKE0,
+    output wire [1:0]DQM,
+    output wire CAS,
+    output wire RAS,
+    output wire SDWE,
+    output wire SDCS0,
+    inout wire [15:0]Data,
+    output wire [12:0]Address,
+    output wire [1:0]Bank,
 
         input  wire        w_rxd,
         output wire        w_txd,
-        output wire [5:0] w_led,
+        output wire [1:0] w_led,
         input wire w_btnl,
         input wire w_btnr,
     	// when sdcard_pwr_n = 0, SDcard power on
@@ -124,8 +124,9 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
 
 `ifndef SIM_MODE
     wire [31:0] w_sd_init_data;
+    wire [31:0] file_size;
     wire w_sd_init_we, w_sd_init_done;
-    wire [5:0] sd_led_status;
+    //wire [5:0] sd_led_status;
     wire [31:0] w_sdloader_state;
     `ifdef SDSPI
     `ifdef FAT32_SD
@@ -149,12 +150,12 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
                                 .m_pready(m_pready),
                                 .m_pslverr(m_pslverr),
                                 .m_sdsbusy(m_sdsbusy),
-                                .m_sdspi_status(m_sdspi_status));
+                                .m_sdspi_status(m_sdspi_status), .file_size(file_size));
 	wire file_found;
 	wire [1:0] filesystem_type;
-	wire [5:0] sd_led_status = ~{w_sd_init_done, file_found, filesystem_type, 2'b00};
+	//assign sd_led_status = ~{w_sd_init_done, file_found, filesystem_type, 2'b00};
     `else
-    sdspi_loader sdspi_loader(.clk27mhz(clk), .resetn(rst_x),
+    sdspi_loader sdspi_loader(.clk(clk), .resetn(rst_x),
         .w_main_init_state(r_init_state), .DATA(w_sd_init_data), .WE(w_sd_init_we), .DONE(w_sd_init_done), 
         .w_ctrl_state(r_sd_state), .w_loader_status(w_sdloader_state),
                                 // signals connect to SD controller
@@ -172,7 +173,7 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
     `else
     `ifdef FAT32_SD
     sd_file_loader #(.SD_CLK_DIV(`SDCARD_CLK_DIV)) sd_file_loader
-      (.clk27mhz(clk), .resetn(rst_x),
+      (.clk(clk), .resetn(rst_x),
         .w_main_init_state(r_init_state), .DATA(w_sd_init_data), .WE(w_sd_init_we), .DONE(w_sd_init_done),
         .w_ctrl_state(r_sd_state),
         .tangled(sd_led_status),
@@ -180,7 +181,7 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
         .sddat0(sddat0), .sddat1(sddat1), .sddat2(sddat2), .sddat3(sddat3));
     `else
     // sd_loader includes define.vh
-    sd_loader /*#(.SD_CLK_DIV(`SDCARD_CLK_DIV))*/ sd_loader(.clk27mhz(clk), .resetn(rst_x), 
+    sd_loader #(.SD_CLK_DIV(`SDCARD_CLK_DIV)) sd_loader(.clk(clk), .resetn(rst_x), 
         .w_main_init_state(r_init_state), .DATA(w_sd_init_data), .WE(w_sd_init_we), .DONE(w_sd_init_done),
         .w_ctrl_state(r_sd_state),
         .sdcard_pwr_n(sdcard_pwr_n), .sdclk(sdclk), .sdcmd(sdcmd), .sdcmd_i(sdcmd_i), .sdcmd_oe(sdcmd_oe),
@@ -189,7 +190,7 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
     `endif
     `endif
     `ifndef FAT32_SD
-    assign sd_led_status = {!w_sd_init_done, 5'b0};
+    //assign sd_led_status = {!w_sd_init_done, 5'b0};
     `endif
 
     // sd state machine for copying sd to dram
@@ -223,6 +224,34 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
             r_bblsd_done <= 1;
     end
 `endif
+
+    /**********************************************************************************************/
+
+    // debug on display
+    `ifndef SIM_MODE
+    wire clkdiv;
+    wire [31:0] data_vector;
+    max7219 max7219(.clk(clk), .clkdiv(clkdiv), .reset_n(rst_x), .data_vector(data_vector),
+            .clk_out(MAX7219_CLK),
+            .data_out(MAX7219_DATA),
+            .load_out(MAX7219_LOAD)
+        );
+    clkdivider cd(.clk(clk), .reset_n(rst_x), .n(21'd100), .clkdiv(clkdiv));
+
+    assign data_vector = (w_btnr == 1 && w_btnl == 1) ? w_sdloader_state :
+                         (w_btnl == 0 && w_btnr == 0) ? diff1 :
+                         (w_btnl == 0 && w_btnr == 1) ? diff2 :
+                         {r_mem_rb_done, w_sd_init_done, w_init_done, r_zero_done,
+                          //w_sd_checksum_match, 
+                          {r_bblsd_done, r_init_state[2:0], r_sd_state[3:0]},
+                          r_initaddr3[19:0]};
+    assign w_led = //{w_btnl, w_btnr}; // btnl=ledext=g20=led[0], btnr=ledint=g21=led[1]. pressbtn=>0 0=>ledactive
+                (w_btnl == 1 && w_btnr == 1) ? {w_init_done, r_zero_done} :
+                (w_btnl == 1 && w_btnr == 0) ? {r_mem_rb_done, w_sd_init_done} :
+                (w_btnl == 0 && w_btnr == 1) ? {1'b1, w_sd_checksum_match} :
+                                                2'b00; //led_status[1:0];
+    `endif
+
 
     /**********************************************************************************************/
 `ifdef SIM_MODE
@@ -389,7 +418,7 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
 	    r_zero_we <= 0;
 	    r_zero_done <= 1;
 `else
-        if(!w_dram_busy && !r_zero_done && o_init_calib_complete) 
+        if(!w_dram_busy && !r_zero_done) // && o_init_calib_complete) 
 				r_zero_we <= 1;
 		  else if(w_dram_busy && r_zero_we) begin
             r_zero_we    <= 0;
@@ -460,51 +489,24 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
 
                                .clk(clk),
                                .rst_x(rst_x),
-                               .clk_sdram(clk_sdram),
-                               .o_init_calib_complete(o_init_calib_complete),
-                               .sdram_fail(sdram_fail),
-                               `ifdef TN_DRAM_REFRESH
-                               .r_late_refresh(w_late_refresh),
-                               `endif
+			       .clk_sdram(clk_sdram),
 
                                 `ifdef SIM_MODE
                                 .w_mtime()
                                 `else
-                                .O_sdram_clk(O_sdram_clk),
-                               .O_sdram_cke(O_sdram_cke),
-                               .O_sdram_cs_n(O_sdram_cs_n),            // chip select
-                               .O_sdram_cas_n(O_sdram_cas_n),           // columns address select
-                               .O_sdram_ras_n(O_sdram_ras_n),           // row address select
-                               .O_sdram_wen_n(O_sdram_wen_n),           // write enable
-                               .IO_sdram_dq(IO_sdram_dq),       // 32 bit bidirectional data bus
-                               .O_sdram_addr(O_sdram_addr),     // 11 bit multiplexed address bus
-                               .O_sdram_ba(O_sdram_ba),        // two banks
-                               .O_sdram_dqm(O_sdram_dqm)       // 32/4
+				// SDRAM
+    				.SDCLK0(SDCLK0),
+	    			.SDCKE0(SDCKE0),
+    				.DQM(DQM),
+    				.CAS(CAS),
+    				.RAS(RAS),
+    				.SDWE(SDWE),
+    				.SDCS0(SDCS0),
+    				.Data(Data),
+    				.Address(Address),
+    				.Bank(Bank)
                                `endif
                                );
-    /**********************************************************************************************/
-
-    // debug on display
-    `ifndef SIM_MODE
-    wire clkdiv;
-    wire [31:0] data_vector;
-    max7219 max7219(.clk(clk), .clkdiv(clkdiv), .reset_n(rst_x), .data_vector(data_vector),
-            .clk_out(MAX7219_CLK),
-            .data_out(MAX7219_DATA),
-            .load_out(MAX7219_LOAD)
-        );
-    clkdivider cd(.clk(clk), .reset_n(rst_x), .n(21'd100), .clkdiv(clkdiv));
-
-    assign data_vector = (w_btnr == 0 && w_btnl == 0) ? w_sdloader_state : //{5'b0, r_init_state[2:0], r_initaddr3[23:0]} 
-    			w_btnr ? diff2 : //w_sd_checksum :
-	    		w_btnl ? diff1 : {m_sdspi_status}; // {24'h0, 5'b0, r_init_state}; 
-
-    
-    assign w_led = (w_btnl == 0 && w_btnr == 0) ? 
-                        ~ {w_sd_checksum_match, r_mem_rb_done, w_sd_init_done, 
-                        w_init_done, r_zero_done, o_init_calib_complete & !sdram_fail & !w_late_refresh} :
-                        sd_led_status;
-    `endif
 endmodule
     /**********************************************************************************************/
 

@@ -249,8 +249,8 @@ module hazard3_sd #(
             sdsrd <= 1;
             state <= 2;
         end else if (state == 2) begin
-            if (sdsdout_avail && !sdserror) begin
-                //sdsrd <= 0;
+		if (sdsdout_avail) begin // && !sdserror) begin
+                //sdsrd <= 0; // block transfer
                 outbyte <= sdsdout;
                 state   <= 3;
             end
@@ -302,7 +302,7 @@ module hazard3_sd #(
             state <= 12;
         end else if (state == 12) begin
             if (sdsdin_taken == 1) begin
-                //sdswr <= 0;
+                //sdswr <= 0; // block transfer
                 sdsdin_valid <= 0;
                 state <= 13;
             end

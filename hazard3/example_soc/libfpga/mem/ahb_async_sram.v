@@ -47,7 +47,7 @@ module ahb_async_sram #(
 
     input  wire        w_rxd,
     output wire        w_txd,
-    output wire [ 5:0] w_led,
+    output wire [ 1:0] w_led,
     input  wire        w_btnl,
     input  wire        w_btnr,
     // when sdcard_pwr_n = 0, SDcard power on

@@ -13,9 +13,9 @@
 `include "define.vh"
 
 module sd_file_loader #(
-    parameter SD_CLK_DIV = 3'd2
+    parameter SD_CLK_DIV = 3'd3
 ) (
-    input  wire        clk27mhz,
+    input  wire        clk,
     // when sdcard_pwr_n = 0, SDcard power on
     output wire        sdcard_pwr_n,
     // signals connect to SD bus
@@ -38,7 +38,7 @@ module sd_file_loader #(
 );
 
 
-    wire clk = clk27mhz;
+    wire clk = clk;
     wire [8:0] led;
 
     assign sdcard_pwr_n = 1'b0;  // keep SDcard power-on
@@ -81,7 +81,7 @@ module sd_file_loader #(
     reg       rdone;
     reg [31:0] rsector = 0, i = 0;
 
-    always @(posedge clk27mhz) begin
+    always @(posedge clk) begin
         if (!resetn) begin
             rsector <= 0;
             state <= 0;
@@ -113,7 +113,7 @@ module sd_file_loader #(
     end
 
     reg rstatechanged = 0;
-    always @(posedge clk27mhz) begin
+    always @(posedge clk) begin
         if (!resetn) begin
             waddr <= 0;
             DATA  <= 0;

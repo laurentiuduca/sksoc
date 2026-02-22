@@ -1,7 +1,7 @@
 
 
 module fpga_top (
-    input  wire         clk27mhz,
+    input  wire         clk,
     // rstn active-low, You can re-read SDcard by pushing the reset button.
     input  wire         w_btnl,
     input wire          w_btnr,
@@ -26,7 +26,7 @@ module fpga_top (
 
 reg resetn=0;
 reg [31:0] rcnt=0;
-always @ (posedge clk27mhz)
+always @ (posedge clk)
 	if(rcnt < 10000)
 		rcnt <= rcnt+1;
 	else 
@@ -45,7 +45,7 @@ reg mw=0, mr=0, serwr=0;
 reg [7:0] mdata=0, serdata=0;
 reg [7:0] mout=0;
 reg [31:0] maddr=0;
-always @ (posedge clk27mhz) begin
+always @ (posedge clk) begin
 	if(mw)
 		m[maddr] <= mdata;
 	mout <= m[maddr];
@@ -68,7 +68,7 @@ wire sdsdout_avail;
 reg sdsdout_taken=0;
 wire [1:0] state_o;
 wire [7:0] sdsfsm_o;
-always @ (posedge clk27mhz or negedge resetn) begin
+always @ (posedge clk or negedge resetn) begin
     	if(~resetn) begin
         	state <= 0;
 		sdsbaddr <= 0;
@@ -176,7 +176,7 @@ always @ (posedge clk27mhz or negedge resetn) begin
 		end
 	end
 end
-always @ (posedge clk27mhz or negedge resetn) begin
+always @ (posedge clk or negedge resetn) begin
         if(~resetn) begin
                 noerror <= 1;
 		errorcode <= 0;
@@ -191,19 +191,19 @@ end
 // send file content to UART
 //----------------------------------------------------------------------------------------------------
 wire tre_o;
-UartTx tx(.CLK(clk27mhz), .RST_X(resetn), .DATA(serdata), .WE(serwr), .TXD(uart_tx), .READY(tre_o));
+UartTx tx(.CLK(clk), .RST_X(resetn), .DATA(serdata), .WE(serwr), .TXD(uart_tx), .READY(tre_o));
 
     /**********************************************************************************************/
 
     // debug on display
     wire clkdiv;
     wire [31:0] data_vector;
-    max7219 max7219(.clk(clk27mhz), .clkdiv(clkdiv), .reset_n(resetn), .data_vector(data_vector),
+    max7219 max7219(.clk(clk), .clkdiv(clkdiv), .reset_n(resetn), .data_vector(data_vector),
             .clk_out(MAX7219_CLK),
             .data_out(MAX7219_DATA),
             .load_out(MAX7219_LOAD)
         );
-    clkdivider cd(.clk(clk27mhz), .reset_n(resetn), .n(21'd100), .clkdiv(clkdiv));
+    clkdivider cd(.clk(clk), .reset_n(resetn), .n(21'd100), .clkdiv(clkdiv));
 
     assign data_vector = (w_btnr == 0 && w_btnl == 0) ? {{firstdin, sdsbaddr[3:0], {1'b0, sdserror_code}}, oecnt[15:0]} : 
 	    w_btnr ? {{errstate[3:0], 3'd0, sdsbusy, state}, scnt[15:0]} : {tre_o, maddr[14:0], mout, serdata};
@@ -211,7 +211,7 @@ UartTx tx(.CLK(clk27mhz), .RST_X(resetn), .DATA(serdata), .WE(serwr), .TXD(uart_
         //~((scnt >> 8) & tre_o);
 
 sd_controller /*#(.WRITE_TIMEOUT(1))*/ sdc (
-                        .clk(clk27mhz), // twice the SPI clk
+                        .clk(clk), // twice the SPI clk
                         .reset(!resetn),
 
                         .cs(cs),

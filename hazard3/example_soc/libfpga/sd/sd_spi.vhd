@@ -101,10 +101,10 @@ use ieee.numeric_std.all;
 
 entity sd_controller is
 generic (
-	clockRate : integer := 50000000;		-- Incoming clock is 50MHz (can change this to 2000 to test Write Timeout)
+	clockRate : integer := 50_000_000;		-- Incoming clock is 50MHz (can change this to 2000 to test Write Timeout)
 	slowClockDivider : integer := 64;	-- Basic clock is 25MHz, slow clock for startup is 25/64 = 390kHz
 	R1_TIMEOUT : integer := 10;			-- Number of bytes to wait before giving up on receiving R1 response
-	WRITE_TIMEOUT : integer range 0 to 999 := 500		-- Number of ms to wait before giving up on write completing
+	WRITE_TIMEOUT : integer range 0 to 999 := 500		-- 500 Number of ms to wait before giving up on write completing
 	);
 port (
 	cs : out std_logic;				-- To SD card

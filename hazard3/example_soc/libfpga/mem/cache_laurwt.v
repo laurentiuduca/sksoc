@@ -37,21 +37,21 @@ module cache_ctrl #(
 
     output wire w_init_done,
 
-    // tang nano 20k SDRAM
-    output wire        O_sdram_clk,
-    output wire        O_sdram_cke,
-    output wire        O_sdram_cs_n,   // chip select
-    output wire        O_sdram_cas_n,  // columns addrefoc select
-    output wire        O_sdram_ras_n,  // row address select
-    output wire        O_sdram_wen_n,  // write enable
-    inout  wire [31:0] IO_sdram_dq,    // 32 bit bidirectional data bus
-    output wire [10:0] O_sdram_addr,   // 11 bit multiplexed address bus
-    output wire [ 1:0] O_sdram_ba,     // two banks
-    output wire [ 3:0] O_sdram_dqm,    // 32/4
+    // SDRAM
+    output wire SDCLK0,
+    output wire SDCKE0,
+    output wire [1:0]DQM,
+    output wire CAS,
+    output wire RAS,
+    output wire SDWE,
+    output wire SDCS0,
+    inout wire [15:0]Data,
+    output wire [12:0]Address,
+    output wire [1:0]Bank,
 
     input  wire        w_rxd,
     output wire        w_txd,
-    output wire [ 5:0] w_led,
+    output wire [ 1:0] w_led,
     input  wire        w_btnl,
     input  wire        w_btnr,
     // when sdcard_pwr_n = 0, SDcard power on
@@ -235,16 +235,17 @@ module cache_ctrl #(
         .o_init_calib_complete(calib_done),
         .sdram_fail(sdram_fail),
 
-        .O_sdram_clk  (O_sdram_clk),
-        .O_sdram_cke  (O_sdram_cke),
-        .O_sdram_cs_n (O_sdram_cs_n),   // chip select
-        .O_sdram_cas_n(O_sdram_cas_n),  // columns address select
-        .O_sdram_ras_n(O_sdram_ras_n),  // row address select
-        .O_sdram_wen_n(O_sdram_wen_n),  // write enable
-        .IO_sdram_dq  (IO_sdram_dq),    // 32 bit bidirectional data bus
-        .O_sdram_addr (O_sdram_addr),   // 11 bit multiplexed address bus
-        .O_sdram_ba   (O_sdram_ba),     // two banks
-        .O_sdram_dqm  (O_sdram_dqm),    // 32/4
+                                // SDRAM
+                                .SDCLK0(SDCLK0),
+                                .SDCKE0(SDCKE0),
+                                .DQM(DQM),
+                                .CAS(CAS),
+                                .RAS(RAS),
+                                .SDWE(SDWE),
+                                .SDCS0(SDCS0),
+                                .Data(Data),
+                                .Address(Address),
+                                .Bank(Bank),	
 
         .w_rxd(w_rxd),
         .w_txd(w_txd),
