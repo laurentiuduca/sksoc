@@ -1,5 +1,5 @@
 // laur
-//`define SIM_MODE
+`define SIM_MODE
 
 //`define DUMP_VCD
 // dbgstart may be defined in hazard3_config.vh, not here
@@ -20,10 +20,10 @@ example_soc #(
         .CLK_MHZ   (40)        // For timer timebase
 sdram clk
     ) 
-define.vh `define SDCARD_CLK_DIV 3 // clk is between 25-50mhz
+define.vh `define SDCARD_CLK_DIV 3 // clk is 50mhz
 */
 
-//`define ethon
+`define ethon
 `define ETHERNET_DEVADDR 16'hc000
 `define ETHERNET_MTU 16'd1500
 
@@ -33,7 +33,7 @@ define.vh `define SDCARD_CLK_DIV 3 // clk is between 25-50mhz
 `define SDSPI_BLOCKADDR (`SDSPI_DEVADDR + `SDSPI_BLOCKSIZE)
 `define SDSPI_ADDRUH 16'h4000
 //`define simsdspi
-`define SDCARD_CLK_DIV 3 // clk is between 50mhz
+`define SDCARD_CLK_DIV 3 // clk is 50mhz
 `define FAT32_SD
 
 `define CACHE_SIZE (32*1024)

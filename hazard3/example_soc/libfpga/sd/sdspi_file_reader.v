@@ -629,7 +629,7 @@ module sdspi_file_reader #(
                 end else send <= 0;
             end else begin
                 {outen, outbyte} <= 0;
-		if(!frbusy)
+		if(!frbusy || (send && state == 23))
                 	send <= 0;
             end
         end
@@ -637,7 +637,7 @@ module sdspi_file_reader #(
     reg [7:0] state = 0;
     reg [31:0] senti = 0;
     reg send = 0;
-    assign frbusy = (w_main_init_state != 3) || (send && !(state == 0 && w_ctrl_state == 0));
+    assign frbusy = (w_main_init_state != 3) || send;
     always @(posedge clk or negedge rstn) begin
         if (!rstn) begin
             state <= 0;
@@ -666,9 +666,11 @@ module sdspi_file_reader #(
                 end
             end else if (state == 22) begin
                 if (w_ctrl_state == 0) begin
-                    state <= 0;
+                    state <= 23;
                 end
                 if (senti >= `BIN_SIZE) BOOTDONE <= 1;
+            end else if (state == 23) begin
+                    state <= 0;
             end
         end
     end

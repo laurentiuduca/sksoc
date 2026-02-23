@@ -43,6 +43,7 @@ wire sdcard_pwr_n;
 wire sddat1, sddat2;
 
 wire pll_clk;
+wire clk_sdram;
 wire locked;
 reg [31:0] cnt=0;
 reg rst_n=0;
@@ -61,6 +62,7 @@ always@(posedge clk)
 	end
 `ifdef SIM_MODE
 assign pll_clk = clk;
+assign clk_sdram = clk;
 assign locked = rst_n;
 `else
 mmcmclock mmcmlaur(

@@ -245,10 +245,10 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
                           //w_sd_checksum_match, 
                           {r_bblsd_done, r_init_state[2:0], r_sd_state[3:0]},
                           r_initaddr3[19:0]};
-    assign w_led = //{w_btnl, w_btnr}; // btnl=ledext=g20=led[0], btnr=ledint=g21=led[1]. pressbtn=>0 0=>ledactive
-                (w_btnl == 1 && w_btnr == 1) ? {w_init_done, r_zero_done} :
+    assign w_led = //{w_btnl, w_btnr}; // btnl=ledext=g21=led[0], btnr=ledint=g20=led[1]. pressbtn=>0 0=>ledactive
+                (w_btnl == 0 && w_btnr == 1) ? {w_init_done, r_zero_done} :
                 (w_btnl == 1 && w_btnr == 0) ? {r_mem_rb_done, w_sd_init_done} :
-                (w_btnl == 0 && w_btnr == 1) ? {1'b1, w_sd_checksum_match} :
+                (w_btnl == 1 && w_btnr == 1) ? {1'b1, w_sd_checksum_match} :
                                                 2'b00; //led_status[1:0];
     `endif
 
