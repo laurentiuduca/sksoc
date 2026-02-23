@@ -7,7 +7,8 @@ set_property PACKAGE_PIN G21 [get_ports w_led[0]]
 set_property IOSTANDARD LVCMOS33 [get_ports w_led[0]]
 set_property PACKAGE_PIN M21 [get_ports clk]
 set_property IOSTANDARD LVCMOS33 [get_ports clk]
-#create_clock -period 20.00 [get_ports { clk }];
+create_clock -add -name sys_clk_pin -period 20.00 [get_ports { clk }];
+#create_generated_clock -add -name sys_clk -period 20 [get_pins mmcmclock/clk_sys]
 set_property IOSTANDARD LVCMOS33 [get_ports w_btnl]
 set_property PACKAGE_PIN H7 [get_ports w_btnl]
 set_property IOSTANDARD LVCMOS33 [get_ports w_btnr]

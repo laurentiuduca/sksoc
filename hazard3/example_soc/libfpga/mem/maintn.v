@@ -240,7 +240,7 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
 
     assign data_vector = (w_btnr == 1 && w_btnl == 1) ? w_sdloader_state :
                          (w_btnl == 0 && w_btnr == 0) ? diff1 :
-                         (w_btnl == 0 && w_btnr == 1) ? diff2 :
+                         (w_btnl == 0 && w_btnr == 1) ? r_verify_checksum :
                          {r_mem_rb_done, w_sd_init_done, w_init_done, r_zero_done,
                           //w_sd_checksum_match, 
                           {r_bblsd_done, r_init_state[2:0], r_sd_state[3:0]},

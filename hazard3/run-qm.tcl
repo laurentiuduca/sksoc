@@ -107,5 +107,7 @@ write_checkpoint -force route.dcp
 report_timing_summary -file routetiming.rpt
 report_utilization -file routeutil.rpt
 
+report_timing_summary
+
 # write bitstream
 write_bitstream -force "top.bit"
