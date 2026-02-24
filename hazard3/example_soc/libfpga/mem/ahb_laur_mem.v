@@ -204,8 +204,10 @@ module ahb_sync_sram #(
                 r_dram_wr <= 1;
                 state <= 20;
                 if (ahb_read_aphase || ahb_write_aphase) begin
+		    `ifdef SIM_MODE
                     $display("ahb_read_aphase or write aphase in write dphase");
                     $finish;
+		    `endif
                 end
 `ifdef dbghexcl
                 if (exclwrdisplay) begin
@@ -224,8 +226,10 @@ module ahb_sync_sram #(
             end
 
             if (ahbls_htrans == 2'b01 || ahbls_htrans == 2'b11) begin
+		`ifdef SIM_MODE
                 $display("ahbls_htrans=%x not supported", ahbls_htrans);
                 $finish;
+		`endif
             end
 
         end

@@ -144,14 +144,18 @@ endtask
 				state <= 0;
 				r_stall <= 0;
 			end else begin
+				`ifdef SIM_MODE
 				$display("read r_addr=%x", r_addr);
 				$finish;
+				`endif
 			end
         end
 	8'd19: begin // mem_write
 		if(r_addr[1:0]) begin
+				`ifdef SIM_MODE
                                 $display("write r_addr=%x", r_addr);
                                 $finish;
+				`endif
                 end
 		r_mask <= r_ctrl;
 		r_wdata <= r_wdata_ui;

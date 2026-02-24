@@ -135,8 +135,10 @@ module hazard3_sd #(
             if (bus_write && pready == 0) begin
                 //$display("bus w paddr=%x pwdata=%x pready=%x", paddr, pwdata, pready);
                 if (paddr == 16'h8100) begin
+		    `ifdef SIM_MODE
                     $display("finish");
                     $finish;
+		    `endif
                 end
                 if (paddr < `SDSPI_BLOCKADDR) begin
                     sdsbaddr <= pwdata;

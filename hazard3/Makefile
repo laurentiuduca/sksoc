@@ -12,7 +12,7 @@ HDLETHERNET=$(HDLLF)/ethernet
 
 TOPSOURCE=$(HAZARD3DIR)/example_soc/m_topsim.v
 OTHERSOURCE= $(HAZARD3DIR)/example_soc/soc/example_soc-dual.v $(HDLLFCOMMON)/reset_sync.v $(HDLLFCOMMON)/fpga_reset.v $(HDLLFCOMMON)/activity_led.v $(HDL)/hazard3_core.v $(HDL)/hazard3_2cpu.v $(HDL)/hazard3_cpu_1port.v $(HDL)/arith/hazard3_alu.v $(HDL)/arith/hazard3_branchcmp.v $(HDL)/arith/hazard3_mul_fast.v $(HDL)/arith/hazard3_muldiv_seq.v $(HDL)/arith/hazard3_onehot_encode.v $(HDL)/arith/hazard3_onehot_priority.v $(HDL)/arith/hazard3_onehot_priority_dynamic.v $(HDL)/arith/hazard3_priority_encode.v $(HDL)/arith/hazard3_shift_barrel.v $(HDL)/hazard3_csr.v $(HDL)/hazard3_decode.v $(HDL)/hazard3_frontend.v $(HDL)/hazard3_instr_decompress.v $(HDL)/hazard3_irq_ctrl.v $(HDL)/hazard3_pmp.v $(HDL)/hazard3_power_ctrl.v $(HDL)/hazard3_regfile_1w2r.v $(HDL)/hazard3_triggers.v $(HDL)/debug/dtm/hazard3_jtag_dtm.v $(HDL)/debug/dtm/hazard3_jtag_dtm_core.v $(HDL)/debug/cdc/hazard3_apb_async_bridge.v $(HDL)/debug/cdc/hazard3_reset_sync.v $(HDL)/debug/cdc/hazard3_sync_1bit.v $(HDL)/debug/dm/hazard3_dm.v $(HDLPERI)/hazard3_riscv_timer.v $(HDLLFPERI)/uart/uart_mini.v $(HDLLFPERI)/uart/uart_regs.v $(HDLLFCOMMON)/clkdiv_frac.v $(HDLLFCOMMON)/sync_fifo.v $(HDLLF)/cdc/sync_1bit.v $(HDLLFPERI)/spi_03h_xip/spi_03h_xip.v $(HDLLFPERI)/spi_03h_xip/spi_03h_xip_regs.v $(HDLLF)/busfabric/ahbl_crossbar.v $(HDLLF)/busfabric/ahbl_splitter.v $(HDLLF)/busfabric/ahbl_arbiter.v $(HDLLFCOMMON)/onehot_mux.v $(HDLLFCOMMON)/onehot_priority.v $(HDLLF)/busfabric/ahbl_to_apb.v $(HDLLF)/busfabric/apb_splitter.v 
-LAURSDRAMQM=$(HDLLF)/mem/sdram-qm/memoryqm.v $(HDLLF)/mem/sdram-qm/memsim.v $(HDLLF)/mem/maintn.v $(HDLLF)/mem/sdram-qm/mmcmclock.v
+LAURSDRAMQM=$(HDLLF)/mem/sdram-qm/memoryqm.v $(HDLLF)/mem/sdram-qm/sdramwinb.v $(HDLLF)/mem/sdram-qm/memsim.v $(HDLLF)/mem/maintn.v $(HDLLF)/mem/sdram-qm/mmcmclock.v
 LAURMEMWB=$(LAURSDRAMQM) $(HDLLF)/mem/ahb_laur_mem.v $(HDLLF)/mem/cache_laurwb.v $(HDLLF)/mem/max7219.v $(HDLLF)/mem/clkdivider.v $(HDLLF)/mem/sd_loader.v $(HDLLF)/mem/sd_file_loader.v $(HDLLF)/mem/sd_file_reader.v $(HDLLF)/mem/sd_reader.v $(HDLLF)/mem/sdcmd_ctrl.v
 LAURMEMWT=$(LAURSDRAMQM) $(HDLLF)/mem/ahb_laur_mem.v $(HDLLF)/mem/cache_laurwt.v $(HDLLF)/mem/max7219.v $(HDLLF)/mem/clkdivider.v $(HDLLF)/mem/sd_file_loader.v $(HDLLF)/mem/sd_file_reader.v $(HDLLF)/mem/sd_reader.v $(HDLLF)/mem/sdcmd_ctrl.v
 LUKEMEM=$(HDLLF)/mem/sram_sync.v $(HDLLF)/mem/ahb_sync_sram.v 
@@ -49,14 +49,14 @@ tb.out:
 clean:
 	rm -f simple.vvp *.vcd *.out result.txt simv ucli.key vcs-result.txt log.txt diff.txt final_mem.txt log.txt.gz trace.txt
 	rm -rf simv.daidir csrc
-	rm -rf obj_dir example_soc/libfpga/sd/*o example_soc/libfpga/sd/*cf
+	rm -rf obj_dir example_soc/libfpga/sd/*o example_soc/libfpga/sd/*cf *edf *json yosys*log
 	rm -rf synth.vg impl serialout.txt ftn.txt *out stip*.txt
 	rm -rf laur2.txt log*txt ./a.out
 	rm -rf xsim*.* xelab*.* xvlog*.* sd_model.log
 	rm -f init_kernel.txt fh fl fout cl ch cr impl dump.vcd
 	rm -f *vg *json yosys.txt
 	rm -f initmem.bin simsd.fat32
-	rm -rf xsim* webtalk* xelab*.* top_sim.wdb project.prj run.tcl *.vcd vivado* *bit capture* *out .Xil *dcp *rpt
+	rm -rf xsim* webtalk* xelab*.* top_sim.wdb project.prj run.tcl *.vcd vivado* *bit capture* *out .Xil *dcp *rpt proj.*
 	rm -rf example_soc/libfpga/sdsd_spi.o example_soc/libfpga/sdwork-obj93.cf tight_setup_hold_pins.txt
 
 veriwb:
@@ -91,12 +91,16 @@ qmsynth:
 gwsynth:
 	time gw_sh run-tn.tcl
 
-BOARD=tangnano20k
-FAMILY=GW2A-18C
-DEVICE=GW2AR-LV18QN88C8/I7
+PART=xc7a100tfgg676-1
+TOP=${TOPMODULE}
+XRAY_DATABASE_DIR=/snap/openxc7/x1/opt/nextpnr-xilinx/external/prjxray-db
+
 yosys:
-	yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI}; synth_gowin -top ${TOPMODULE} -vout ${TOPMODULE}.vg -json ${TOPMODULE}.json"
+	yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI} ; synth_xilinx -top ${TOPMODULE} -family xc7 -json ${TOP}.json; write_edif -pvector bra ${TOP}.edf " | tee yosys.log
+	time vivado -mode batch -source route-qm.tcl
 nextpnr:
-	nextpnr-himbaechel --json ${TOPMODULE}.json --freq 27 --write ${TOPMODULE}_pnr.json --device ${DEVICE} --vopt family=${FAMILY} --vopt cst=rlsoc.cst.nextpnr
-	gowin_pack -d ${FAMILY} -o ${TOPMODULE}.fs ${TOPMODULE}_pnr.json
+	time nextpnr-xilinx --chipdb ${XRAY_DATABASE_DIR}/artix7/${PART}/chipdb.bin --xdc qmtechv3.xdc --json ${TOP}.json --write ${TOP}_routed.json | tee nextpnr.log
+	fasm2bels --part ${PART} --db-root ${XRAY_DATABASE_DIR}  --input ${TOP}_routed.json --output ${TOP}.fasm 
+	fasm2frames --part ${PART} --db-root ${XRAY_DATABASE_DIR} ${TOP}.fasm > ${TOP}.frames
+	xc7frames2bit --part_file ${XRAY_DATABASE_DIR}/${PART}/part.yaml --frm_file ${TOP}.frames --output_file ${TOP}.bit
 

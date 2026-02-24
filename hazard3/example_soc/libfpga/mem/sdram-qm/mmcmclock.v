@@ -10,7 +10,6 @@ module mmcmclock (
 wire clkfb;
 wire clkfb_buf;
 wire clk_in_buf;
-wire clk_outsys_mmcm, clk_out100_mmcm;
 
 BUFG clkin_buf (
     .I(clk_in),
@@ -37,14 +36,11 @@ mmcm_inst (
     .RST(reset),
 
     .CLKFBOUT(clkfb),
-    .CLKOUT0(clk_outsys_mmcm),
-    .CLKOUT1(clk_out100_mmcm),
+    .CLKOUT0(clk_outsys),
+    .CLKOUT1(clk_out100),
 
     .LOCKED(locked)
 );
-
-BUFG clkout0_buf (.I(clk_outsys_mmcm), .O(clk_outsys));
-BUFG clkout1_buf (.I(clk_out100_mmcm), .O(clk_out100));
 
 BUFG clkfb_bufg (
     .I(clkfb),

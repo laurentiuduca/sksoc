@@ -5,6 +5,8 @@
 
 `default_nettype none
 
+`include "define.vh"
+
 module hazard3_decode #(
 `include "hazard3_config.vh"
 ,
@@ -509,8 +511,10 @@ always @ (*) begin
 			d_except = EXCEPT_INSTR_FAULT;
 		else if (d_invalid && !d_starved) begin
 			d_except = EXCEPT_INSTR_ILLEGAL;
+			`ifdef SIM_MODE
 			$display("EXCEPT_INSTR_ILLEGAL decode d_pc=%x hartid=%1x d_instr=%x %0d", d_pc, MHARTID_VAL, d_instr, $time);
 			$finish;
+			`endif
 		end
 	end
 	if (partial_predicted_branch) begin
