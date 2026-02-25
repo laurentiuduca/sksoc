@@ -87,9 +87,13 @@ module hazard3_ethernet #(
     task rxgotnew(input int nbytes);
       if(rxread != rxwrote) begin 
 	rxdiscard = nbytes;
+	`ifdef SIM_MODE
 	$display("rxgotnew discard %d bytes", nbytes);
+	`endif
       end else begin
+	`ifdef SIM_MODE
 	$display("start receiving %d bytes", nbytes);
+	`endif
 	rxdiscard = 0;
 	rxsize = nbytes;
 	receiving = 1;
@@ -110,7 +114,9 @@ module hazard3_ethernet #(
 	  receiving = 0;
           rxcnt = 0;
 	  rxwrote = rxwrote + 1;
+	  `ifdef SIM_MODE
 	  $display("");
+	  `endif
 	end else
           rxcnt = rxcnt + 1;
       end
@@ -168,7 +174,9 @@ module hazard3_ethernet #(
                         rxenableirq <= pwdata;
                         pready <= 1;
 		end else if (paddr == `REGETH_TXENABLEIRQ_W) begin
+			`ifdef SIM_MODE
                         $display("txenableirq <= %x r_irqtx=%x", pwdata, r_irqtx);
+			`endif
                         txenableirq <= pwdata;
                         pready <= 1;
 		end else if (paddr == `REGETH_ACKTXIRQ_W) begin
@@ -251,8 +259,10 @@ module hazard3_ethernet #(
 		$display("sending %d bytes", txsize);
                 for(i=0; i<txsize; i=i+1) begin
                   ret = addbytetotxframe(brtx.m[i]);
+		  `ifdef SIM_MODE
 		  if(ret != 0)
-		  $write("%x ", brtx.m[i]);
+		  	$write("%x ", brtx.m[i]);
+		  `endif
 		end
                 ret = sendtxframe();
                 txstate <= 2;

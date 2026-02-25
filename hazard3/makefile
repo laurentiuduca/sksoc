@@ -49,7 +49,7 @@ tb.out:
 clean:
 	rm -f simple.vvp *.vcd *.out result.txt simv ucli.key vcs-result.txt log.txt diff.txt final_mem.txt log.txt.gz trace.txt
 	rm -rf simv.daidir csrc
-	rm -rf obj_dir example_soc/libfpga/sd/*o example_soc/libfpga/sd/*cf *edf *json yosys*log
+	rm -rf obj_dir example_soc/libfpga/sd/*o example_soc/libfpga/sd/*cf *edf *json yosys*log *.il
 	rm -rf synth.vg impl serialout.txt ftn.txt *out stip*.txt
 	rm -rf laur2.txt log*txt ./a.out
 	rm -rf xsim*.* xelab*.* xvlog*.* sd_model.log
@@ -96,7 +96,10 @@ TOP=${TOPMODULE}
 XRAY_DATABASE_DIR=/snap/openxc7/x1/opt/nextpnr-xilinx/external/prjxray-db
 
 yosys:
-	yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI} ; synth_xilinx -top ${TOPMODULE} -family xc7 -json ${TOP}.json; write_edif -pvector bra ${TOP}.edf " | tee yosys.log
+	#yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI} ; synth_xilinx -top ${TOPMODULE} -family xc7 -json ${TOP}.json; write_edif -pvector bra ${TOP}.edf " | tee yosys.log
+route:
+	yosys -c y.tcl
+	yosys z.ys
 	time vivado -mode batch -source route-qm.tcl
 nextpnr:
 	time nextpnr-xilinx --chipdb ${XRAY_DATABASE_DIR}/artix7/${PART}/chipdb.bin --xdc qmtechv3.xdc --json ${TOP}.json --write ${TOP}_routed.json | tee nextpnr.log

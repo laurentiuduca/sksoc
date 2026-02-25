@@ -80,10 +80,12 @@ module async_fifo #(
     wire push_actual = wpush && !wfull;
     wire pop_actual = rpop && !rempty;
 
+    `ifdef SIM_MODE
     //synthesis translate_off
     always @(posedge wclk) if (wpush && wfull) $display($time, ": WARNING %m: push on full");
     always @(posedge rclk) if (rpop && rempty) $display($time, ": WARNING %m: pop on empty");
     //synthesis translate_on
+    `endif
 
     // ----------------------------------------------------------------------------
     // Pointer counters and synchronisation

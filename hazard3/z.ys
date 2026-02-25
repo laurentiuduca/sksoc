@@ -1,0 +1,6 @@
+#yosys -import
+read_rtlil checkpoint.il
+delete t:*$scopeinfo
+delete t:*$print
+write_edif -pvector bra m_topsim.edf
+

@@ -1,0 +1,106 @@
+yosys -import
+
+set HDL "hdl"
+set HDLDEBUG "${HDL}/debug"
+set HDLPERI "example_soc/soc/peri"
+set HDLLF "example_soc/libfpga"
+set HDLLFCOMMON "${HDLLF}/common"
+set HDLLFPERI "${HDLLF}/peris"
+set HDLSD "${HDLLF}/sd"
+set HDLETHERNET "${HDLLF}/ethernet"
+
+set TOPSOURCE "example_soc/m_topsim.v"
+set OTHERSOURCE "example_soc/soc/example_soc-dual.v ${HDLLFCOMMON}/reset_sync.v ${HDLLFCOMMON}/fpga_reset.v ${HDLLFCOMMON}/activity_led.v ${HDL}/hazard3_core.v ${HDL}/hazard3_2cpu.v ${HDL}/hazard3_cpu_1port.v ${HDL}/arith/hazard3_alu.v ${HDL}/arith/hazard3_branchcmp.v ${HDL}/arith/hazard3_mul_fast.v ${HDL}/arith/hazard3_muldiv_seq.v ${HDL}/arith/hazard3_onehot_encode.v ${HDL}/arith/hazard3_onehot_priority.v ${HDL}/arith/hazard3_onehot_priority_dynamic.v ${HDL}/arith/hazard3_priority_encode.v ${HDL}/arith/hazard3_shift_barrel.v ${HDL}/hazard3_csr.v ${HDL}/hazard3_decode.v ${HDL}/hazard3_frontend.v ${HDL}/hazard3_instr_decompress.v ${HDL}/hazard3_irq_ctrl.v ${HDL}/hazard3_pmp.v ${HDL}/hazard3_power_ctrl.v ${HDL}/hazard3_regfile_1w2r.v ${HDL}/hazard3_triggers.v ${HDL}/debug/dtm/hazard3_jtag_dtm.v ${HDL}/debug/dtm/hazard3_jtag_dtm_core.v ${HDL}/debug/cdc/hazard3_apb_async_bridge.v ${HDL}/debug/cdc/hazard3_reset_sync.v ${HDL}/debug/cdc/hazard3_sync_1bit.v ${HDL}/debug/dm/hazard3_dm.v ${HDLPERI}/hazard3_riscv_timer.v ${HDLLFPERI}/uart/uart_mini.v ${HDLLFPERI}/uart/uart_regs.v ${HDLLFCOMMON}/clkdiv_frac.v ${HDLLFCOMMON}/sync_fifo.v ${HDLLF}/cdc/sync_1bit.v ${HDLLFPERI}/spi_03h_xip/spi_03h_xip.v ${HDLLFPERI}/spi_03h_xip/spi_03h_xip_regs.v ${HDLLF}/busfabric/ahbl_crossbar.v ${HDLLF}/busfabric/ahbl_splitter.v ${HDLLF}/busfabric/ahbl_arbiter.v ${HDLLFCOMMON}/onehot_mux.v ${HDLLFCOMMON}/onehot_priority.v ${HDLLF}/busfabric/ahbl_to_apb.v ${HDLLF}/busfabric/apb_splitter.v "
+set LAURSDRAMQM "${HDLLF}/mem/sdram-qm/memoryqm.v ${HDLLF}/mem/sdram-qm/sdramwinb.v ${HDLLF}/mem/sdram-qm/memsim.v ${HDLLF}/mem/maintn.v ${HDLLF}/mem/sdram-qm/mmcmclock.v"
+set LAURMEMWB "${LAURSDRAMQM} ${HDLLF}/mem/ahb_laur_mem.v ${HDLLF}/mem/cache_laurwb.v ${HDLLF}/mem/max7219.v ${HDLLF}/mem/clkdivider.v ${HDLLF}/mem/sd_loader.v ${HDLLF}/mem/sd_file_loader.v ${HDLLF}/mem/sd_file_reader.v ${HDLLF}/mem/sd_reader.v ${HDLLF}/mem/sdcmd_ctrl.v"
+set LAURMEMWT "${LAURSDRAMQM} ${HDLLF}/mem/ahb_laur_mem.v ${HDLLF}/mem/cache_laurwt.v ${HDLLF}/mem/max7219.v ${HDLLF}/mem/clkdivider.v ${HDLLF}/mem/sd_file_loader.v ${HDLLF}/mem/sd_file_reader.v ${HDLLF}/mem/sd_reader.v ${HDLLF}/mem/sdcmd_ctrl.v"
+set LUKEMEM "${HDLLF}/mem/sram_sync.v ${HDLLF}/mem/ahb_sync_sram.v "
+set SDSPI "${HDLSD}/sd.v ${HDLSD}/sd_spi.v ${HDLLF}/sd/sdspi_loader.v ${HDLLF}/sd/sdspi_file_reader.v ${HDLLF}/sd/sdspi_reader.v"
+set ETHERNET "${HDLETHERNET}/ethernet.v"
+set SDOC "${HDLSD}/sd-oc.v ${HDLSD}/sdModel.v ${HDLSD}/bistable_domain_cross.v  ${HDLSD}/generic_fifo_dc_gray.v ${HDLSD}/sd_cmd_master.v ${HDLSD}/sd_crc_7.v ${HDLSD}/sd_wb_sel_ctrl.v ${HDLSD}/byte_en_reg.v            ${HDLSD}/monostable_domain_cross.v  ${HDLSD}/sd_cmd_serial_host.v  ${HDLSD}/sd_data_master.v       ${HDLSD}/sd_fifo_filler.v ${HDLSD}/edge_detect.v            ${HDLSD}/sdc_controller.v           ${HDLSD}/sd_controller_wb.v    ${HDLSD}/sd_data_serial_host.v  ${HDLSD}/generic_dpram.v          ${HDLSD}/sd_clock_divider.v         ${HDLSD}/sd_crc_16.v           ${HDLSD}/sd_data_xfer_trig.v"
+
+
+set PART "xc7a100tfgg676-1"
+set TOP "m_topsim"
+set XRAY_DATABASE_DIR "/snap/openxc7/x1/opt/nextpnr-xilinx/external/prjxray-db"
+
+verilog_defaults -add -I${HDL}
+verilog_defaults -add -I${HDLSD}
+verilog_defaults -add -Iexample_soc
+
+#read_verilog "${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI}"
+# read design sources
+read_verilog -sv "example_soc/m_topsim.v"
+read_verilog -sv "example_soc/soc/example_soc-dual.v"
+read_verilog -sv "example_soc/libfpga/common/reset_sync.v"
+read_verilog -sv "example_soc/libfpga/common/fpga_reset.v" 
+read_verilog -sv "example_soc/libfpga/common/activity_led.v" 
+read_verilog -sv "hdl/hazard3_core.v" 
+read_verilog -sv "hdl/hazard3_cpu_1port.v"
+read_verilog -sv "hdl/hazard3_2cpu.v"
+read_verilog -sv "hdl/arith/hazard3_alu.v" 
+read_verilog -sv "hdl/arith/hazard3_branchcmp.v" 
+read_verilog -sv "hdl/arith/hazard3_mul_fast.v" 
+read_verilog -sv "hdl/arith/hazard3_muldiv_seq.v" 
+read_verilog -sv "hdl/arith/hazard3_onehot_encode.v" 
+read_verilog -sv "hdl/arith/hazard3_onehot_priority.v" 
+read_verilog -sv "hdl/arith/hazard3_onehot_priority_dynamic.v" 
+read_verilog -sv "hdl/arith/hazard3_priority_encode.v" 
+read_verilog -sv "hdl/arith/hazard3_shift_barrel.v" 
+read_verilog -sv "hdl/hazard3_csr.v" 
+read_verilog -sv "hdl/hazard3_decode.v" 
+read_verilog -sv "hdl/hazard3_frontend.v" 
+read_verilog -sv "hdl/hazard3_instr_decompress.v" 
+read_verilog -sv "hdl/hazard3_irq_ctrl.v" 
+read_verilog -sv "hdl/hazard3_pmp.v" 
+read_verilog -sv "hdl/hazard3_power_ctrl.v" 
+read_verilog -sv "hdl/hazard3_regfile_1w2r.v" 
+read_verilog -sv "hdl/hazard3_triggers.v" 
+read_verilog -sv "hdl/debug/dtm/hazard3_jtag_dtm.v" 
+read_verilog -sv "hdl/debug/dtm/hazard3_jtag_dtm_core.v" 
+read_verilog -sv "hdl/debug/cdc/hazard3_apb_async_bridge.v" 
+read_verilog -sv "hdl/debug/cdc/hazard3_sync_1bit.v"
+read_verilog -sv "hdl/debug/cdc/hazard3_reset_sync.v" 
+read_verilog -sv "hdl/debug/dm/hazard3_dm.v"
+read_verilog -sv "example_soc/soc/peri/hazard3_riscv_timer.v"
+read_verilog -sv "example_soc/libfpga/peris/spi_03h_xip/spi_03h_xip.v" 
+read_verilog -sv "example_soc/libfpga/peris/spi_03h_xip/spi_03h_xip_regs.v" 
+read_verilog -sv "example_soc/libfpga/mem/ahb_cache_readonly.v" 
+read_verilog -sv "example_soc/libfpga/mem/ahb_cache_writeback.v" 
+read_verilog -sv "example_soc/libfpga/mem/cache_mem_set_associative.v" 
+read_verilog -sv "example_soc/libfpga/busfabric/ahbl_crossbar.v" 
+read_verilog -sv "example_soc/libfpga/busfabric/ahbl_splitter.v" 
+read_verilog -sv "example_soc/libfpga/busfabric/ahbl_arbiter.v" 
+read_verilog -sv "example_soc/libfpga/common/onehot_mux.v" 
+read_verilog -sv "example_soc/libfpga/common/onehot_priority.v" 
+read_verilog -sv "example_soc/libfpga/busfabric/ahbl_to_apb.v" 
+read_verilog -sv "example_soc/libfpga/busfabric/apb_splitter.v" 
+read_verilog -sv "example_soc/libfpga/mem/ahb_laur_mem.v" 
+read_verilog -sv "example_soc/libfpga/mem/cache_laurwt.v"
+read_verilog -sv "example_soc/libfpga/mem/maintn.v"
+read_verilog -sv "example_soc/libfpga/mem/sdram-qm/memoryqm.v"  
+read_verilog -sv "example_soc/libfpga/mem/sdram-qm/mmcmclock.v"  
+read_verilog -sv "example_soc/libfpga/mem/sdram-qm/sdramwinb.v"
+
+read_verilog -sv "example_soc/libfpga/peris/uart/uart_mini.v"
+
+read_verilog -sv "example_soc/libfpga/mem/max7219.v"
+read_verilog -sv "example_soc/libfpga/mem/clkdivider.v"
+
+#read_verilog -sv "example_soc/libfpga/mem/sd_loader.v"
+#read_verilog -sv "example_soc/libfpga/mem/sd_file_loader.v"
+#read_verilog -sv "example_soc/libfpga/mem/sd_file_reader.v"
+#read_verilog -sv "example_soc/libfpga/mem/sd_reader.v"
+#read_verilog -sv "example_soc/libfpga/mem/sdcmd_ctrl.v"
+
+read_verilog -sv "example_soc/libfpga/sd/sd.v"
+#read_verilog -sv "example_soc/libfpga/sd/sd_spi.v"
+read_verilog "example_soc/libfpga/sd/sd_spi.v"
+read_verilog -sv "example_soc/libfpga/sd/sdspi_file_reader.v"
+read_verilog -sv "example_soc/libfpga/sd/sdspi_reader.v"
+read_verilog -sv "example_soc/libfpga/sd/sdspi_loader.v"
+
+synth_xilinx -top ${TOP} -family xc7 -flatten -json ${TOP}.json 
+write_rtlil checkpoint.il
+write_edif -pvector bra ${TOP}.edf
+

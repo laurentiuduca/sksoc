@@ -87,13 +87,14 @@ module sync_fifo #(
     // ----------------------------------------------------------------------------
     // Testbench junk vvv
 
+`ifdef SIM_MODE
     //synthesis translate_off
 `ifdef laur0
     always @(posedge clk) if (w_en && full) $display($time, ": WARNING %m: push on full");
 `endif
     always @(posedge clk) if (r_en && empty) $display($time, ": WARNING %m: pop on empty");
     //synthesis translate_on
-
+`endif
 
 `ifdef FORMAL_CHECK_FIFO
     initial assume (!rst_n);

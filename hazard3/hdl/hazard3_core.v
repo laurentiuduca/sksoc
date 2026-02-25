@@ -4,6 +4,7 @@
 \*****************************************************************************/
 
 `default_nettype none
+`include "define.vh"
 
 module hazard3_core #(
 `include "hazard3_config.vh"
@@ -187,13 +188,17 @@ reg [W_ADDR-1:0] obus_haddr_i=0, obus_haddr_d=0;
 always @(posedge clk) begin
         if(orst_n != rst_n) begin
                 orst_n <= rst_n;
+		`ifdef SIM_MODE
 		$display("hazard_core rst_n=%x", rst_n);
+		`endif
         end
 	if(j < 10 && (obus_haddr_i != bus_haddr_i || obus_haddr_d != bus_haddr_d) || (j < 20 && (x_except == 7 ||x_except==2))) begin
 		j <= j+1;
 		obus_haddr_i <= bus_haddr_i;
 	        obus_haddr_d <= bus_haddr_d;
+		`ifdef SIM_MODE
 		$display("%d d_pc=%x bus_haddr_i=%x bus_haddr_d=%x x_except=%x fd_cir=%x", $time, d_pc, bus_haddr_i, bus_haddr_d, x_except, fd_cir);
+		`endif
 	end
 end
 `endif
@@ -206,12 +211,16 @@ end
 always @ (posedge clk) begin
 	if (rst_n) begin
 		if (|fd_cir_vld && (^fd_cir[15:0] === 1'bx)) begin
+			`ifdef SIM_MODE
 			$display("CIR LSBs are X, should be valid!");
 			$finish;
+			`endif
 		end
 		if (fd_cir_vld[1] && (^fd_cir === 1'bX)) begin
+			`ifdef SIM_MODE
 			$display("CIR contains X, should be fully valid!");
 			$finish;
+			`endif
 		end
 	end
 end
@@ -1358,8 +1367,10 @@ wire m_reg_wen = |xm_rd && m_reg_wen_if_nonzero;
 always @ (posedge clk) begin
 	if (rst_n) begin
 		if (m_reg_wen && (^m_result === 1'bX)) begin
+			`ifdef SIM_MODE
 			$display("Writing X to register file!");
 			$finish;
+			`endif
 		end
 	end
 end
@@ -1395,8 +1406,10 @@ always @ (posedge clk or negedge rst_n) begin
 	end else begin
 `ifdef HAZARD3_X_CHECKS
 		if (!m_stall && ^bus_wdata_d === 1'bX) begin
+			`ifdef SIM_MODE
 			$display("Writing Xs to memory!");
 			$finish;
+			`endif
 		end
 `endif
 		if (m_reg_wen_if_nonzero)

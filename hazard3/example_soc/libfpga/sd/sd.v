@@ -175,7 +175,9 @@ module hazard3_sd #(
             pready <= 1;
             prdata <= sdspi_status;
             ctrlstate <= 0;
+	    `ifdef SIM_MODE
             $display("ctrlstate = 1, sdspi_status=%x", sdspi_status);
+	    `endif
         end else if (ctrlstate == `CTRLSTATERDBLK) begin
 `ifdef dbgsimsd1
             for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1) begin
