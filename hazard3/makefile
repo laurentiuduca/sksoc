@@ -97,7 +97,6 @@ XRAY_DATABASE_DIR=/snap/openxc7/x1/opt/nextpnr-xilinx/external/prjxray-db
 
 yosys:
 	#yosys -p "read_verilog -I$(HDL) -I$(HDLSD) -Iexample_soc ${TOPSOURCE} ${OTHERSOURCE} ${LAURMEMWT} ${SDSPI} ; synth_xilinx -top ${TOPMODULE} -family xc7 -json ${TOP}.json; write_edif -pvector bra ${TOP}.edf " | tee yosys.log
-route:
 	yosys -c y.tcl
 	yosys z.ys
 	time vivado -mode batch -source route-qm.tcl
