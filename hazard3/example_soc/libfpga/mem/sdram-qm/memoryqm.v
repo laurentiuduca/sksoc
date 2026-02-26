@@ -98,7 +98,6 @@ endtask
 task prepare_write_end;
 begin
 	state <= 19;
-	state_next <= 23;
 end
 endtask 
 task prepare_write;
@@ -160,6 +159,7 @@ endtask
 		r_mask <= r_ctrl;
 		r_wdata <= r_wdata_ui;
      		state <= 20;
+		state_next <= 23;
 	end
         8'd20: begin // mem_write
                 r_we <= 1;
