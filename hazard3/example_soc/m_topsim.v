@@ -95,7 +95,7 @@ mmcmclock mmcmlaur(
     wire w_init_done;
 
     example_soc #(
-        .CLK_MHZ   (50)        // For timer timebase
+        .CLK_MHZ   (`FREQ / 1000000)        // For timer timebase
     ) es (
         // System clock + reset
         .clk(pll_clk),

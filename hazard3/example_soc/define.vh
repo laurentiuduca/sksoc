@@ -9,7 +9,8 @@
 
 `define TN_DRAM_REFRESH // for tang nano
 `define SIM_TNSRAM // tang nano not only sim ram
-`define FREQ 50_000_000
+`define frdiv 25
+`define FREQ (1000 / `frdiv) * 1_000_000
 /*
 CLK
 mmcm

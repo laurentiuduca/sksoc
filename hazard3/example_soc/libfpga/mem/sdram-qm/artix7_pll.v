@@ -1,15 +1,16 @@
-`default_nettype wire
+`include "define.vh"
+
 module artix7_pll
 (
     // Inputs
-     input           clkref_i
-    ,input           rst
+     input wire      clkref_i
+    ,input wire      rst
     // Outputs
-    ,output          clkout0_o
-    ,output          clkout1_o
-    ,output          clkout2_o
-    ,output          clkout3_o
-    ,output          clkout4_o
+    ,output wire clkout0_o
+    ,output wire clkout1_o
+    ,output wire clkout2_o
+    ,output wire clkout3_o
+    ,output wire clkout4_o
     ,output wire     locked
 );
 
@@ -48,14 +49,14 @@ PLLE2_BASE
     .BANDWIDTH("OPTIMIZED"),      // OPTIMIZED, HIGH, LOW
     .CLKFBOUT_PHASE(0.0),         // Phase offset in degrees of CLKFB, (-360-360)
     .CLKIN1_PERIOD(20.0),         // Input clock period in ns resolution
-    .CLKFBOUT_MULT(24),     // VCO=1200MHz
+    .CLKFBOUT_MULT(20),     // VCO=1000MHz
 
     // CLKOUTx_DIVIDE: Divide amount for each CLKOUT(1-128)
-    .CLKOUT0_DIVIDE(12), // CLK0=100MHz
-    .CLKOUT1_DIVIDE(3), // CLK1=400MHz
-    .CLKOUT2_DIVIDE(6), // CLK2=200MHz
-    .CLKOUT3_DIVIDE(3), // CLK3=400MHz
-    .CLKOUT4_DIVIDE(24),
+    .CLKOUT0_DIVIDE(10), // CLK0=100MHz
+    .CLKOUT1_DIVIDE(3), // CLK1=
+    .CLKOUT2_DIVIDE(6), // CLK2=
+    .CLKOUT3_DIVIDE(3), // CLK3=
+    .CLKOUT4_DIVIDE(`frdiv),
 
     // CLKOUTx_DUTY_CYCLE: Duty cycle for each CLKOUT
     .CLKOUT0_DUTY_CYCLE(0.5),
