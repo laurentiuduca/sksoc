@@ -65,6 +65,20 @@ assign pll_clk = clk;
 assign clk_sdram = clk;
 assign locked = rst_n;
 `else
+artix7_pll
+u_pll
+(
+    .clkref_i(clk)           // 50
+    ,.rst(~rst_n)
+    ,.locked(locked)
+    // Outputs
+    ,.clkout0_o(clk_sdram)         // 100
+    ,.clkout1_o()     // 400
+    ,.clkout2_o()     // 200
+    ,.clkout3_o() // 400 (phase 90)
+    ,.clkout4_o(pll_clk)
+);
+`ifdef laur0
 mmcmclock mmcmlaur(
     .clk_in(clk),     // 50 MHz input
     .reset(~rst_n),       // active-high reset
@@ -72,6 +86,7 @@ mmcmclock mmcmlaur(
     .clk_out100(clk_sdram),
     .locked(locked)
 );
+`endif
 //assign pll_clk = clk;
 `endif
     wire w_rxd = 1;

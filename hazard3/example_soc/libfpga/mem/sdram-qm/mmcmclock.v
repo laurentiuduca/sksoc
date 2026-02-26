@@ -42,7 +42,7 @@ mmcm_inst (
     .LOCKED(locked)
 );
 
-BUFG clkfb_bufg (
+BUFH clkfb_bufg (
     .I(clkfb),
     .O(clkfb_buf)
 );
