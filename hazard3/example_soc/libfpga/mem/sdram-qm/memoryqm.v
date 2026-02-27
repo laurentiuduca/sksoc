@@ -135,6 +135,9 @@ endtask
 		end
 	end
 	8'd12: begin
+		state <= 13;
+	end
+	8'd13: begin
 			r_dram_odata1 <= w_dram_odata1;
 			r_dram_odata0 <= w_dram_odata0;
 			if(r_addr[1:0] == 0)
