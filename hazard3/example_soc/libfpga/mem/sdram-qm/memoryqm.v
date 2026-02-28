@@ -206,8 +206,7 @@ end
         .ucmd(r_rd | r_we),
         .uwe(r_we),
         .uwrdata(r_wdata),
-        .urddata0(w_dram_odata0),
-        .urddata1(w_dram_odata1),
+        .urddata(w_dram_odata),
         .state_cnt(drvstate)
 );
 `endif
