@@ -2,7 +2,7 @@
 module sdramwinb(clk,rst,
 				data,addr,ba,
 				cke,
-				cs_n,ras_n,cas_n,we_n,dqm, dqmi, uaddr, ucmd, uwe, uwrdata, urddata0, urddata1, busy, state_cnt);
+				cs_n,ras_n,cas_n,we_n,dqm, dqmi, uaddr, ucmd, uwe, uwrdata, urddata, busy, state_cnt);
 				
 input             clk,rst;
 
@@ -14,12 +14,12 @@ output                cke;
 output                cs_n,ras_n,cas_n,we_n;
 output  [1 :0 ]       dqm;
 
-input  [1 :0 ]       dqmi;
+input  [3 :0 ]       dqmi;
 output  reg           busy;
-output  reg [15:0 ]   urddata0, urddata1;
+output  wire [31:0 ]   urddata;
 input   [23:0]	      uaddr;
 input   wire          uwe, ucmd;
-input   [15:0]        uwrdata;
+input   [31:0]        uwrdata;
 output reg         [6  :0 ] state_cnt=0;
 
 reg         [15 : 0] dq;                            // SDRAM I/O
@@ -33,6 +33,12 @@ reg                  we_n;                          // WE#
 reg          [1 : 0] dqm;                           // I/O Mask
 reg                  data_inv_flag;
 
+reg [1:0] nw=0;
+reg [15:0] urddata0, urddata1;
+assign urddata={urddata1, urddata0};
+reg [1:0] ndqmi=0;
+reg [15:0] nwrdata=0;
+reg [23:0] naddr=0;
 reg         [6  :0 ] refreshcnt=0;
 wire        [15 : 0] data = dq;
 
@@ -238,26 +244,34 @@ always @ ( posedge clk or negedge rst )
 					state_cnt <= 'd91;
 				      end else if (ucmd) begin
 					busy <= 1;
-					if(uwe)
+					naddr <= uaddr >> 1;
+					ndqmi <= dqmi[1:0];
+					if(uwe) begin
+						nw <= 0;
+						nwrdata <= uwrdata[15:0];
 						state_cnt <= 'd33;
+					end
 					else 
 						state_cnt <= 'd50;
 				      end else
 					state_cnt <= 'd32;
 				end
 				// write
-				'd33: active (uaddr[23:22], uaddr[21:9], hi_z);               //33 Active: Bank <= uaddr[23:22], Row <= uaddr[21:9]
+				'd33: active (naddr[23:22], naddr[21:9], hi_z);               //33 Active: Bank <= uaddr[23:22], Row <= uaddr[21:9]
 				'd34: nop (0, hi_z);                     //34-35 Nop                             
-				'd36: write  (uaddr[23:22], uaddr[8:0], uwrdata, dqmi);     //36 Write : Bank <= , Col <= uaddr[8:0], Dqm <= 0 
+				'd36: write  (naddr[23:22], naddr[8:0], nwrdata, ndqmi);     //36 Write : Bank <= , Col <= uaddr[8:0], Dqm <= 0 
 				'd37: nop (0, hi_z);                     //37 Nop                                
 				'd38: nop (0, hi_z);                     //38 Nop                                
 				'd39: nop (0, hi_z);                     //39-40 Nop                             
-				'd40: state_cnt <= 'd67;
+				'd40: begin
+					nw <= nw + 1;
+					state_cnt <= 'd67;
+				end
 
 				// read
-				'd50: active (uaddr[23:22], uaddr[21:9], hi_z);               //50 Active: Bank <= uaddr[23:22], Row <= uaddr[21:9]
+				'd50: active (naddr[23:22], naddr[21:9], hi_z);               //50 Active: Bank <= uaddr[23:22], Row <= uaddr[21:9]
 				'd51: nop (0, hi_z);                     //51-52 Nop  
-				'd53: read   (uaddr[23:22], uaddr[8:0], hi_z, dqmi);          //53 Read                                
+				'd53: read   (naddr[23:22], naddr[8:0], hi_z, ndqmi);          //53 Read                                
 				'd54: nop (0, hi_z);                     //54 Nop                                
 				'd55: nop (0, hi_z);                     //55 Nop
 				'd56: urddata0 <= data;
@@ -268,8 +282,15 @@ always @ ( posedge clk or negedge rst )
 				'd67: precharge_all_bank(0, hi_z);       //9 Precharge ALL Bank
 				'd68: nop (0, hi_z);                  //10-11 Nop, tRP's minimum value is 20ns
 				'd69: begin
-					state_cnt <= 'd32;
-					busy <= 0;
+					if(nw == 1) begin
+						naddr <= naddr + 1;
+						nwrdata <= uwrdata[31:16];
+						ndqmi <= dqmi[3:2];
+						state_cnt <= 'd33;
+					end else begin
+						state_cnt <= 'd32;
+						busy <= 0;
+					end
 				end
 
 				'd91: auto_refresh;                      //91 Auto Refresh                       
