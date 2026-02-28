@@ -246,8 +246,8 @@ always @ ( posedge clk or negedge rst )
 					busy <= 1;
 					naddr <= uaddr >> 1;
 					ndqmi <= dqmi[1:0];
+					nw <= 0;
 					if(uwe) begin
-						nw <= 0;
 						nwrdata <= uwrdata[15:0];
 						state_cnt <= 'd33;
 					end
