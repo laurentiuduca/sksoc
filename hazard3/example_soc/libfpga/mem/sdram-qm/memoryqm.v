@@ -21,7 +21,7 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
      input  wire [2:0]                   sys_state,
      input  wire [3:0]                   w_bus_cpustate,
      output wire [7:0]                   mem_state,
-     input wire [31:0]			 d_pc,
+     input  wire [31:0]                  d_pc,
 
    `ifdef SIM_MODE
       input wire [31:0] w_mtime,
@@ -48,29 +48,27 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
     reg         r_we    = 0;
     reg         r_rd    = 0;
     wire 	w_busy;
-    wire[`winbdatalen-1:0] w_dram_odata1, w_dram_odata0;
-    reg [`winbmasklen-1:0] r_mask=0;
-    reg [3:0] r_ctrl=0;
-    reg [`winbdatalen-1:0] r_dram_odata0 = 0, r_dram_odata1 = 0;
-    reg [`winbaddrlen-1:0] r_maddr;
+    wire[31:0] w_dram_odata;
+    reg [3:0] r_mask=0;
+    reg [31:0] r_dram_odata=0;
+    reg [31:0] r_maddr;
     reg [31:0] r_addr;
 
-    wire[31:0] w_odata = {r_dram_odata1, r_dram_odata0};
+    wire[31:0] w_odata = r_dram_odata;
     assign o_data = w_odata;
-    reg [`winbdatalen-1:0] r_wdata=0;
-    reg [31:0] r_wdata_ui=0;
+    reg [31:0] r_wdata=0;
 
     reg r_stall = 0;
     assign o_busy = r_stall;
-    reg [7:0] state = 0, state_next=0;
+    reg [7:0] state = 0;
     assign mem_state = state;
     reg r_refresh = 0;
 
 task prepare_read_base;
 begin
 	 r_addr <= i_addr;
-	 r_maddr <= {i_addr[`winbaddrlen-1:2], 2'b0} >> 1; // data out is 16 bit word
-         r_ctrl <= i_ctrl;
+	 r_maddr <= i_addr;
+         r_mask <= i_ctrl;
          r_stall <= 1;
 end
 endtask 
@@ -90,9 +88,9 @@ endtask
 task prepare_write_base;
 begin
 	 r_addr <= i_addr;
-         r_maddr <= {i_addr[`winbaddrlen-1:2], 2'b0} >> 1; // data in is 16 bit word
-         r_wdata_ui <= i_data;
-         r_ctrl <= i_ctrl;
+         r_maddr <= i_addr;
+         r_wdata <= i_data;
+         r_mask <= i_ctrl;
          r_stall <= 1;
 end
 endtask
@@ -111,7 +109,6 @@ endtask
     always@(posedge clk) begin
     if(~rst_x) begin
       state <= 0;
-      state_next <= 0;
     end else
     case(state)
     8'd0: // idle
@@ -139,8 +136,7 @@ endtask
 		state <= 13;
 	end
 	8'd13: begin
-			r_dram_odata1 <= w_dram_odata1;
-			r_dram_odata0 <= w_dram_odata0;
+			r_dram_odata <= w_dram_odata;
 			if(r_addr[1:0] == 0)
 			begin
             			// one read is enough
@@ -160,10 +156,8 @@ endtask
                                 $finish;
 				`endif
                 end
-		r_mask <= r_ctrl;
-		r_wdata <= r_wdata_ui;
      		state <= 20;
-		state_next <= 23;
+		//$display("write d_pc=%x r_addr=%x r_maddr=%x r_wdata=%x r_mask=%x", d_pc, r_addr, r_maddr, r_wdata, r_mask);
 	end
         8'd20: begin // mem_write
                 r_we <= 1;
@@ -177,26 +171,18 @@ endtask
 	end
 	8'd22: begin
 		if(!w_busy) begin
-			if(state_next == 0)
-				r_stall <= 0;
-			state <= state_next; 
+			r_stall <= 0;
+			state <= 0;
 		end
 	end
-        8'd23: begin // mem_write
-		r_maddr <= r_maddr + 1;
-                r_mask <= r_ctrl >> 2;
-                r_wdata <= r_wdata_ui >> 16;
-                state <= 20;
-		state_next <= 0;
-        end
 	endcase
 end
 
 `ifdef SIM_MODE
-    m_sdram_sim #(`BIN_SIZE/2) idbmem(.CLK(clk), .w_addr(r_maddr), .w_odata0(w_dram_odata0), .w_odata1(w_dram_odata1),
+    m_sdram_sim #(`BIN_SIZE/2) idbmem(.CLK(clk), .w_addr(r_maddr), .w_odata(w_dram_odata),
         .w_we(r_we), .w_le(r_rd), .w_wdata(r_wdata), .w_mask(~r_mask), .w_stall(w_busy), 
         .w_mtime(w_mtime[31:0]),
-        .w_refresh(r_refresh)
+        .w_refresh(0)
         );
 `else
     wire [6:0] drvstate;
