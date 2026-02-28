@@ -7,9 +7,9 @@
 //`define dbgdhrystone
 //`define dbghexcl
 
-`define TN_DRAM_REFRESH // for tang nano
+//`define TN_DRAM_REFRESH // for tang nano
 `define SIM_TNSRAM // tang nano not only sim ram
-`define frdiv 25
+`define frdiv 40
 `define FREQ (1000 / `frdiv) * 1_000_000
 /*
 CLK
@@ -25,6 +25,7 @@ define.vh `define SDCARD_CLK_DIV 3 // clk is 50mhz
 */
 
 `define ethon
+//`define ethirqon
 `define ETHERNET_DEVADDR 16'hc000
 `define ETHERNET_MTU 16'd1500
 
@@ -63,4 +64,3 @@ define.vh `define SDCARD_CLK_DIV 3 // clk is 50mhz
 `define winbaddrlen 24
 `define winbdatalen 16
 `define winbmasklen 2
-

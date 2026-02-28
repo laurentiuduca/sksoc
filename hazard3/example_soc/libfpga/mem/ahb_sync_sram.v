@@ -58,17 +58,17 @@ module ahb_sync_sram #(
     input  wire [       7:0] ahbls_hmaster,
     output wire              ahbls_hexokay,
 
-    // tang nano 20k SDRAM
-    output wire        O_sdram_clk,
-    output wire        O_sdram_cke,
-    output wire        O_sdram_cs_n,   // chip select
-    output wire        O_sdram_cas_n,  // columns addrefoc select
-    output wire        O_sdram_ras_n,  // row address select
-    output wire        O_sdram_wen_n,  // write enable
-    inout  wire [31:0] IO_sdram_dq,    // 32 bit bidirectional data bus
-    output wire [10:0] O_sdram_addr,   // 11 bit multiplexed address bus
-    output wire [ 1:0] O_sdram_ba,     // two banks
-    output wire [ 3:0] O_sdram_dqm,    // 32/4
+    // SDRAM
+    output wire SDCLK0,
+    output wire SDCKE0,
+    output wire [1:0]DQM,
+    output wire CAS,
+    output wire RAS,
+    output wire SDWE,
+    output wire SDCS0,
+    inout wire [15:0]Data,
+    output wire [12:0]Address,
+    output wire [1:0]Bank,
 
     input  wire        w_rxd,
     output wire        w_txd,

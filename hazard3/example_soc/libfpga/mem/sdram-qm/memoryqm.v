@@ -21,6 +21,7 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
      input  wire [2:0]                   sys_state,
      input  wire [3:0]                   w_bus_cpustate,
      output wire [7:0]                   mem_state,
+     input wire [31:0]			 d_pc,
 
    `ifdef SIM_MODE
       input wire [31:0] w_mtime,

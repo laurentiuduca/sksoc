@@ -486,6 +486,7 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
                                .sys_state(r_init_state),
                                .w_bus_cpustate(w_bus_cpustate),
                                .mem_state(w_mem_state),
+			       .d_pc(d_pc),
 
                                .clk(clk),
                                .rst_x(rst_x),

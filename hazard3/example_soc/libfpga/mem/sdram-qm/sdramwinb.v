@@ -262,6 +262,7 @@ always @ ( posedge clk or negedge rst )
 				'd55: nop (0, hi_z);                     //55 Nop
 				'd56: urddata0 <= data;
 				'd57: urddata1 <= data;
+				'd58: state_cnt <= 'd67;
 				
 				// precharge
 				'd67: precharge_all_bank(0, hi_z);       //9 Precharge ALL Bank

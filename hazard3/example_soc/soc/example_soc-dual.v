@@ -95,7 +95,7 @@ module example_soc #(
     // applies whether the transfers are part of the same Exclusive access sequence or not.
 
     // Level-sensitive interrupt sources
-    `ifdef ethon
+    `ifdef ethirqon
     wire [NUM_IRQS-1:0] irq={31'h0, eth_irqrx, eth_irqtx};  // -> mip.meip
     `else
     wire [NUM_IRQS-1:0] irq=0;
