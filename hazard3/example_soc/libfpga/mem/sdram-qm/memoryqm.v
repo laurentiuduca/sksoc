@@ -68,7 +68,7 @@ task prepare_read_base;
 begin
 	 r_addr <= i_addr;
 	 r_maddr <= i_addr;
-         r_mask <= i_ctrl;
+         r_mask <= 4'hf; //i_ctrl;
          r_stall <= 1;
 end
 endtask 

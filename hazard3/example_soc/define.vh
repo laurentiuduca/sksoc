@@ -1,5 +1,5 @@
 // laur
-`define SIM_MODE
+//`define SIM_MODE
 
 //`define DUMP_VCD
 // dbgstart may be defined in hazard3_config.vh, not here
@@ -24,7 +24,7 @@ sdram clk
 define.vh `define SDCARD_CLK_DIV 3 // clk is 50mhz
 */
 
-`define ethon
+//`define ethon
 //`define ethirqon
 `define ETHERNET_DEVADDR 16'hc000
 `define ETHERNET_MTU 16'd1500
