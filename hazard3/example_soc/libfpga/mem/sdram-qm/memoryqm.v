@@ -51,7 +51,6 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
     wire[31:0] w_dram_odata;
     reg [3:0] r_mask=0;
     reg [31:0] r_dram_odata=0;
-    reg [31:0] r_maddr;
     reg [31:0] r_addr;
 
     wire[31:0] w_odata = r_dram_odata;
@@ -60,126 +59,188 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
 
     reg r_stall = 0;
     assign o_busy = r_stall;
-    reg [7:0] state = 0;
+    reg [7:0] state = 0, ramstate=0;
     assign mem_state = state;
     reg r_refresh = 0;
 
-task prepare_read_base;
-begin
-	 r_addr <= i_addr;
-	 r_maddr <= i_addr;
-         r_mask <= 4'hf; //i_ctrl;
-         r_stall <= 1;
-end
-endtask 
-task prepare_read_end;
-begin
- 	 state <= 9;
-end
-endtask 
+    wire empty_afifo1, empty_afifo2;
+    wire full_afifo1, full_afifo2;
+    reg wen_afifo1=0, wen_afifo2=0;
+    reg ren_afifo1=0, ren_afifo2=0;
+    `define af1size 70 // = addr + mask + rd + wr + idata
+    `define af2size 70 // odata
+    reg [`af1size-1:0] din_afifo1=0, dout_afifo1; //{r_addr, r_mask, r_rd, r_wr, r_wdata};
+    reg [`af2size-1:0] din_afifo2=0, dout_afifo2=0; // r_dram_odata
+    // proc to sdram
+    asyncfifo #(
+                .DATA_WIDTH(`af1size),
+                .ADDR_WIDTH(2),
+		.qid(1))
+    afifo1 (
+            .wclk(clk),
+            .rclk(clk_sdram),
+            .i_wrst_x(rst_x),
+            .i_rrst_x(rst_x),
+            .i_wen(wen_afifo1),
+            .i_data(din_afifo1),
+            .i_ren(ren_afifo1),
+            .o_data(dout_afifo1),
+            .o_empty(empty_afifo1),
+            .o_full(full_afifo1));
+    // sdram to pl
+    asyncfifo #(
+                .DATA_WIDTH(`af2size),
+                .ADDR_WIDTH(2),
+		.qid(2))
+    afifo2 (
+            .wclk(clk_sdram),
+            .rclk(clk),
+            .i_wrst_x(rst_x),
+            .i_rrst_x(rst_x),
+            .i_wen(wen_afifo2),
+            .i_data(din_afifo2),
+            .i_ren(ren_afifo2),
+            .o_data(dout_afifo2),
+            .o_empty(empty_afifo2),
+            .o_full(full_afifo2));
+
 task prepare_read;
 begin
-         prepare_read_base;
-         prepare_read_end;
-
+	 r_addr <= i_addr;
+         r_mask <= 4'hf;
+         r_stall <= 1;
+ 	 state <= 10;
 end
 endtask 
 
-task prepare_write_base;
+task prepare_write;
 begin
 	 r_addr <= i_addr;
-         r_maddr <= i_addr;
          r_wdata <= i_data;
          r_mask <= i_ctrl;
          r_stall <= 1;
-end
-endtask
-task prepare_write_end;
-begin
-	state <= 19;
-end
-endtask 
-task prepare_write;
-begin
-         prepare_write_base;
-         prepare_write_end;
+	 state <= 20;
 end
 endtask 
 
-    always@(posedge clk) begin
+    // proc to sdram
+always@(posedge clk) begin
     if(~rst_x) begin
       state <= 0;
     end else
     case(state)
-    8'd0: // idle
-      if(i_rd_en && !w_busy) begin
-         prepare_read;
-      end else if(i_wr_en && !w_busy) begin
-         prepare_write;
-      end
-        8'd09: begin
-	       r_rd <= 1;
-	       state <= 10;
+	8'd0: // idle
+       		if(i_rd_en && !ramstate && empty_afifo1 && empty_afifo2) begin
+         		prepare_read;
+      		end else if(i_wr_en && !ramstate && empty_afifo1 && empty_afifo2) begin
+         		prepare_write;
+      		end
+        8'd10: begin // mem read
+	       din_afifo1 <= {r_addr, r_mask, 1'b1, 1'b0, r_wdata};
+	       wen_afifo1 <= 1;
+	       state <= 11;
         end	       
-	8'd10: begin //mem read
-		if(w_busy) begin
-			r_rd <= 0;
-                        state <= 11;
-		end
-        end
 	8'd11: begin 
-		if(!w_busy) begin
+		wen_afifo1 <= 0;
+		if(!empty_afifo1)
 			state <= 12;
+        end
+	8'd12: begin 
+		if(empty_afifo1 && !empty_afifo2) begin
+			state <= 13;
 		end
-	end
-	8'd12: begin
-		state <= 13;
 	end
 	8'd13: begin
-			r_dram_odata <= w_dram_odata;
-			if(r_addr[1:0] == 0)
-			begin
-            			// one read is enough
-				state <= 0;
-				r_stall <= 0;
-			end else begin
-				`ifdef SIM_MODE
-				$display("read r_addr=%x", r_addr);
-				$finish;
-				`endif
-			end
-        end
-	8'd19: begin // mem_write
-		if(r_addr[1:0]) begin
-				`ifdef SIM_MODE
-                                $display("write r_addr=%x", r_addr);
-                                $finish;
-				`endif
-                end
-     		state <= 20;
-		//$display("write d_pc=%x r_addr=%x r_maddr=%x r_wdata=%x r_mask=%x", d_pc, r_addr, r_maddr, r_wdata, r_mask);
+		ren_afifo2 <= 1;
+		r_dram_odata <= dout_afifo2;
+		state <= 14;
 	end
-        8'd20: begin // mem_write
-                r_we <= 1;
-                state <= 21;
-        end
-	8'd21: begin
-		if(w_busy) begin
-			r_we <= 0;
-			state <= 22;
-		end 
-	end
-	8'd22: begin
-		if(!w_busy) begin
-			r_stall <= 0;
-			state <= 0;
+	8'd14: begin
+		ren_afifo2 <= 0;
+		r_stall <= 0;
+		state <= 0;
+		if(i_rd_en) begin
+                                $display("error rd");
+                                $finish();
 		end
 	end
+        8'd20: begin // mem write
+		din_afifo1 <= {r_addr, r_mask, 1'b0, 1'b1, r_wdata};
+                wen_afifo1 <= 1;
+                state <= 21;
+
+        end
+	8'd21: begin
+                wen_afifo1 <= 0;
+                if(!empty_afifo1)
+                        state <= 22;
+        end
+        8'd22: begin
+                if(empty_afifo1) begin
+			r_stall <= 0;
+                        state <= 0;
+			if(i_wr_en) begin
+				$display("error wr");
+				$finish();
+			end
+
+                end
+        end
 	endcase
 end
 
+    // sdram to proc
+    always@(posedge clk_sdram) begin
+    if(~rst_x) begin
+      ramstate <= 0;
+    end else
+    case(ramstate)
+        8'd0: // idle
+                if(!empty_afifo1) begin
+                        ren_afifo1 <= 1;
+			{r_addr, r_mask, r_rd, r_we, r_wdata} <= dout_afifo1;
+			ramstate <= 1;
+                end
+	8'd1: begin
+		// command from proc
+		ren_afifo1 <= 0;
+		if(r_rd) begin
+			if(w_busy) begin
+				r_rd <= 0;
+				ramstate <= 10;
+			end
+		end else if(r_we) begin
+			if(w_busy) begin
+				r_we <= 0;
+				ramstate <= 20;
+			end
+		end else begin
+			$display("afifo logic error");
+			$finish;
+		end
+	end
+	8'd10: begin // read
+		if(!w_busy) begin
+			din_afifo2 <= w_dram_odata;
+			wen_afifo2 <= 1;
+			ramstate <= 11;
+		end
+	end
+	8'd11: begin
+		wen_afifo2 <= 0;
+		if(!empty_afifo2) begin
+			ramstate <= 0;
+		end
+	end
+	8'd20: begin
+		if(!w_busy)
+			ramstate <= 0;
+	end
+	endcase	
+end
+
 `ifdef SIM_MODE
-    m_sdram_sim #(`BIN_SIZE/2) idbmem(.CLK(clk), .w_addr(r_maddr), .w_odata(w_dram_odata),
+    m_sdram_sim #(`BIN_SIZE/2) idbmem(.CLK(clk), .w_addr(r_addr), .w_odata(w_dram_odata),
         .w_we(r_we), .w_le(r_rd), .w_wdata(r_wdata), .w_mask(~r_mask), .w_stall(w_busy), 
         .w_mtime(w_mtime[31:0]),
         .w_refresh(0)
@@ -202,7 +263,7 @@ end
 
 	.dqmi(~r_mask),
         .busy(w_busy),
-        .uaddr(r_maddr),
+        .uaddr(r_addr),
         .ucmd(r_rd | r_we),
         .uwe(r_we),
         .uwrdata(r_wdata),

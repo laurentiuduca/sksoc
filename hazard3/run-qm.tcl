@@ -73,6 +73,7 @@ read_verilog -sv "example_soc/libfpga/mem/sdram-qm/memoryqm.v"
 read_verilog -sv "example_soc/libfpga/mem/sdram-qm/artix7_pll.v"
 read_verilog -sv "example_soc/libfpga/mem/sdram-qm/sdramwinb.v"
 
+read_verilog -sv "example_soc/libfpga/cdc/af.v"
 read_verilog -sv "example_soc/libfpga/peris/uart/uart_mini.v"
 
 read_verilog -sv "example_soc/libfpga/mem/max7219.v"
