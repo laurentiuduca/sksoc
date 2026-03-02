@@ -49,13 +49,13 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
     reg         r_rd    = 0;
     wire 	w_busy;
     wire[31:0] w_dram_odata;
-    reg [3:0] r_mask=0;
+    reg [3:0] r_mask=0, r_mmask=0;
     reg [31:0] r_dram_odata=0;
-    reg [31:0] r_addr;
+    reg [31:0] r_addr=0, r_maddr=0;
 
     wire[31:0] w_odata = r_dram_odata;
     assign o_data = w_odata;
-    reg [31:0] r_wdata=0;
+    reg [31:0] r_wdata=0, r_mwdata=0;
 
     reg r_stall = 0;
     assign o_busy = r_stall;
@@ -69,8 +69,10 @@ module DRAM_conRV #(parameter PRELOAD_FILE = "")
     reg ren_afifo1=0, ren_afifo2=0;
     `define af1size 70 // = addr + mask + rd + wr + idata
     `define af2size 70 // odata
-    reg [`af1size-1:0] din_afifo1=0, dout_afifo1; //{r_addr, r_mask, r_rd, r_wr, r_wdata};
-    reg [`af2size-1:0] din_afifo2=0, dout_afifo2=0; // r_dram_odata
+    reg [`af1size-1:0] din_afifo1=0;
+    wire [`af1size-1:0] dout_afifo1; 
+    reg [`af2size-1:0] din_afifo2=0;
+    wire [`af1size-1:0] dout_afifo2; 
     // proc to sdram
     asyncfifo #(
                 .DATA_WIDTH(`af1size),
@@ -198,7 +200,7 @@ end
         8'd0: // idle
                 if(!empty_afifo1) begin
                         ren_afifo1 <= 1;
-			{r_addr, r_mask, r_rd, r_we, r_wdata} <= dout_afifo1;
+			{r_maddr, r_mmask, r_rd, r_we, r_mwdata} <= dout_afifo1;
 			ramstate <= 1;
                 end
 	8'd1: begin
@@ -240,8 +242,8 @@ end
 end
 
 `ifdef SIM_MODE
-    m_sdram_sim #(`BIN_SIZE/2) idbmem(.CLK(clk), .w_addr(r_addr), .w_odata(w_dram_odata),
-        .w_we(r_we), .w_le(r_rd), .w_wdata(r_wdata), .w_mask(~r_mask), .w_stall(w_busy), 
+    m_sdram_sim #(`BIN_SIZE/2) idbmem(.CLK(clk), .w_addr(r_maddr), .w_odata(w_dram_odata),
+        .w_we(r_we), .w_le(r_rd), .w_wdata(r_mwdata), .w_mask(~r_mmask), .w_stall(w_busy), 
         .w_mtime(w_mtime[31:0]),
         .w_refresh(0)
         );
@@ -261,12 +263,12 @@ end
         .we_n(SDWE),
         .dqm(DQM),
 
-	.dqmi(~r_mask),
+	.dqmi(~r_mmask),
         .busy(w_busy),
-        .uaddr(r_addr),
+        .uaddr(r_maddr),
         .ucmd(r_rd | r_we),
         .uwe(r_we),
-        .uwrdata(r_wdata),
+        .uwrdata(r_mwdata),
         .urddata(w_dram_odata),
         .state_cnt(drvstate)
 );
