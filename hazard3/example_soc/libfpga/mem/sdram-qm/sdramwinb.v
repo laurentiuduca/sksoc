@@ -242,6 +242,11 @@ always @ ( posedge clk or negedge rst )
 			              if(refreshcnt >= `maxrefreshcnt) begin
 					refreshcnt <= 'd0;
 					state_cnt <= 'd91;
+				      end else if(nw == 1) begin
+                                                naddr <= naddr + 1;
+                                                nwrdata <= uwrdata[31:16];
+                                                ndqmi <= dqmi[3:2];
+                                                state_cnt <= 'd33;
 				      end else if (ucmd) begin
 					busy <= 1;
 					naddr <= uaddr >> 1;
@@ -282,15 +287,8 @@ always @ ( posedge clk or negedge rst )
 				'd67: precharge_all_bank(0, hi_z);       //9 Precharge ALL Bank
 				'd68: nop (0, hi_z);                  //10-11 Nop, tRP's minimum value is 20ns
 				'd69: begin
-					if(nw == 1) begin
-						naddr <= naddr + 1;
-						nwrdata <= uwrdata[31:16];
-						ndqmi <= dqmi[3:2];
-						state_cnt <= 'd33;
-					end else begin
 						state_cnt <= 'd32;
 						busy <= 0;
-					end
 				end
 
 				'd91: auto_refresh;                      //91 Auto Refresh                       
