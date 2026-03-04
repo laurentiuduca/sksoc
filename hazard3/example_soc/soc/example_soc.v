@@ -15,8 +15,7 @@
 
 module example_soc #(
     parameter DTM_TYPE   = "JTAG",   // Can be "JTAG" or "ECP5"
-    parameter SRAM_DEPTH = 1 << 21,  // 2 Mwords x 4 -> 8MB
-    parameter CLK_MHZ    = 27,       // For timer timebase
+    parameter CLK_MHZ    = 100,       // For timer timebase
     parameter W_MEMOP    = 5,
     `include "hazard3_config.vh"
 ) (
@@ -36,21 +35,21 @@ module example_soc #(
     output wire uart_tx,
     input  wire uart_rx,
 
-    // tang nano 20k SDRAM
-    output wire        O_sdram_clk,
-    output wire        O_sdram_cke,
-    output wire        O_sdram_cs_n,   // chip select
-    output wire        O_sdram_cas_n,  // columns addrefoc select
-    output wire        O_sdram_ras_n,  // row address select
-    output wire        O_sdram_wen_n,  // write enable
-    inout  wire [31:0] IO_sdram_dq,    // 32 bit bidirectional data bus
-    output wire [10:0] O_sdram_addr,   // 11 bit multiplexed address bus
-    output wire [ 1:0] O_sdram_ba,     // two banks
-    output wire [ 3:0] O_sdram_dqm,    // 32/4
+    // SDRAM
+    output wire SDCLK0,
+    output wire SDCKE0,
+    output wire [1:0]DQM,
+    output wire CAS,
+    output wire RAS,
+    output wire SDWE,
+    output wire SDCS0,
+    inout wire [15:0]Data,
+    output wire [12:0]Address,
+    output wire [1:0]Bank,
 
     input  wire       w_rxd,
     output wire       w_txd,
-    output wire [5:0] w_led,
+    output wire [1:0] w_led,
     input  wire       w_btnl,
     input  wire       w_btnr,
     // when sdcard_pwr_n = 0, SDcard power on
@@ -277,9 +276,15 @@ module example_soc #(
     wire               pwrup_req;
     wire               unblock_out;
 
-    wire               uart_irq;
-    wire [N_HARTS-1:0] soft_irq;  // -> mip.msip
-    wire               timer_irq;
+    `ifdef ethirqon
+    wire [NUM_IRQS-1:0] irq={31'h0, eth_irqrx, eth_irqtx};  // -> mip.meip
+    `else
+    wire [NUM_IRQS-1:0] irq=0;
+    `endif
+    wire                      eth_irqtx, eth_irqrx;
+    wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
+    wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
+    wire [N_HARTS*W_DATA-1:0] hartids;
 
     hazard3_cpu_1port #(
         // These must have the values given here for you to end up with a useful SoC:
@@ -288,7 +293,7 @@ module example_soc #(
         .CSR_M_MANDATORY    (1),
         .CSR_M_TRAP         (1),
         .DEBUG_SUPPORT      (1),
-        .NUM_IRQS           (1),
+        .NUM_IRQS           (NUM_IRQS),
         .RESET_REGFILE      (0),
         // Can be overridden from the defaults in hazard3_config.vh during
         // instantiation of example_soc():
@@ -328,7 +333,7 @@ module example_soc #(
     ) cpu (
         .clk          (clk),
         .clk_always_on(clk),
-        .rst_n        (rst_n_cpu),
+        .rst_n        (rst_n),
 
         .hartid(),
         .d_pc  (d_pc),
@@ -378,10 +383,10 @@ module example_soc #(
         .dbg_sbus_wdata(sbus_wdata),
         .dbg_sbus_rdata(sbus_rdata),
 
-        .irq(uart_irq),
-
-        .soft_irq (soft_irq),
-        .timer_irq(timer_irq),
+        // Level-sensitive interrupt sources
+        .irq        (irq),          // -> mip.meip
+        .soft_irq   (soft_irq),     // -> mip.msip
+        .timer_irq  (timer_irq),    // -> mip.mtip	
         .hmaster  ()
     );
 
@@ -501,18 +506,18 @@ module example_soc #(
         .rst_n(rst_n),
 
         // From masters; function as slave ports
-        .src_hready_resp({  /*sd_hready, */ proc_hready}),
-        //.src_hready    ({/*sd_hready, */proc_hready}),
-        .src_hresp      ({  /*sd_hresp, */ proc_hresp}),
-        .src_haddr      ({  /*sd_haddr, */ proc_haddr}),
-        .src_hwrite     ({  /*sd_hwrite, */ proc_hwrite}),
-        .src_htrans     ({  /*sd_htrans, */ proc_htrans}),
-        .src_hsize      ({  /*sd_hsize, */ proc_hsize}),
-        .src_hburst     ({  /*sd_hburst, */ proc_hburst}),
-        .src_hprot      ({  /*sd_hprot, */ proc_hprot}),
-        .src_hmastlock  ({  /*sd_hmastlock, */ proc_hmastlock}),
-        .src_hwdata     ({  /*sd_hwdata, */ proc_hwdata}),
-        .src_hrdata     ({  /*sd_hrdata, */ proc_hrdata}),
+        .src_hready_resp({  proc_hready),
+        //.src_hready    (  proc_hready),
+        .src_hresp       (  proc_hresp),
+        .src_haddr       (  proc_haddr),
+        .src_hwrite      (  proc_hwrite),
+        .src_htrans      (  proc_htrans),
+        .src_hsize       (  proc_hsize),
+        .src_hburst      (  proc_hburst),
+        .src_hprot       (  proc_hprot),
+        .src_hmastlock   (  proc_hmastlock),
+        .src_hwdata      (  proc_hwdata),
+        .src_hrdata      (  proc_hrdata),
         .src_d_pc       (d_pc),
         .src_hartid     (0),
         // exclusive access signaling
@@ -582,8 +587,17 @@ module example_soc #(
     wire              sd_pready;
     wire              sd_pslverr;
 
-    wire [W_DATA-1:0] sd_phartid, uart_phartid, timer_phartid;
-    wire [W_DATA-1:0] sd_pd_pc, uart_pd_pc, timer_pd_pc;
+    wire              eth_psel;
+    wire              eth_penable;
+    wire              eth_pwrite;
+    wire [      15:0] eth_paddr;
+    wire [      31:0] eth_pwdata;
+    wire [      31:0] eth_prdata;
+    wire              eth_pready;
+    wire              eth_pslverr;    
+
+    wire [W_DATA-1:0] eth_phartid, sd_phartid, uart_phartid, timer_phartid;
+    wire [W_DATA-1:0] eth_pd_pc, sd_pd_pc, uart_pd_pc, timer_pd_pc;
 
     ahbl_to_apb apb_bridge_u (
         .clk  (clk),
@@ -617,10 +631,10 @@ module example_soc #(
     );
 
     apb_splitter #(
-        .N_SLAVES (3),
+        .N_SLAVES (4),
         // inside devices paddr has 16 bytes
-        .ADDR_MAP ({`SDSPI_DEVADDR, 32'h4000_0000}),
-        .ADDR_MASK(48'hc000_c000_c000)
+        .ADDR_MAP ({`ETHERNET_DEVADDR, `SDSPI_DEVADDR, 32'h4000_0000}),
+        .ADDR_MASK(64'hc000_c000_c000_c000)
     ) inst_apb_splitter (
         .clk         (clk),
         .apbs_paddr  (bridge_paddr),
@@ -634,16 +648,16 @@ module example_soc #(
         .apbs_phartid(bridge_phartid),
         .apbs_pd_pc  (bridge_pd_pc),
 
-        .apbm_paddr  ({sd_paddr, uart_paddr, timer_paddr}),
-        .apbm_psel   ({sd_psel, uart_psel, timer_psel}),
-        .apbm_penable({sd_penable, uart_penable, timer_penable}),
-        .apbm_pwrite ({sd_pwrite, uart_pwrite, timer_pwrite}),
-        .apbm_pwdata ({sd_pwdata, uart_pwdata, timer_pwdata}),
-        .apbm_pready ({sd_pready, uart_pready, timer_pready}),
-        .apbm_prdata ({sd_prdata, uart_prdata, timer_prdata}),
-        .apbm_pslverr({sd_pslverr, uart_pslverr, timer_pslverr}),
-        .apbm_hartid ({sd_phartid, uart_phartid, timer_phartid}),
-        .apbm_pd_pc  ({sd_pd_pc, uart_pd_pc, timer_pd_pc})
+        .apbm_paddr  ({eth_paddr,   sd_paddr,   uart_paddr,   timer_paddr}),
+        .apbm_psel   ({eth_psel,    sd_psel,    uart_psel,    timer_psel}),
+        .apbm_penable({eth_penable, sd_penable, uart_penable, timer_penable}),
+        .apbm_pwrite ({eth_pwrite,  sd_pwrite,  uart_pwrite,  timer_pwrite}),
+        .apbm_pwdata ({eth_pwdata,  sd_pwdata,  uart_pwdata,  timer_pwdata}),
+        .apbm_pready ({eth_pready,  sd_pready,  uart_pready,  timer_pready}),
+        .apbm_prdata ({eth_prdata,  sd_prdata,  uart_prdata,  timer_prdata}),
+        .apbm_pslverr({eth_pslverr, sd_pslverr, uart_pslverr, timer_pslverr}),
+        .apbm_hartid ({eth_phartid, sd_phartid, uart_phartid, timer_phartid}),
+        .apbm_pd_pc  ({eth_pd_pc,   sd_pd_pc,   uart_pd_pc,   timer_pd_pc})
     );
 
     // ----------------------------------------------------------------------------
@@ -654,8 +668,7 @@ module example_soc #(
     // zero-initialised so don't leave the little guy hanging too long)
 
     ahb_sync_sram #(
-        .DEPTH(SRAM_DEPTH),
-        .HAS_WRITE_BUFFER(1),  // 0 does not work
+        //.HAS_WRITE_BUFFER (1), // 0 does not work
         .PRELOAD_FILE("init_kernel.txt")
     ) sram0 (
         .clk      (clk),
@@ -683,17 +696,17 @@ module example_soc #(
         .ahbls_hmaster    (sram0_hmaster),
         .ahbls_hexokay    (sram0_hexokay),
 
-        // tang nano 20k SDRAM
-        .O_sdram_clk  (O_sdram_clk),
-        .O_sdram_cke  (O_sdram_cke),
-        .O_sdram_cs_n (O_sdram_cs_n),   // chip select
-        .O_sdram_cas_n(O_sdram_cas_n),  // columns addrefoc select
-        .O_sdram_ras_n(O_sdram_ras_n),  // row address select
-        .O_sdram_wen_n(O_sdram_wen_n),  // write enable
-        .IO_sdram_dq  (IO_sdram_dq),    // 32 bit bidirectional data bus
-        .O_sdram_addr (O_sdram_addr),   // 11 bit multiplexed address bus
-        .O_sdram_ba   (O_sdram_ba),     // two banks
-        .O_sdram_dqm  (O_sdram_dqm),    // 32/4
+                                // SDRAM
+                                .SDCLK0(SDCLK0),
+                                .SDCKE0(SDCKE0),
+                                .DQM(DQM),
+                                .CAS(CAS),
+                                .RAS(RAS),
+                                .SDWE(SDWE),
+                                .SDCS0(SDCS0),
+                                .Data(Data),
+                                .Address(Address),
+                                .Bank(Bank),
 
         .w_rxd(w_rxd),
         .w_txd(w_txd),
@@ -721,6 +734,7 @@ module example_soc #(
 
     );
 
+    wire uart_irq;
     uart_mini uart_u (
         .clk  (clk),
         .rst_n(rst_n),
@@ -781,6 +795,7 @@ module example_soc #(
 
         .tick(timer_tick),
 
+	.irq(irq),
         .soft_irq (soft_irq),
         .timer_irq(timer_irq)
     );
@@ -836,86 +851,24 @@ module example_soc #(
         .sdspi_status(sdspi_status)
     );
 
+    `ifdef ethon
+    hazard3_ethernet eth0 (
+        .clk  (clk),
+        .rst_n(rst_n),
+    
+        .psel   (eth_psel),
+        .penable(eth_penable),
+        .pwrite (eth_pwrite),
+        .paddr  (eth_paddr),
+        .pwdata (eth_pwdata),
+        .prdata (eth_prdata),
+        .pready (eth_pready),
+        .pslverr(eth_pslverr),
 
-    /*
-`ifdef laur0
-     // we have 2 sd drivers but only 1 active at a given moment of time
-     wire         m_sdclk;
-     wire         oc_sdclk;
-     assign sdclk = w_init_done ? oc_sdclk : m_sdclk;
+	.tx_clk(clk), .rx_clk(clk),
+	.irqtx(eth_irqtx),
+	.irqrx(eth_irqrx)
+    );
+    `endif
 
-     wire sdcmd_oe, oc_sdcmd_oe, m_sdcmd_oe;
-     wire o_sdcmd, oc_sdcmd, m_sdcmd;
-     assign sdcmd_oe = w_init_done ? oc_sdcmd_oe : m_sdcmd_oe;
-     assign o_sdcmd = w_init_done ? oc_sdcmd : m_sdcmd;
-     assign sdcmd = sdcmd_oe ? o_sdcmd : 1'bz;
-
-     wire sddat_oe0, sddat_oe321, oc_sddat_oe, m_sddat_oe0, m_sddat_oe321;
-     wire [3:0] o_sddat, oc_sddat, m_sddat;
-     assign m_sddat[0] = sddat0;
-     assign m_sddat_oe0 = 1'b0;
-     assign m_sddat_oe321 = 1'b1;
-     assign sddat_oe0 = w_init_done ? oc_sddat_oe : m_sddat_oe0;
-     assign sddat_oe321 = w_init_done ? oc_sddat_oe : m_sddat_oe321;
-     assign o_sddat = w_init_done ? oc_sddat : m_sddat;
-     assign {sddat3, sddat2, sddat1} = sddat_oe321 ? o_sddat[3:1] : 3'bzzz;
-     assign sddat0 = sddat_oe0 ? o_sddat[0] : 1'bz;
-`endif
-
-`ifdef laur0
-wire [W_ADDR-1:0] sd_haddr;
-wire              sd_hwrite;
-wire [1:0]        sd_htrans;
-wire [2:0]        sd_hsize;
-wire [2:0]        sd_hburst;
-wire [3:0]        sd_hprot;
-wire              sd_hmastlock;
-wire              sd_hexcl;
-wire              sd_hready;
-wire              sd_hresp;
-wire [W_DATA-1:0] sd_hwdata;
-wire [W_DATA-1:0] sd_hrdata;
-`endif
-
-`ifdef laur0
-hazard3_sd #(.DEVADDR(`SDDEVADDR)) sd(
-        .clk       (clk),
-        .rst_n     (w_init_done),
-
-	`ifdef laur0
-        .haddr                      (sd_haddr),
-        .hwrite                     (sd_hwrite),
-        .htrans                     (sd_htrans),
-        .hsize                      (sd_hsize),
-        .hburst                     (sd_hburst),
-        .hprot                      (sd_hprot),
-        .hmastlock                  (sd_hmastlock),
-        .hexcl                      (sd_hexcl),
-        .hready                     (sd_hready),
-        .hresp                      (sd_hresp),
-        //.hexokay                    (sd_hexokay),
-        .hwdata                     (sd_hwdata),
-        .hrdata                     (sd_hrdata),
-	`endif
-
-        .psel      (sd_psel),
-        .penable   (sd_penable),
-        .pwrite    (sd_pwrite),
-        .paddr     (sd_paddr),
-        .pwdata    (sd_pwdata),
-        .prdata    (sd_prdata),
-        .pready    (sd_pready),
-        .pslverr   (sd_pslverr),
-	
-	.sd_clk_pad_o(oc_sdclk),
-	.sd_cmd(oc_sdcmd),
-	.sd_cmd_i(sdcmd),
-	.sd_cmd_oe(oc_sdcmd_oe),
-	.sd_dat(oc_sddat),
-	.sd_dat_oe(oc_sddat_oe),
-	.sd_dat_i({sddat3, sddat2, sddat1, sddat0})
-
-);
-`endif
-*/
 endmodule
