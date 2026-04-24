@@ -1,3 +1,6 @@
+// laurentiu cristian duca 202604
+// spdx-license identifier apache2
+
 `timescale 1ns/1ps
 
 //

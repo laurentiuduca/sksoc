@@ -1,3 +1,7 @@
+
+// spdx license identifier - mit
+//Copyright (c) 2021-2024 Laurentiu-Cristian Duca
+//Copyright (c) 2020 Kise Laboratory, Tokyo Institute of Technology
 module asyncfifo #(
                                parameter DATA_WIDTH  = 512,
                                parameter ADDR_WIDTH  = 8, // FIFO_DEPTH = 2^ADDR_WIDTH

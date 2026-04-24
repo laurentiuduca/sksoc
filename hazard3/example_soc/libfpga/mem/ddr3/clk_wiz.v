@@ -1,4 +1,5 @@
-
+// modified by Laurentiu-Cristian Duca
+// spdx-license identifier - gnu gpl
 module clk_wiz
  (
   input wire         clk_in,

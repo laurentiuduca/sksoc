@@ -1,3 +1,6 @@
+// laurentiu cristian duca 202604
+// spdx-license identifier apache2
+
 `include "define.vh"
 module mmcmclock (
     output wire clk_outsys,   

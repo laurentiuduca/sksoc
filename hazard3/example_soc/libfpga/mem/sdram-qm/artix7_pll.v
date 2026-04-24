@@ -1,3 +1,6 @@
+// laurentiu cristian duca 202604
+// spdx-license identifier apache2
+
 `include "define.vh"
 
 module artix7_pll

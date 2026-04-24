@@ -1,3 +1,6 @@
+// modified by laurentiu cristian duca 202604
+// spdx-license identifier apache2
+
 `default_nettype wire
 module sdramwinb(clk,rst,
 				data,addr,ba,
