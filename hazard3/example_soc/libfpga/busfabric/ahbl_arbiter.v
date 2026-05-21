@@ -154,8 +154,8 @@ module ahbl_arbiter #(
 
     reg  [N_PORTS-1:0] mast_req_a;
     wire [N_PORTS-1:0] mast_gnt_a;
-    reg [N_PORTS-1:0] mast_gnt_d;
-    reg [N_PORTS-1:0] active;
+    reg  [N_PORTS-1:0] mast_gnt_d;
+    reg  [N_PORTS-1:0] active;
     always @(*) begin
         for (i = 0; i < N_PORTS; i = i + 1) begin
             // HTRANS == 2'b10, 2'b11 when active
@@ -182,7 +182,7 @@ module ahbl_arbiter #(
 
     // AHB State Machine
 
-    reg [ W_ADDR-1:0] dd_pc;
+    reg [W_ADDR-1:0] dd_pc;
     assign dst_hready = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
 				 |(src_hready & mast_gnt_a); //1'b1;
 

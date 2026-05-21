@@ -61,14 +61,14 @@ module ahb_sync_sram #(
     // SDRAM
     output wire SDCLK0,
     output wire SDCKE0,
-    output wire [1:0]DQM,
+    output wire [1:0] DQM,
     output wire CAS,
     output wire RAS,
     output wire SDWE,
     output wire SDCS0,
-    inout wire [15:0]Data,
-    output wire [12:0]Address,
-    output wire [1:0]Bank,
+    inout wire [15:0] Data,
+    output wire [12:0] Address,
+    output wire [1:0] Bank,
 
     input  wire        w_rxd,
     output wire        w_txd,

@@ -1,5 +1,5 @@
 // laur
-//`define SIM_MODE
+// `define SIM_MODE
 
 //`define DUMP_VCD
 // dbgstart may be defined in hazard3_config.vh, not here
@@ -52,19 +52,19 @@ define.vh `define SDCARD_CLK_DIV 3 // clk is 50mhz
 `define SERIAL_WCNT (`FREQ / 115200)
 `endif
 
-`define XLEN    32
+`define XLEN 32
 `define LATENCY 0
 
 `ifndef SIM_MODE
-	`define LAUR_MEM_RB // mem read-back after writing it with BBL
-	`define LAUR_MEM_RB_ONLY_CHECK
+`define LAUR_MEM_RB // mem read-back after writing it with BBL
+`define LAUR_MEM_RB_ONLY_CHECK
 `endif
 
 `define MEM_SIZE (256*1024)
 `define BBL_SIZE (256*1024) // initmem.bin
-`define BIN_BBL_SIZE   `BBL_SIZE
+`define BIN_BBL_SIZE `BBL_SIZE
 `define BIN_DISK_SIZE 0
-`define BIN_SIZE       (`BIN_BBL_SIZE + `BIN_DISK_SIZE)
+`define BIN_SIZE (`BIN_BBL_SIZE + `BIN_DISK_SIZE)
 
 // simulate sdram winbond
 `define winbaddrlen 24

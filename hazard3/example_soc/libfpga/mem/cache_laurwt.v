@@ -36,39 +36,44 @@ module cache_ctrl #(
 
     output wire w_init_done,
 
-    `ifdef WUKONGDDR3
+`ifdef WUKONGDDR3
     input wire rst_n_ddram,
-    input wire i_controller_clk, i_ddr3_clk, i_ref_clk, i_ddr3_clk_90,
+    input wire i_controller_clk,
+    i_ddr3_clk,
+    i_ref_clk,
+    i_ddr3_clk_90,
     // DDR3 I/O Interface
-    output wire ddr3_clk_p, ddr3_clk_n,
+    output wire ddr3_clk_p,
+    ddr3_clk_n,
     output wire ddr3_reset_n,
-    output wire ddr3_cke, // CKE
+    output wire ddr3_cke,  // CKE
     //output wire ddr3_cs_n, // no chip select signal
-    output wire ddr3_ras_n, // RAS#
-    output wire ddr3_cas_n, // CAS#
-    output wire ddr3_we_n, // WE#
-    output wire[14-1:0] ddr3_addr,
-    output wire[3-1:0] ddr3_ba,
-    inout wire[16-1:0] ddr3_dq,
-    inout wire[2-1:0] ddr3_dqs_p, ddr3_dqs_n,
-    output wire[2-1:0] ddr3_dm,
-    output wire ddr3_odt, // on-die termination
-    `endif
-    `ifdef WUKONGSDRAM
+    output wire ddr3_ras_n,  // RAS#
+    output wire ddr3_cas_n,  // CAS#
+    output wire ddr3_we_n,  // WE#
+    output wire [14-1:0] ddr3_addr,
+    output wire [3-1:0] ddr3_ba,
+    inout wire [16-1:0] ddr3_dq,
+    inout wire [2-1:0] ddr3_dqs_p,
+    ddr3_dqs_n,
+    output wire [2-1:0] ddr3_dm,
+    output wire ddr3_odt,  // on-die termination
+`endif
+`ifdef WUKONGSDRAM
     input wire clk_sdram,
     input wire rst_n_sdram,
     // SDRAM
     output wire SDCLK0,
     output wire SDCKE0,
-    output wire [1:0]DQM,
+    output wire [1:0] DQM,
     output wire CAS,
     output wire RAS,
     output wire SDWE,
     output wire SDCS0,
-    inout wire [15:0]Data,
-    output wire [12:0]Address,
-    output wire [1:0]Bank,
-    `endif
+    inout wire [15:0] Data,
+    output wire [12:0] Address,
+    output wire [1:0] Bank,
+`endif
 
     input  wire        w_rxd,
     output wire        w_txd,
@@ -250,47 +255,49 @@ module cache_ctrl #(
         .w_init_done(w_init_done),
         .d_pc(d_pc),
 
-        .clk(clk),
+        .clk  (clk),
         .rst_x(rst_x),
 
         .o_init_calib_complete(calib_done),
         .sdram_fail(sdram_fail),
-				`ifdef WUKONGDDR3
-                                .i_controller_clk(i_controller_clk),
-                                .i_ddr3_clk(i_ddr3_clk),
-                                .i_ref_clk(i_ref_clk),
-                                .i_ddr3_clk_90(i_ddr3_clk_90),
-                                .rst_n_ddram(rst_n_ddram),
-                                // DDR3 I/O Interface
-                                .ddr3_clk_p(ddr3_clk_p), .ddr3_clk_n(ddr3_clk_n),
-                                .ddr3_reset_n(ddr3_reset_n),
-                                .ddr3_cke(ddr3_cke), // CKE
-                                //ddr3_cs_n, // no chip select signal
-                                .ddr3_ras_n(ddr3_ras_n), // RAS#
-                                .ddr3_cas_n(ddr3_cas_n), // CAS#
-                                .ddr3_we_n(ddr3_we_n), // WE#
-                                .ddr3_addr(ddr3_addr),
-                                .ddr3_ba(ddr3_ba),
-                                .ddr3_dq(ddr3_dq),
-                                .ddr3_dqs_p(ddr3_dqs_p), .ddr3_dqs_n(ddr3_dqs_n),
-                                .ddr3_dm(ddr3_dm),
-                                .ddr3_odt(ddr3_odt), // on-die termination
-                                `endif
-                                `ifdef WUKONGSDRAM
-                                .clk_sdram(clk_sdram),
-                                .rst_n_sdram(rst_n_sdram),
-                                // SDRAM
-                                .SDCLK0(SDCLK0),
-                                .SDCKE0(SDCKE0),
-                                .DQM(DQM),
-                                .CAS(CAS),
-                                .RAS(RAS),
-                                .SDWE(SDWE),
-                                .SDCS0(SDCS0),
-                                .Data(Data),
-                                .Address(Address),
-                                .Bank(Bank),	
-				`endif
+`ifdef WUKONGDDR3
+        .i_controller_clk(i_controller_clk),
+        .i_ddr3_clk(i_ddr3_clk),
+        .i_ref_clk(i_ref_clk),
+        .i_ddr3_clk_90(i_ddr3_clk_90),
+        .rst_n_ddram(rst_n_ddram),
+        // DDR3 I/O Interface
+        .ddr3_clk_p(ddr3_clk_p),
+        .ddr3_clk_n(ddr3_clk_n),
+        .ddr3_reset_n(ddr3_reset_n),
+        .ddr3_cke(ddr3_cke),  // CKE
+        //ddr3_cs_n, // no chip select signal
+        .ddr3_ras_n(ddr3_ras_n),  // RAS#
+        .ddr3_cas_n(ddr3_cas_n),  // CAS#
+        .ddr3_we_n(ddr3_we_n),  // WE#
+        .ddr3_addr(ddr3_addr),
+        .ddr3_ba(ddr3_ba),
+        .ddr3_dq(ddr3_dq),
+        .ddr3_dqs_p(ddr3_dqs_p),
+        .ddr3_dqs_n(ddr3_dqs_n),
+        .ddr3_dm(ddr3_dm),
+        .ddr3_odt(ddr3_odt),  // on-die termination
+`endif
+`ifdef WUKONGSDRAM
+        .clk_sdram(clk_sdram),
+        .rst_n_sdram(rst_n_sdram),
+        // SDRAM
+        .SDCLK0(SDCLK0),
+        .SDCKE0(SDCKE0),
+        .DQM(DQM),
+        .CAS(CAS),
+        .RAS(RAS),
+        .SDWE(SDWE),
+        .SDCS0(SDCS0),
+        .Data(Data),
+        .Address(Address),
+        .Bank(Bank),
+`endif
         .w_rxd(w_rxd),
         .w_txd(w_txd),
         .w_led(w_led),

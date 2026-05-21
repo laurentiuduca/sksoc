@@ -78,15 +78,15 @@ module hazard3_riscv_timer #(
                 else soft_irq[0] <= 1;
             end else if (bus_write && paddr == (ADDR_IPI + 4) && !state) begin
                 // laur - nuttx sends ipi at this addr
-		if(N_HARTS > 1) begin
+                if (N_HARTS > 1) begin
 `ifdef dbgstart
-	                $display(
-        	            "\t h%1x pc=%x iowrite && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d",
-                	    phartid, pd_pc, paddr, pwdata, soft_irq, $time);
+                    $display(
+                        "\t h%1x pc=%x iowrite && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d",
+                        phartid, pd_pc, paddr, pwdata, soft_irq, $time);
 `endif
-	                if (pwdata == 0) soft_irq[N_HARTS-1] <= 0;
-        	        else soft_irq[N_HARTS-1] <= 1;
-		end
+                    if (pwdata == 0) soft_irq[N_HARTS-1] <= 0;
+                    else soft_irq[N_HARTS-1] <= 1;
+                end
             end
             tcnt <= tcnt + 1;
         end
@@ -140,7 +140,7 @@ module hazard3_riscv_timer #(
             ADDR_MTIMECMPH:      prdata = ~mtimecmp0[63:32];
             ADDR_MTIMECMP + 8:   prdata = ~mtimecmp1[31:0];
             ADDR_MTIMECMPH + 12: prdata = ~mtimecmp1[63:32];
-	    ADDR_PLIC_CLAIM :    prdata = extint_num;
+            ADDR_PLIC_CLAIM:     prdata = extint_num;
             default:             prdata = 32'h0;
         endcase
     end
@@ -162,18 +162,18 @@ module hazard3_riscv_timer #(
                 32'h00000080: extint_num <= 8;
                 default:      extint_num <= 0;
             endcase
-	    //if(w_irq_t)
-		//    $display("w_irq_t=%x", w_irq_t);
-	end
+            //if(w_irq_t)
+            //    $display("w_irq_t=%x", w_irq_t);
+        end
     end
-    
+
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             pready <= 0;
             state  <= 0;
         end else if (state == 0) begin
-	    //if(paddr == ADDR_PLIC_CLAIM)
-		//    $display("ADDR_PLIC_CLAIM, extint_num=%x", extint_num);
+            //if(paddr == ADDR_PLIC_CLAIM)
+            //    $display("ADDR_PLIC_CLAIM, extint_num=%x", extint_num);
             if (bus_read) begin
                 pready <= 1;
                 state  <= 1;

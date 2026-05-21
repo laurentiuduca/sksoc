@@ -22,8 +22,10 @@ module hazard3_ethernet #(
     output wire pslverr,
 
     // ethernet signals
-    input wire tx_clk, rx_clk,
-    output wire irqtx, irqrx
+    input  wire tx_clk,
+    rx_clk,
+    output wire irqtx,
+    irqrx
 );
 
 endmodule

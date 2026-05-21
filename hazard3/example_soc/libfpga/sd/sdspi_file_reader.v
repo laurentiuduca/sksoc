@@ -200,7 +200,7 @@ module sdspi_file_reader #(
     end
 
 
-    reg [31:0] fptr = 0, dtowr=0;
+    reg [31:0] fptr = 0, dtowr = 0;
     //----------------------------------------------------------------------------------------------------------------------
     // main FSM
     //----------------------------------------------------------------------------------------------------------------------
@@ -617,7 +617,7 @@ module sdspi_file_reader #(
             fptr <= 0;
             {outen, outbyte} <= 0;
             send <= 0;
-	    dtowr=0;
+            dtowr = 0;
         end else begin
             if (rvalid && filesystem_state == READ_A_FILE && ~search_fat && fptr < file_size) begin
                 fptr <= fptr + 1;
@@ -625,12 +625,11 @@ module sdspi_file_reader #(
                 mw[fptr[1:0]] <= rdata;
                 if (fptr[1:0] == 2'b11) begin
                     dtowr <= {rdata, mw[2], mw[1], mw[0]};
-                    send <= 1;
+                    send  <= 1;
                 end else send <= 0;
             end else begin
                 {outen, outbyte} <= 0;
-		if(!frbusy || (send && state == 23))
-                	send <= 0;
+                if (!frbusy || (send && state == 23)) send <= 0;
             end
         end
 
@@ -646,7 +645,7 @@ module sdspi_file_reader #(
             if (state == 0) begin
                 if (BOOTDONE == 0) begin
                     if (send) begin
-			DATA <= dtowr;
+                        DATA  <= dtowr;
                         state <= 20;
                     end
                 end
@@ -668,15 +667,15 @@ module sdspi_file_reader #(
                 end
                 if (senti >= `BIN_SIZE) BOOTDONE <= 1;
             end else if (state == 23) begin
-                    state <= 0;
+                state <= 0;
             end
         end
     end
 
     assign w_reader_status = {
-        senti[23:0],  
+        senti[23:0],
         //state[3:0], w_reader_status_orig[3:0],
-	m_sdspi_status[7:0] // ctrlstate[7:0], state[7:0]
+        m_sdspi_status[7:0]  // ctrlstate[7:0], state[7:0]
     };
 
 endmodule

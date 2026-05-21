@@ -135,10 +135,10 @@ module hazard3_sd #(
             if (bus_write && pready == 0) begin
                 //$display("bus w paddr=%x pwdata=%x pready=%x", paddr, pwdata, pready);
                 if (paddr == 16'h8100) begin
-		    `ifdef SIM_MODE
+`ifdef SIM_MODE
                     $display("finish");
                     $finish;
-		    `endif
+`endif
                 end
                 if (paddr < `SDSPI_BLOCKADDR) begin
                     sdsbaddr <= pwdata;
@@ -175,9 +175,9 @@ module hazard3_sd #(
             pready <= 1;
             prdata <= sdspi_status;
             ctrlstate <= 0;
-	    `ifdef SIM_MODE
+`ifdef SIM_MODE
             $display("ctrlstate = 1, sdspi_status=%x", sdspi_status);
-	    `endif
+`endif
         end else if (ctrlstate == `CTRLSTATERDBLK) begin
 `ifdef dbgsimsd1
             for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1) begin
@@ -193,7 +193,7 @@ module hazard3_sd #(
         end else if (ctrlstate == `CTRLSTATEWRBLK) begin
 `ifdef dbgsimsd1
             for (i = 0; i < `SDSPI_BLOCKSIZE; i = i + 1)
-            	simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)] = br.m[i];
+            simsdmem[i+(sdsbaddr*`SDSPI_BLOCKSIZE)] = br.m[i];
             $display("wr block done");
 `endif
             // write block command
@@ -221,9 +221,9 @@ module hazard3_sd #(
         end else if (ctrlstate == 16) begin
             mcnt   <= mcnt + 1;
             maddr1 <= maddr1 + 1;
-	    // chars are contiguous in mem
+            // chars are contiguous in mem
             prdata <= {mout, mout, mout, mout};
-	    //prdata <= mout << ((maddr1 & 3) << 3);
+            //prdata <= mout << ((maddr1 & 3) << 3);
             if (mcnt == 0) begin
                 //if(mout)
                 //	$display("\tbus r paddr=%x data=%x", maddr1, mout);
@@ -253,7 +253,7 @@ module hazard3_sd #(
             sdsrd <= 1;
             state <= 2;
         end else if (state == 2) begin
-		if (sdsdout_avail) begin // && !sdserror) begin
+            if (sdsdout_avail) begin  // && !sdserror) begin
                 //sdsrd <= 0; // block transfer
                 outbyte <= sdsdout;
                 state   <= 3;

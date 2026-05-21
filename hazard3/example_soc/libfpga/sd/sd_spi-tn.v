@@ -982,61 +982,61 @@ module sd_controller (
     always @* last_din_valid = n1552_q;  // (isignal)
     initial last_din_valid = 1'b0;
     /* sd_spi.vhd:313:33  */
-    assign n59_o  = set_return_state ? new_return_state : return_state;
+    assign n59_o = set_return_state ? new_return_state : return_state;
     /* sd_spi.vhd:314:33  */
-    assign n60_o  = set_sr_return_state ? new_sr_return_state : sr_return_state;
+    assign n60_o = set_sr_return_state ? new_sr_return_state : sr_return_state;
     /* sd_spi.vhd:315:33  */
-    assign n61_o  = set_cmd_out ? new_cmd_out : cmd_out;
+    assign n61_o = set_cmd_out ? new_cmd_out : cmd_out;
     /* sd_spi.vhd:317:33  */
-    assign n62_o  = set_address ? new_address : address;
+    assign n62_o = set_address ? new_address : address;
     /* sd_spi.vhd:319:33  */
-    assign n63_o  = set_byte_counter ? new_byte_counter : byte_counter;
+    assign n63_o = set_byte_counter ? new_byte_counter : byte_counter;
     /* sd_spi.vhd:335:53  */
-    assign n64_o  = new_data_out[7];  // extract
+    assign n64_o = new_data_out[7];  // extract
     /* sd_spi.vhd:346:51  */
-    assign n65_o  = dout_taken & sdavail;
+    assign n65_o = dout_taken & sdavail;
     /* sd_spi.vhd:346:33  */
-    assign n67_o  = n65_o ? 1'b0 : n1557_q;
+    assign n67_o = n65_o ? 1'b0 : n1557_q;
     /* sd_spi.vhd:346:33  */
-    assign n69_o  = n65_o ? 1'b0 : sdavail;
+    assign n69_o = n65_o ? 1'b0 : sdavail;
     /* sd_spi.vhd:342:33  */
-    assign n70_o  = set_davail ? data_in : n1556_q;
+    assign n70_o = set_davail ? data_in : n1556_q;
     /* sd_spi.vhd:342:33  */
-    assign n72_o  = set_davail ? 1'b1 : n67_o;
+    assign n72_o = set_davail ? 1'b1 : n67_o;
     /* sd_spi.vhd:342:33  */
-    assign n74_o  = set_davail ? 1'b1 : n69_o;
+    assign n74_o = set_davail ? 1'b1 : n69_o;
     /* sd_spi.vhd:354:45  */
-    assign n75_o  = ~din_valid;
+    assign n75_o = ~din_valid;
     /* sd_spi.vhd:354:56  */
-    assign n76_o  = ~wr;
+    assign n76_o = ~wr;
     /* sd_spi.vhd:354:76  */
-    assign n77_o  = ~wr_multiple;
+    assign n77_o = ~wr_multiple;
     /* sd_spi.vhd:354:61  */
-    assign n78_o  = n77_o & n76_o;
+    assign n78_o = n77_o & n76_o;
     /* sd_spi.vhd:354:50  */
-    assign n79_o  = n75_o | n78_o;
+    assign n79_o = n75_o | n78_o;
     /* sd_spi.vhd:359:71  */
-    assign n80_o  = ~last_din_valid;
+    assign n80_o = ~last_din_valid;
     /* sd_spi.vhd:359:53  */
-    assign n81_o  = n80_o & din_valid;
+    assign n81_o = n80_o & din_valid;
     /* sd_spi.vhd:364:49  */
-    assign n82_o  = new_din_taken & din_latch;
+    assign n82_o = new_din_taken & din_latch;
     /* sd_spi.vhd:364:33  */
-    assign n84_o  = n82_o ? 1'b1 : n1558_q;
+    assign n84_o = n82_o ? 1'b1 : n1558_q;
     /* sd_spi.vhd:364:33  */
-    assign n86_o  = n82_o ? 1'b1 : sdin_taken;
+    assign n86_o = n82_o ? 1'b1 : sdin_taken;
     /* sd_spi.vhd:364:33  */
-    assign n88_o  = n82_o ? 1'b0 : din_latch;
+    assign n88_o = n82_o ? 1'b0 : din_latch;
     /* sd_spi.vhd:359:33  */
-    assign n90_o  = n81_o ? 1'b0 : n84_o;
+    assign n90_o = n81_o ? 1'b0 : n84_o;
     /* sd_spi.vhd:359:33  */
-    assign n92_o  = n81_o ? 1'b0 : n86_o;
+    assign n92_o = n81_o ? 1'b0 : n86_o;
     /* sd_spi.vhd:359:33  */
-    assign n94_o  = n81_o ? 1'b1 : n88_o;
+    assign n94_o = n81_o ? 1'b1 : n88_o;
     /* sd_spi.vhd:354:33  */
-    assign n96_o  = n79_o ? 1'b0 : n90_o;
+    assign n96_o = n79_o ? 1'b0 : n90_o;
     /* sd_spi.vhd:354:33  */
-    assign n98_o  = n79_o ? 1'b0 : n92_o;
+    assign n98_o = n79_o ? 1'b0 : n92_o;
     /* sd_spi.vhd:354:33  */
     assign n100_o = n79_o ? 1'b0 : n94_o;
     /* sd_spi.vhd:270:25  */

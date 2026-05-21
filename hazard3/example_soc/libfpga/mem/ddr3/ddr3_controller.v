@@ -39,7 +39,7 @@
 
 //`define FORMAL_COVER //skip reset sequence during formal verification to fit in cover depth
 `default_nettype none
-//`timescale 1ps / 1ps
+`timescale 1ps / 1ps
 //
 // speed bin
 `define DDR3_1600_11_11_11 

@@ -15,9 +15,9 @@
 `include "define.vh"
 
 module example_soc #(
-    parameter DTM_TYPE   = "JTAG",   // Can be "JTAG" or "ECP5"
-    parameter CLK_MHZ    = 100,       // For timer timebase
-    parameter W_MEMOP    = 5,
+    parameter DTM_TYPE = "JTAG",  // Can be "JTAG" or "ECP5"
+    parameter CLK_MHZ  = 100,     // For timer timebase
+    parameter W_MEMOP  = 5,
     `include "hazard3_config.vh"
 ) (
     // System clock + reset
@@ -35,39 +35,44 @@ module example_soc #(
     output wire uart_tx,
     input  wire uart_rx,
 
-    `ifdef WUKONGDDR3
+`ifdef WUKONGDDR3
     input wire rst_n_ddram,
-    input wire i_controller_clk, i_ddr3_clk, i_ref_clk, i_ddr3_clk_90,
+    input wire i_controller_clk,
+    i_ddr3_clk,
+    i_ref_clk,
+    i_ddr3_clk_90,
     // DDR3 I/O Interface
-    output wire ddr3_clk_p, ddr3_clk_n,
+    output wire ddr3_clk_p,
+    ddr3_clk_n,
     output wire ddr3_reset_n,
-    output wire ddr3_cke, // CKE
+    output wire ddr3_cke,  // CKE
     //output wire ddr3_cs_n, // no chip select signal
-    output wire ddr3_ras_n, // RAS#
-    output wire ddr3_cas_n, // CAS#
-    output wire ddr3_we_n, // WE#
-    output wire[14-1:0] ddr3_addr,
-    output wire[3-1:0] ddr3_ba,
-    inout wire[16-1:0] ddr3_dq,
-    inout wire[2-1:0] ddr3_dqs_p, ddr3_dqs_n,
-    output wire[2-1:0] ddr3_dm,
-    output wire ddr3_odt, // on-die termination
-    `endif
-    `ifdef WUKONGSDRAM
-    input wire clk_sdram, 
+    output wire ddr3_ras_n,  // RAS#
+    output wire ddr3_cas_n,  // CAS#
+    output wire ddr3_we_n,  // WE#
+    output wire [14-1:0] ddr3_addr,
+    output wire [3-1:0] ddr3_ba,
+    inout wire [16-1:0] ddr3_dq,
+    inout wire [2-1:0] ddr3_dqs_p,
+    ddr3_dqs_n,
+    output wire [2-1:0] ddr3_dm,
+    output wire ddr3_odt,  // on-die termination
+`endif
+`ifdef WUKONGSDRAM
+    input wire clk_sdram,
     input wire rst_n_sdram,
     // SDRAM
     output wire SDCLK0,
     output wire SDCKE0,
-    output wire [1:0]DQM,
+    output wire [1:0] DQM,
     output wire CAS,
     output wire RAS,
     output wire SDWE,
     output wire SDCS0,
-    inout wire [15:0]Data,
-    output wire [12:0]Address,
-    output wire [1:0]Bank,
-    `endif
+    inout wire [15:0] Data,
+    output wire [12:0] Address,
+    output wire [1:0] Bank,
+`endif
 
     input  wire       w_rxd,
     output wire       w_txd,
@@ -116,12 +121,12 @@ module example_soc #(
     // applies whether the transfers are part of the same Exclusive access sequence or not.
 
     // Level-sensitive interrupt sources
-    `ifdef ethirqon
-    wire [NUM_IRQS-1:0] irq={31'h0, eth_irqrx, eth_irqtx};  // -> mip.meip
-    `else
-    wire [NUM_IRQS-1:0] irq=0;
-    `endif
-    wire                      eth_irqtx, eth_irqrx;
+`ifdef ethirqon
+    wire [NUM_IRQS-1:0] irq = {31'h0, eth_irqrx, eth_irqtx};  // -> mip.meip
+`else
+    wire [NUM_IRQS-1:0] irq = 0;
+`endif
+    wire eth_irqtx, eth_irqrx;
     wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
     wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
     wire [       N_HARTS-1:0] hart_halted;
@@ -374,7 +379,7 @@ module example_soc #(
     wire [      31:0] eth_pwdata;
     wire [      31:0] eth_prdata;
     wire              eth_pready;
-    wire              eth_pslverr;    
+    wire              eth_pslverr;
 
     wire [W_DATA-1:0] eth_phartid, sd_phartid, uart_phartid, timer_phartid;
     wire [W_DATA-1:0] eth_pd_pc, sd_pd_pc, uart_pd_pc, timer_pd_pc;
@@ -462,8 +467,8 @@ module example_soc #(
         //.HAS_WRITE_BUFFER (1), // 0 does not work
         .PRELOAD_FILE("init_kernel.txt")
     ) sram0 (
-        .clk      (clk),
-        .rst_n    (rst_n),
+        .clk  (clk),
+        .rst_n(rst_n),
 
         .d_pc       (sram0_d_pc),
         .hartid     (sram0_hartid),
@@ -486,42 +491,44 @@ module example_soc #(
         .ahbls_hmaster    (sram0_hmaster),
         .ahbls_hexokay    (sram0_hexokay),
 
-				`ifdef WUKONGDDR3
-                                .i_controller_clk(i_controller_clk),
-                                .i_ddr3_clk(i_ddr3_clk),
-                                .i_ref_clk(i_ref_clk),
-                                .i_ddr3_clk_90(i_ddr3_clk_90),
-                                .rst_n_ddram(rst_n_ddram),
-                                // DDR3 I/O Interface
-                                .ddr3_clk_p(ddr3_clk_p), .ddr3_clk_n(ddr3_clk_n),
-                                .ddr3_reset_n(ddr3_reset_n),
-                                .ddr3_cke(ddr3_cke), // CKE
-                                //ddr3_cs_n, // no chip select signal
-                                .ddr3_ras_n(ddr3_ras_n), // RAS#
-                                .ddr3_cas_n(ddr3_cas_n), // CAS#
-                                .ddr3_we_n(ddr3_we_n), // WE#
-                                .ddr3_addr(ddr3_addr),
-                                .ddr3_ba(ddr3_ba),
-                                .ddr3_dq(ddr3_dq),
-                                .ddr3_dqs_p(ddr3_dqs_p), .ddr3_dqs_n(ddr3_dqs_n),
-                                .ddr3_dm(ddr3_dm),
-                                .ddr3_odt(ddr3_odt), // on-die termination
-                                `endif
-                                `ifdef WUKONGSDRAM
-                                .clk_sdram(clk_sdram),
-                                .rst_n_sdram(rst_n_sdram),
-                                // SDRAM
-                                .SDCLK0(SDCLK0),
-                                .SDCKE0(SDCKE0),
-                                .DQM(DQM),
-                                .CAS(CAS),
-                                .RAS(RAS),
-                                .SDWE(SDWE),
-                                .SDCS0(SDCS0),
-                                .Data(Data),
-                                .Address(Address),
-                                .Bank(Bank),
-				`endif
+`ifdef WUKONGDDR3
+        .i_controller_clk(i_controller_clk),
+        .i_ddr3_clk(i_ddr3_clk),
+        .i_ref_clk(i_ref_clk),
+        .i_ddr3_clk_90(i_ddr3_clk_90),
+        .rst_n_ddram(rst_n_ddram),
+        // DDR3 I/O Interface
+        .ddr3_clk_p(ddr3_clk_p),
+        .ddr3_clk_n(ddr3_clk_n),
+        .ddr3_reset_n(ddr3_reset_n),
+        .ddr3_cke(ddr3_cke),  // CKE
+        //ddr3_cs_n, // no chip select signal
+        .ddr3_ras_n(ddr3_ras_n),  // RAS#
+        .ddr3_cas_n(ddr3_cas_n),  // CAS#
+        .ddr3_we_n(ddr3_we_n),  // WE#
+        .ddr3_addr(ddr3_addr),
+        .ddr3_ba(ddr3_ba),
+        .ddr3_dq(ddr3_dq),
+        .ddr3_dqs_p(ddr3_dqs_p),
+        .ddr3_dqs_n(ddr3_dqs_n),
+        .ddr3_dm(ddr3_dm),
+        .ddr3_odt(ddr3_odt),  // on-die termination
+`endif
+`ifdef WUKONGSDRAM
+        .clk_sdram(clk_sdram),
+        .rst_n_sdram(rst_n_sdram),
+        // SDRAM
+        .SDCLK0(SDCLK0),
+        .SDCKE0(SDCKE0),
+        .DQM(DQM),
+        .CAS(CAS),
+        .RAS(RAS),
+        .SDWE(SDWE),
+        .SDCS0(SDCS0),
+        .Data(Data),
+        .Address(Address),
+        .Bank(Bank),
+`endif
 
         .w_rxd(w_rxd),
         .w_txd(w_txd),
@@ -610,8 +617,8 @@ module example_soc #(
 
         .tick(timer_tick),
 
-	.irq(irq),
-        .soft_irq (soft_irq),
+        .irq(irq),
+        .soft_irq(soft_irq),
         .timer_irq(timer_irq)
     );
 
@@ -655,11 +662,11 @@ module example_soc #(
         .sdspi_status(sdspi_status)
     );
 
-    `ifdef ethon
+`ifdef ethon
     hazard3_ethernet eth0 (
         .clk  (clk),
         .rst_n(rst_n),
-    
+
         .psel   (eth_psel),
         .penable(eth_penable),
         .pwrite (eth_pwrite),
@@ -669,10 +676,11 @@ module example_soc #(
         .pready (eth_pready),
         .pslverr(eth_pslverr),
 
-	.tx_clk(clk), .rx_clk(clk),
-	.irqtx(eth_irqtx),
-	.irqrx(eth_irqrx)
+        .tx_clk(clk),
+        .rx_clk(clk),
+        .irqtx (eth_irqtx),
+        .irqrx (eth_irqrx)
     );
-    `endif
+`endif
 
 endmodule
