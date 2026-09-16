@@ -5,19 +5,18 @@
 
 `include "define.vh"
 
-module sd_loader (
+module sd_loader #(parameter SD_CLK_DIV = 3) (
     input  wire         clk,
     // rstn active-low, You can re-read SDcard by pushing the reset button.
     input  wire         resetn,
     input  wire [2:0]   w_main_init_state,
     input  wire [7:0]   w_ctrl_state,
+    output wire [11:0]  tangled,
     // when sdcard_pwr_n = 0, SDcard power on
     output wire         sdcard_pwr_n,
     // signals connect to SD bus
     output wire         sdclk,
     inout  wire         sdcmd,
-    input  wire		sdcmd_i,
-    output wire         sdcmd_oe,
     input  wire         sddat0,
     output wire         sddat1, sddat2, sddat3,
     
@@ -41,6 +40,7 @@ wire [7:0] outbyte;
 
 `define SD_SECTOR_SIZE 512
 reg [7:0] state=0;
+assign tangled = {state, card_type};
 reg [7:0] mem[0:`SD_SECTOR_SIZE - 1];
 reg [$clog2(`SD_SECTOR_SIZE):0] i=0;
 
@@ -106,14 +106,12 @@ wire [1:0] card_type;
 // sd_reader
 //----------------------------------------------------------------------------------------------------
 sd_reader #(
-    .CLK_DIV          ( `SDCARD_CLK_DIV )   // because clk=100MHz, CLK_DIV must ≥3
+    .CLK_DIV          ( SD_CLK_DIV )   // because clk=100MHz, CLK_DIV must ≥3
 ) u_sd_reader (
     .rstn             ( resetn         ),
     .clk              ( clk      ),
     .sdclk            ( sdclk          ),
     .sdcmd            ( sdcmd          ),
-    .sdcmd_i	      ( sdcmd_i	       ),
-    .sdcmd_oe	      (sdcmd_oe),
     .sddat0           ( sddat0         ),
     .card_stat        ( card_stat      ),  // show the sdcard initialize status
     .card_type        ( card_type       ),  // 0=UNKNOWN    , 1=SDv1    , 2=SDv2  , 3=SDHCv2
