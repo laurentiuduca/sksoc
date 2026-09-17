@@ -1,7 +1,7 @@
 skSoC: a RISC-V Hazard3 based SoC skeleton
 ====
 
--4. start with example_soc-dual.v
+-4. start with example_soc.v or example_soc-dual.v
 
 -3.
 For old skSoC tang nano 20k check sksoc-tn repository
