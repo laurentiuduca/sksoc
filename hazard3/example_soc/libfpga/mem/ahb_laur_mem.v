@@ -172,7 +172,8 @@ module ahb_sync_sram #(
                     //$finish;
                 end
             end else begin
-                r_ahbls_hexokay <= 0;
+                for (i = 0; i < N_HARTS; i = i + 1)
+                if (r_excl_addr[i] == ahbls_haddr) r_excl_addr_valid[i] <= 0;
                 r_ahbls_haddr <= ahbls_haddr;
                 state <= 22;
                 r_mask <= wmask;
