@@ -217,7 +217,8 @@ module wukong_ddr3 (
         .io_ddr3_dqs_n(ddr3_dqs_n),
         .o_ddr3_dm(ddr3_dm),
         .o_ddr3_odt(ddr3_odt),  // on-die termination
-        .o_debug1(o_debug1)
+        .o_debug1(o_debug1),
+        .refresh_counter()
     );
 
 endmodule
