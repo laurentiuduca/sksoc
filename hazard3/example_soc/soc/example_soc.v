@@ -293,6 +293,7 @@ module example_soc #(
     wire               proc_hexokay = 1'b1;  // No global monitor
     wire [ W_DATA-1:0] proc_hwdata;
     wire [ W_DATA-1:0] proc_hrdata;
+    wire [ W_DATA-1:0] proc_hmaster;
 
     wire               pwrup_req;
     wire               unblock_out;
@@ -408,7 +409,7 @@ module example_soc #(
         .irq        (irq),          // -> mip.meip
         .soft_irq   (soft_irq),     // -> mip.msip
         .timer_irq  (timer_irq),    // -> mip.mtip	
-        .hmaster  ()
+        .hmaster  (proc_hmaster)
     );
 
     // ----------------------------------------------------------------------------
@@ -436,7 +437,7 @@ module example_soc #(
     wire [W_DATA-1:0] sram0_hartid;
     // exclusive access signaling
     wire              sram0_hexcl;
-    wire [       7:0] sram0_hmaster;
+    wire [W_DATA-1:0] sram0_hmaster;
     wire              sram0_hexokay;
 
     wire              bridge_hready_resp;
@@ -455,12 +456,12 @@ module example_soc #(
     wire [W_DATA-1:0] bridge_hartid;
     // exclusive access signaling
     wire              bridge_hexcl;
-    wire [       7:0] bridge_hmaster;
+    wire [W_DATA-1:0] bridge_hmaster;
     wire              bridge_hexokay = 1;
 
 
     wire              src_hexcl;  // exclusive access signaling
-    wire [       7:0] src_hmaster;  // exclusive access signaling
+    wire [W_DATA-1:0] src_hmaster = proc_hmaster;  // exclusive access signaling
     wire              src_hexokay;  // exclusive access signaling
     //`define USECROSS
 `ifndef USECROSS

@@ -35,7 +35,7 @@ module ahb_sync_sram #(
     output wire [W_DATA-1:0] ahbls_hrdata,
     // exclusive access signaling
     input  wire              ahbls_hexcl,
-    input  wire [       7:0] ahbls_hmaster,
+    input  wire [W_DATA-1:0] ahbls_hmaster,
     output wire              ahbls_hexokay,
 
 `ifdef WUKONGDDR3
