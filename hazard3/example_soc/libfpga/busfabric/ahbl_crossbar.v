@@ -151,7 +151,7 @@ module ahbl_crossbar #(
                     assign xbar_hartid[i][j]              = split_hartid[W_DATA*j+:W_DATA];
                     // exclusive access signaling
                     assign xbar_hexcl[i][j]               = split_hexcl[j];
-                    assign xbar_hmaster[i][j]             = split_hmaster[8*j];
+                    assign xbar_hmaster[i][j]             = split_hmaster[8*j+:8];
                     assign xbar_slave_sel_d[i][j]         = split_slave_sel_d[j];
 
                     assign split_hready_resp[j]           = xbar_hready_resp[i][j];
