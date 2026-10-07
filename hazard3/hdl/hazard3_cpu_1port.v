@@ -37,7 +37,7 @@ module hazard3_cpu_1port #(
 	output wire [2:0]         hburst,
 	output reg  [3:0]         hprot,
 	output wire               hmastlock,
-	output reg  [7:0]         hmaster,
+	output reg  [W_DATA-1:0]  hmaster,
 	output reg                hexcl,
 	input  wire               hready,
 	input  wire               hresp,
@@ -270,7 +270,7 @@ always @ (*) begin
 		hsize   = {1'b0, dbg_sbus_size};
 		hwrite  = dbg_sbus_write;
 		hprot   = hprot_sbus;
-		hmaster = N_HARTS; // 8'h01
+		hmaster = N_HARTS; 
 	end else if (bus_gnt_d) begin
 		htrans  = HTRANS_NSEQ;
 		hexcl   = core_aph_excl_d;
@@ -278,7 +278,7 @@ always @ (*) begin
 		hsize   = core_hsize_d;
 		hwrite  = core_hwrite_d;
 		hprot   = hprot_data;
-		hmaster = MHARTID_VAL; //8'h00;
+		hmaster = MHARTID_VAL; 
 	end else if (bus_gnt_i) begin
 		htrans  = HTRANS_NSEQ;
 		hexcl   = 1'b0;
@@ -286,7 +286,7 @@ always @ (*) begin
 		hsize   = core_hsize_i;
 		hwrite  = 1'b0;
 		hprot   = hprot_instr;
-		hmaster = MHARTID_VAL; //8'h00;
+		hmaster = MHARTID_VAL; 
 	end else begin
 		htrans  = HTRANS_IDLE;
 		hexcl   = 1'b0;
@@ -294,7 +294,7 @@ always @ (*) begin
 		hsize   = 3'h0;
 		hwrite  = 1'b0;
 		hprot   = 4'h0;
-		hmaster = MHARTID_VAL; //8'h00;
+		hmaster = MHARTID_VAL;
 	end
 end
 

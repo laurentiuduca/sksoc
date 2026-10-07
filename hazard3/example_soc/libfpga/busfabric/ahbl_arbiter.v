@@ -61,7 +61,7 @@ module ahbl_arbiter #(
     input  wire [       N_PORTS-1:0] split_slave_sel_d,
     // exclusive access signaling
     input  wire [       N_PORTS-1:0] src_hexcl,
-    input  wire [     N_PORTS*8-1:0] src_hmaster,
+    input  wire [N_PORTS*W_DATA-1:0] src_hmaster,
     output wire [       N_PORTS-1:0] src_hexokay,
 
     // To slave; functions as master port
@@ -81,7 +81,7 @@ module ahbl_arbiter #(
     input  wire [W_DATA-1:0] dst_hrdata,
     // exclusive access signaling   
     output wire              dst_hexcl,
-    output wire [       7:0] dst_hmaster,
+    output wire [W_DATA-1:0] dst_hmaster,
     input  wire              dst_hexokay
 );
 
@@ -102,7 +102,7 @@ module ahbl_arbiter #(
     reg                          buf_hmastlock    [0:N_PORTS-1];
     // exclusive access signaling
     reg                          buf_hexcl        [0:N_PORTS-1];
-    reg     [               7:0] buf_hmaster      [0:N_PORTS-1];
+    reg     [        W_DATA-1:0] buf_hmaster      [0:N_PORTS-1];
 
     reg     [N_PORTS*W_ADDR-1:0] actual_d_pc;
     reg     [N_PORTS*W_DATA-1:0] actual_hartid;
@@ -116,7 +116,7 @@ module ahbl_arbiter #(
     reg     [       N_PORTS-1:0] actual_hmastlock;
     // exclusive access signaling
     reg     [       N_PORTS-1:0] actual_hexcl;
-    reg     [     N_PORTS*8-1:0] actual_hmaster;
+    reg     [N_PORTS*W_DATA-1:0] actual_hmaster;
 
     always @(*) begin
         for (i = 0; i < N_PORTS; i = i + 1) begin
@@ -132,7 +132,7 @@ module ahbl_arbiter #(
                 actual_hprot[i*4+:4]            = buf_hprot[i];
                 actual_hmastlock[i]             = buf_hmastlock[i];
                 actual_hexcl[i]                 = buf_hexcl[i];
-                actual_hmaster[i*8+:8]          = buf_hmaster[i];
+                actual_hmaster[i*W_DATA+:W_DATA]= buf_hmaster[i];
             end else begin
                 actual_d_pc[i*W_ADDR+:W_ADDR]   = src_d_pc[i*W_ADDR+:W_ADDR];
                 actual_hartid[i*W_DATA+:W_DATA] = src_hartid[i*W_DATA+:W_DATA];
@@ -145,7 +145,7 @@ module ahbl_arbiter #(
                 actual_hprot[i*4+:4]            = src_hprot[i*4+:4];
                 actual_hmastlock[i]             = src_hmastlock[i];
                 actual_hexcl[i]                 = src_hexcl[i];
-                actual_hmaster[i*8+:8]          = src_hmaster[i*8+:8];
+                actual_hmaster[i*W_DATA+:W_DATA]= src_hmaster[i*W_DATA+:W_DATA];
             end
         end
     end
@@ -208,7 +208,7 @@ module ahbl_arbiter #(
                 buf_hprot[i]     <= 3'h0;
                 buf_hmastlock[i] <= 1'b0;
                 buf_hexcl[i]     <= 1'b0;
-                buf_hmaster[i]   <= 8'd0;
+                buf_hmaster[i]   <= 'd0;
             end
         end else begin
             if (dst_hready) begin
@@ -242,7 +242,7 @@ module ahbl_arbiter #(
                     buf_hprot[i]     <= src_hprot[i*4+:4];
                     buf_hmastlock[i] <= src_hmastlock[i];
                     buf_hexcl[i]     <= src_hexcl[i];
-                    buf_hmaster[i]   <= src_hmaster[i*8+:8];
+                    buf_hmaster[i]   <= src_hmaster[i*W_DATA+:W_DATA];
                 end
             end
         end
@@ -301,7 +301,7 @@ module ahbl_arbiter #(
     );
 
     onehot_mux #(
-        .W_INPUT (8),
+        .W_INPUT (W_DATA),
         .N_INPUTS(N_PORTS)
     ) mux_hmaster (
         .in (actual_hmaster),

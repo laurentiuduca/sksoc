@@ -57,7 +57,7 @@ module ahbl_crossbar #(
     input  wire [N_MASTERS*W_DATA-1:0] src_hartid,
     // exclusive access signaling
     input  wire [       N_MASTERS-1:0] src_hexcl,
-    input  wire [     N_MASTERS*8-1:0] src_hmaster,
+    input  wire [N_MASTERS*W_DATA-1:0] src_hmaster,
     output wire [       N_MASTERS-1:0] src_hexokay,
 
     // To slaves; function as master ports
@@ -77,7 +77,7 @@ module ahbl_crossbar #(
     output wire [N_SLAVES*W_DATA-1:0] dst_hartid,
     // exclusive access signaling
     output wire [       N_SLAVES-1:0] dst_hexcl,
-    output wire [     N_SLAVES*8-1:0] dst_hmaster,
+    output wire [N_SLAVES*W_DATA-1:0] dst_hmaster,
     input  wire [       N_SLAVES-1:0] dst_hexokay
 );
 
@@ -102,7 +102,7 @@ module ahbl_crossbar #(
     wire [W_DATA-1:0] xbar_hartid     [0:N_MASTERS-1][0:N_SLAVES-1];
     // exclusive access signaling
     wire              xbar_hexcl      [0:N_MASTERS-1][0:N_SLAVES-1];
-    wire [       7:0] xbar_hmaster    [0:N_MASTERS-1][0:N_SLAVES-1];
+    wire [W_DATA-1:0] xbar_hmaster    [0:N_MASTERS-1][0:N_SLAVES-1];
     wire              xbar_hexokay    [0:N_MASTERS-1][0:N_SLAVES-1];
     wire              xbar_slave_sel_d[0:N_MASTERS-1][0:N_SLAVES-1];
 
@@ -132,7 +132,7 @@ module ahbl_crossbar #(
             wire [N_SLAVES*W_DATA-1:0] split_hartid;
             // exclusive access signaling
             wire [       N_SLAVES-1:0] split_hexcl;
-            wire [     N_SLAVES*8-1:0] split_hmaster;
+            wire [N_SLAVES*W_DATA-1:0] split_hmaster;
             wire [       N_SLAVES-1:0] split_hexokay;
             wire [       N_SLAVES-1:0] split_slave_sel_d;
 
@@ -151,7 +151,7 @@ module ahbl_crossbar #(
                     assign xbar_hartid[i][j]              = split_hartid[W_DATA*j+:W_DATA];
                     // exclusive access signaling
                     assign xbar_hexcl[i][j]               = split_hexcl[j];
-                    assign xbar_hmaster[i][j]             = split_hmaster[8*j];
+                    assign xbar_hmaster[i][j]             = split_hmaster[W_DATA*j+:W_DATA];
                     assign xbar_slave_sel_d[i][j]         = split_slave_sel_d[j];
 
                     assign split_hready_resp[j]           = xbar_hready_resp[i][j];
@@ -174,7 +174,7 @@ module ahbl_crossbar #(
                     assign xbar_hartid[i][j]              = {W_DATA{1'b0}};
                     // exclusive access signaling
                     assign xbar_hexcl[i][j]               = 1'b0;
-                    assign xbar_hmaster[i][j]             = {W_ADDR{1'b0}};
+                    assign xbar_hmaster[i][j]             = {W_DATA{1'b0}};
                     assign xbar_slave_sel_d[i][j]         = 1'b0;
 
                     assign split_hready_resp[j]           = 1'b1;
@@ -211,7 +211,7 @@ module ahbl_crossbar #(
                 .src_hrdata(src_hrdata[W_DATA*i+:W_DATA]),
                 // exclusive access signaling
                 .src_hexcl(src_hexcl[i]),
-                .src_hmaster(src_hmaster[i*8+:8]),
+                .src_hmaster(src_hmaster[W_DATA*i+:W_DATA]),
                 .src_hexokay(src_hexokay[i]),
 
                 .dst_hready(split_hready),
@@ -259,7 +259,7 @@ module ahbl_crossbar #(
             wire [N_MASTERS*W_ADDR-1:0] arb_hartid;
             // exclusive access signaling
             wire [       N_MASTERS-1:0] arb_hexcl;
-            wire [     N_MASTERS*8-1:0] arb_hmaster;
+            wire [N_MASTERS*W_DATA-1:0] arb_hmaster;
             wire [       N_MASTERS-1:0] arb_hexokay;
             wire [       N_MASTERS-1:0] arb_slave_sel_d;
 
@@ -277,7 +277,7 @@ module ahbl_crossbar #(
                 assign arb_hartid[W_DATA*i+:W_DATA] = xbar_hartid[i][j];
                 // exclusive access signaling
                 assign arb_hexcl[i]                 = xbar_hexcl[i][j];
-                assign arb_hmaster[8*i+:8]          = xbar_hmaster[i][j];
+                assign arb_hmaster[W_DATA*i+:W_DATA]= xbar_hmaster[i][j];
                 assign arb_slave_sel_d[i]           = xbar_slave_sel_d[i][j];
 
                 assign xbar_hready_resp[i][j]       = arb_hready_resp[i];
@@ -332,7 +332,7 @@ module ahbl_crossbar #(
                 .dst_hartid(dst_hartid[W_DATA*j+:W_DATA]),
                 // exclusive access signaling
                 .dst_hexcl(dst_hexcl[j]),
-                .dst_hmaster(dst_hmaster[8*j+:8]),
+                .dst_hmaster(dst_hmaster[W_DATA*j+:W_DATA]),
                 .dst_hexokay(dst_hexokay[j])
             );
         end

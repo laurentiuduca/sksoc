@@ -182,7 +182,7 @@ parameter MVENDORID_VAL       = 32'h0,
 parameter MIMPID_VAL          = 32'h0,
 
 // Each core has a single hardware thread. Multiple cores should have unique IDs.
-parameter MHARTID_VAL         = 32'h0,
+parameter MHARTID_VAL         = 32'h0, // [0..N_HARTS] are reserved for cpus and jtag
 
 // Pointer to configuration structure blob, or all-zeroes. Must be at least
 // 4-byte-aligned.

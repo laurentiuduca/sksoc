@@ -110,7 +110,7 @@ module example_soc #(
     wire [2:0] i_hburst, d_hburst;
     wire [3:0] i_hprot, d_hprot;
     wire i_hmastlock, d_hmastlock;
-    wire [7:0] i_hmaster, d_hmaster;  // exclusive access signaling
+    wire [W_DATA-1:0] i_hmaster, d_hmaster;  // exclusive access signaling
     wire i_hready, d_hready;
     wire i_hresp, d_hresp;
     wire i_hexokay, d_hexokay;  // exclusive access signaling
@@ -257,7 +257,7 @@ module example_soc #(
     wire [W_DATA-1:0] sram0_hartid;
     // exclusive access signaling
     wire              sram0_hexcl;
-    wire [       7:0] sram0_hmaster;
+    wire [W_DATA-1:0] sram0_hmaster;
     wire              sram0_hexokay;
 
     wire              bridge_hready_resp;
@@ -276,7 +276,7 @@ module example_soc #(
     wire [W_DATA-1:0] bridge_hartid;
     // exclusive access signaling
     wire              bridge_hexcl;
-    wire [       7:0] bridge_hmaster;
+    wire [W_DATA-1:0] bridge_hmaster;
     wire              bridge_hexokay = 1;
 
     ahbl_crossbar #(

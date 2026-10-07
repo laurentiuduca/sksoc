@@ -58,7 +58,7 @@ module ahbl_splitter #(
     output wire [W_DATA-1:0] src_hrdata,
     // exlusive access signaling
     input  wire              src_hexcl,
-    input  wire [       7:0] src_hmaster,
+    input  wire [W_DATA-1:0] src_hmaster,
     output wire              src_hexokay,
 
     // To slaves; function as master ports
@@ -78,7 +78,7 @@ module ahbl_splitter #(
     output wire [N_PORTS*W_DATA-1:0] dst_hartid,
     // exlusive access signaling
     output wire [       N_PORTS-1:0] dst_hexcl,
-    output wire [     N_PORTS*8-1:0] dst_hmaster,
+    output wire [N_PORTS*W_DATA-1:0] dst_hmaster,
     input  wire [       N_PORTS-1:0] dst_hexokay,
     output reg  [       N_PORTS-1:0] slave_sel_d
 );
