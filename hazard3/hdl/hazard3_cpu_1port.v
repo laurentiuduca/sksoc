@@ -294,7 +294,7 @@ always @ (*) begin
 		hsize   = 3'h0;
 		hwrite  = 1'b0;
 		hprot   = 4'h0;
-		hmaster = MHARTID_VAL; //8'h00;
+		hmaster = MHARTID_VAL;
 	end
 end
 
