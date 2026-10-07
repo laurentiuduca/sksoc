@@ -148,12 +148,12 @@ module ahb_sync_sram #(
             // exclusive transfers
             if (ahbls_hexcl) begin
                 r_ahbls_hexokay <= 1;
-                r_excl_addr[hartid] <= ahbls_haddr;
-                r_excl_addr_valid[hartid] <= 1;
+                r_excl_addr[ahbls_hmaster] <= ahbls_haddr;
+                r_excl_addr_valid[ahbls_hmaster] <= 1;
             end
         end else if (ahb_write_aphase) begin
             if (ahbls_hexcl) begin
-                if (r_excl_addr[hartid] == ahbls_haddr && r_excl_addr_valid[hartid]) begin
+                if (r_excl_addr[ahbls_hmaster] == ahbls_haddr && r_excl_addr_valid[ahbls_hmaster]) begin
                     r_ahbls_hexokay <= 1;
                     for (i = 0; i < N_HARTS; i = i + 1)
                     if (r_excl_addr[i] == ahbls_haddr) r_excl_addr_valid[i] <= 0;
@@ -163,10 +163,10 @@ module ahb_sync_sram #(
                     r_ahbls_hwdata <= ahbls_hwdata;  // this must also be in state 22
                     exclwrdisplay <= 1;
                 end else begin
-//`ifdef dbghexcl
-                    $display("--exclusive write fail at addr %x h%1x hmaster%x pc=%x", ahbls_haddr, hartid, ahbls_hmaster,
+`ifdef dbghexcl
+                    $display("--exclusive write fail at addr %x h%1x pc=%x", ahbls_haddr, ahbls_hmaster,
                              d_pc);
-//`endif
+`endif
                     state <= 30;
                     r_ahbls_hexokay <= 0;
                     //$finish;
@@ -188,8 +188,8 @@ module ahb_sync_sram #(
 `ifdef dbgstart
         if ((ahb_read_aphase || ahb_write_aphase) && k < 10) begin
             $display(
-                "d_pc=%x hartid=%1x ahb_read_aphase=%x || ahb_write_aphase=%x state=%d ahbls_haddr=%x time %8d",
-                d_pc, hartid, ahb_read_aphase, ahb_write_aphase, state, ahbls_haddr, $time);
+                "d_pc=%x h=%1x ahb_read_aphase=%x || ahb_write_aphase=%x state=%d ahbls_haddr=%x time %8d",
+                d_pc, ahbls_hmaster, ahb_read_aphase, ahb_write_aphase, state, ahbls_haddr, $time);
             k <= k + 1;
         end
 `endif
@@ -240,7 +240,7 @@ module ahb_sync_sram #(
                 if (exclwrdisplay) begin
                     exclwrdisplay <= 0;
                     $display("--exclusive write succ at addr %x h%1x pc=%x data=%x", ahbls_haddr,
-                             hartid, d_pc, ahbls_hwdata);
+                             ahbls_hmaster, d_pc, ahbls_hwdata);
                 end
 `endif
             end else if (state == 30) begin
