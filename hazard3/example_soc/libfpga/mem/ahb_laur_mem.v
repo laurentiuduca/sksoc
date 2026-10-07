@@ -163,10 +163,10 @@ module ahb_sync_sram #(
                     r_ahbls_hwdata <= ahbls_hwdata;  // this must also be in state 22
                     exclwrdisplay <= 1;
                 end else begin
-`ifdef dbghexcl
-                    $display("--exclusive write fail at addr %x h%1x pc=%x", ahbls_haddr, hartid,
+//`ifdef dbghexcl
+                    $display("--exclusive write fail at addr %x h%1x hmaster%x pc=%x", ahbls_haddr, hartid, ahbls_hmaster,
                              d_pc);
-`endif
+//`endif
                     state <= 30;
                     r_ahbls_hexokay <= 0;
                     //$finish;
@@ -212,7 +212,7 @@ module ahb_sync_sram #(
             for (i = 0; i < N_HARTS; i = i + 1) r_excl_addr_valid[i] <= 0;
             exclwrdisplay <= 0;
         end else begin
-            r_ahbls_hexokay <= 1;
+            assert (hartid == ahbls_hmaster);
             if (state == 0) begin
                 check_new_req;
                 check_debug;
