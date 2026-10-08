@@ -21,7 +21,7 @@ module ahbl_to_apb #(
     input  wire               ahbls_hmastlock,
     input  wire [ W_DATA-1:0] ahbls_hwdata,
     output reg  [ W_DATA-1:0] ahbls_hrdata,
-    input  wire [ W_DATA-1:0] ahbls_hartid,
+    input  wire [ W_DATA-1:0] ahbls_hmaster,
     input  wire [W_HADDR-1:0] ahbls_hd_pc,
 
     output reg  [W_PADDR-1:0] apbm_paddr,
@@ -32,7 +32,7 @@ module ahbl_to_apb #(
     input  wire               apbm_pready,
     input  wire [ W_DATA-1:0] apbm_prdata,
     input  wire               apbm_pslverr,
-    output reg  [ W_DATA-1:0] apbm_phartid,
+    output reg  [ W_DATA-1:0] apbm_phmaster,
     output reg  [W_HADDR-1:0] apbm_pd_pc
 );
 
@@ -60,7 +60,7 @@ module ahbl_to_apb #(
     task setup;
         begin
             apb_state <= aphase_to_dphase;
-            apbm_phartid <= ahbls_hartid;
+            apbm_phmaster <= ahbls_hmaster;
             apbm_pd_pc <= ahbls_hd_pc;
         end
     endtask
@@ -68,7 +68,7 @@ module ahbl_to_apb #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             apb_state <= S_IDLE;
-            apbm_phartid <= 0;
+            apbm_phmaster <= 0;
             apbm_pd_pc <= 0;
         end else
             case (apb_state)

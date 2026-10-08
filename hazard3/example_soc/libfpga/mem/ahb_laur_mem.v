@@ -17,7 +17,6 @@ module ahb_sync_sram #(
     input wire rst_n,
 
     input wire [W_ADDR-1:0] d_pc,
-    input wire [W_DATA-1:0] hartid,
     output wire w_init_done,
 
     // AHB lite slave interface
@@ -212,7 +211,6 @@ module ahb_sync_sram #(
             for (i = 0; i < N_HARTS; i = i + 1) r_excl_addr_valid[i] <= 0;
             exclwrdisplay <= 0;
         end else begin
-            assert (hartid == ahbls_hmaster);
             if (state == 0) begin
                 check_new_req;
                 check_debug;

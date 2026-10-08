@@ -198,7 +198,7 @@ always@(posedge clk) begin
 		if(pc >= pc_trace_start && pc <= pc_trace_stop)
 			lj <= lj + 1;
 		`ifdef dbgstart
-		$display("  d_pc=%x hartid=%1x d_instr_is_32bit=%1x d_instr=%x fd_cir=%x time=%8d", d_pc, MHARTID_VAL, d_instr_is_32bit, d_instr, fd_cir, $time);
+		$display("  d_pc=%x h=%1x d_instr_is_32bit=%1x d_instr=%x fd_cir=%x time=%8d", d_pc, MHARTID_VAL, d_instr_is_32bit, d_instr, fd_cir, $time);
 		`endif
 		//$display("pc=%x d_instr_is_32bit=%1x d_instr=%x fd_cir=%x", pc, d_instr_is_32bit, d_instr, fd_cir);
 	end
@@ -512,7 +512,7 @@ always @ (*) begin
 		else if (d_invalid && !d_starved) begin
 			d_except = EXCEPT_INSTR_ILLEGAL;
 			`ifdef SIM_MODE
-			$display("EXCEPT_INSTR_ILLEGAL decode d_pc=%x hartid=%1x d_instr=%x %0d", d_pc, MHARTID_VAL, d_instr, $time);
+			$display("EXCEPT_INSTR_ILLEGAL decode d_pc=%x h=%1x d_instr=%x %0d", d_pc, MHARTID_VAL, d_instr, $time);
 			$finish;
 			`endif
 		end

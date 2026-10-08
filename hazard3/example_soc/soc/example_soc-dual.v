@@ -130,7 +130,6 @@ module example_soc #(
     wire [       N_HARTS-1:0] soft_irq;  // -> mip.msip
     wire [       N_HARTS-1:0] timer_irq;  // -> mip.mtip
     wire [       N_HARTS-1:0] hart_halted;
-    wire [N_HARTS*W_DATA-1:0] hartids;
 
     hazard3_2cpu #(
         // These must have the values given here for you to end up with a useful SoC:
@@ -228,8 +227,7 @@ module example_soc #(
         .irq        (irq),          // -> mip.meip
         .soft_irq   (soft_irq),     // -> mip.msip
         .timer_irq  (timer_irq),    // -> mip.mtip	
-        .hart_halted(hart_halted),
-        .hartids    (hartids)
+        .hart_halted(hart_halted)
     );
 
     // ----------------------------------------------------------------------------
@@ -254,7 +252,6 @@ module example_soc #(
     wire [W_DATA-1:0] sram0_hwdata;
     wire [W_DATA-1:0] sram0_hrdata;
     wire [W_ADDR-1:0] sram0_d_pc;
-    wire [W_DATA-1:0] sram0_hartid;
     // exclusive access signaling
     wire              sram0_hexcl;
     wire [W_DATA-1:0] sram0_hmaster;
@@ -273,7 +270,6 @@ module example_soc #(
     wire [W_DATA-1:0] bridge_hwdata;
     wire [W_DATA-1:0] bridge_hrdata;
     wire [W_ADDR-1:0] bridge_hd_pc;
-    wire [W_DATA-1:0] bridge_hartid;
     // exclusive access signaling
     wire              bridge_hexcl;
     wire [W_DATA-1:0] bridge_hmaster;
@@ -305,7 +301,6 @@ module example_soc #(
         .src_hwdata     ({d_hwdata, i_hwdata}),
         .src_hrdata     ({d_hrdata, i_hrdata}),
         .src_d_pc       ({d_d_pc, i_d_pc}),
-        .src_hartid     (hartids),
         // exclusive access signaling
         .src_hexcl      ({d_hexcl, i_hexcl}),
         .src_hmaster    ({d_hmaster, i_hmaster}),
@@ -325,7 +320,6 @@ module example_soc #(
         .dst_hwdata     ({bridge_hwdata, sram0_hwdata}),
         .dst_hrdata     ({bridge_hrdata, sram0_hrdata}),
         .dst_d_pc       ({bridge_hd_pc, sram0_d_pc}),
-        .dst_hartid     ({bridge_hartid, sram0_hartid}),
         // exclusive access signaling
         .dst_hexcl      ({bridge_hexcl, sram0_hexcl}),
         .dst_hmaster    ({bridge_hmaster, sram0_hmaster}),
@@ -342,7 +336,7 @@ module example_soc #(
     wire [      31:0] bridge_prdata;
     wire              bridge_pready;
     wire              bridge_pslverr;
-    wire [W_DATA-1:0] bridge_phartid;
+    wire [W_DATA-1:0] bridge_phmaster;
     wire [W_ADDR-1:0] bridge_pd_pc;
 
     wire              uart_psel;
@@ -381,7 +375,7 @@ module example_soc #(
     wire              eth_pready;
     wire              eth_pslverr;
 
-    wire [W_DATA-1:0] eth_phartid, sd_phartid, uart_phartid, timer_phartid;
+    wire [W_DATA-1:0] eth_phmaster, sd_phmaster, uart_phmaster, timer_phmaster;
     wire [W_DATA-1:0] eth_pd_pc, sd_pd_pc, uart_pd_pc, timer_pd_pc;
 
     ahbl_to_apb apb_bridge_u (
@@ -400,7 +394,7 @@ module example_soc #(
         .ahbls_hmastlock  (bridge_hmastlock),
         .ahbls_hwdata     (bridge_hwdata),
         .ahbls_hrdata     (bridge_hrdata),
-        .ahbls_hartid     (bridge_hartid),
+        .ahbls_hmaster     (bridge_hmaster),
         .ahbls_hd_pc      (bridge_hd_pc),
 
         .apbm_paddr  (bridge_paddr),
@@ -411,7 +405,7 @@ module example_soc #(
         .apbm_pready (bridge_pready),
         .apbm_prdata (bridge_prdata),
         .apbm_pslverr(bridge_pslverr),
-        .apbm_phartid(bridge_phartid),
+        .apbm_phmaster(bridge_phmaster),
         .apbm_pd_pc  (bridge_pd_pc)
     );
 
@@ -430,7 +424,7 @@ module example_soc #(
         .apbs_pready (bridge_pready),
         .apbs_prdata (bridge_prdata),
         .apbs_pslverr(bridge_pslverr),
-        .apbs_phartid(bridge_phartid),
+        .apbs_phmaster(bridge_phmaster),
         .apbs_pd_pc  (bridge_pd_pc),
 
         .apbm_paddr  ({eth_paddr,   sd_paddr,   uart_paddr,   timer_paddr}),
@@ -441,7 +435,7 @@ module example_soc #(
         .apbm_pready ({eth_pready,  sd_pready,  uart_pready,  timer_pready}),
         .apbm_prdata ({eth_prdata,  sd_prdata,  uart_prdata,  timer_prdata}),
         .apbm_pslverr({eth_pslverr, sd_pslverr, uart_pslverr, timer_pslverr}),
-        .apbm_hartid ({eth_phartid, sd_phartid, uart_phartid, timer_phartid}),
+        .apbm_hmaster ({eth_phmaster, sd_phmaster, uart_phmaster, timer_phmaster}),
         .apbm_pd_pc  ({eth_pd_pc,   sd_pd_pc,   uart_pd_pc,   timer_pd_pc})
     );
 
@@ -471,7 +465,6 @@ module example_soc #(
         .rst_n(rst_n),
 
         .d_pc       (sram0_d_pc),
-        .hartid     (sram0_hartid),
         .w_init_done(w_init_done),
 
         .ahbls_hready_resp(sram0_hready_resp),
@@ -569,7 +562,7 @@ module example_soc #(
         .apbs_prdata (uart_prdata),
         .apbs_pready (uart_pready),
         .apbs_pslverr(uart_pslverr),
-        .apbs_phartid(uart_phartid),
+        .apbs_phmaster(uart_phmaster),
         .apbs_pd_pc  (uart_pd_pc),
         .rx          (uart_rx),
         .tx          (uart_tx),
@@ -610,7 +603,7 @@ module example_soc #(
         .prdata (timer_prdata),
         .pready (timer_pready),
         .pslverr(timer_pslverr),
-        .phartid(timer_phartid),
+        .phmaster(timer_phmaster),
         .pd_pc  (timer_pd_pc),
 
         .dbg_halt(&hart_halted),

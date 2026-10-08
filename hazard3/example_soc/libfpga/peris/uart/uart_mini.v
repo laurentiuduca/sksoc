@@ -21,7 +21,7 @@ module uart_mini (
     output wire [31:0] apbs_prdata,
     output wire apbs_pready,
     output wire apbs_pslverr,
-    input wire [31:0] apbs_phartid,
+    input wire [31:0] apbs_phmaster,
     input wire [31:0] apbs_pd_pc,
 
     input  wire rx,
@@ -54,14 +54,14 @@ module uart_mini (
         end else if (state == 0) begin
             if (wr_cmd) begin
 `ifdef dbgsclr
-                $display("---uart-write h%1x pc=%x %x", apbs_phartid, apbs_pwdata, apbs_pd_pc,
+                $display("---uart-write h%1x pc=%x %x", apbs_phmaster, apbs_pwdata, apbs_pd_pc,
                          $time);
 `endif
 `ifdef SIM_MODE
 		if(apbs_paddr == 16'h4020)
 			$finish;
 		else if(apbs_paddr == 16'h4010) begin
-			$display("---dbg-write h%1x pc=%x data=%x %d", apbs_phartid, apbs_pd_pc, apbs_pwdata, 
+			$display("---dbg-write h%1x pc=%x data=%x %d", apbs_phmaster, apbs_pd_pc, apbs_pwdata, 
                          $time);
 		 	r_tx_ready <= 1;
 		end else 

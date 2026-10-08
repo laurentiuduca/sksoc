@@ -45,7 +45,6 @@ module ahbl_arbiter #(
 
     // From masters; function as slave ports
     input  wire [N_PORTS*W_ADDR-1:0] src_d_pc,
-    input  wire [N_PORTS*W_DATA-1:0] src_hartid,
     input  wire [       N_PORTS-1:0] src_hready,
     output wire [       N_PORTS-1:0] src_hready_resp,
     output wire [       N_PORTS-1:0] src_hresp,
@@ -66,7 +65,6 @@ module ahbl_arbiter #(
 
     // To slave; functions as master port
     output wire [W_ADDR-1:0] dst_d_pc,
-    output wire [W_DATA-1:0] dst_hartid,
     output wire              dst_hready,
     input  wire              dst_hready_resp,
     input  wire              dst_hresp,
@@ -91,7 +89,6 @@ module ahbl_arbiter #(
 
     reg     [       N_PORTS-1:0] buf_valid;
     reg     [        W_ADDR-1:0] buf_d_pc         [0:N_PORTS-1];
-    reg     [        W_DATA-1:0] buf_hartid       [0:N_PORTS-1];
     reg     [        W_ADDR-1:0] buf_haddr        [0:N_PORTS-1];
     reg                          buf_hwrite       [0:N_PORTS-1];
     reg     [        W_DATA-1:0] buf_hwdata       [0:N_PORTS-1];
@@ -105,7 +102,6 @@ module ahbl_arbiter #(
     reg     [        W_DATA-1:0] buf_hmaster      [0:N_PORTS-1];
 
     reg     [N_PORTS*W_ADDR-1:0] actual_d_pc;
-    reg     [N_PORTS*W_DATA-1:0] actual_hartid;
     reg     [N_PORTS*W_ADDR-1:0] actual_haddr;
     reg     [       N_PORTS-1:0] actual_hwrite;
     reg     [N_PORTS*W_DATA-1:0] actual_hwdata;
@@ -122,7 +118,6 @@ module ahbl_arbiter #(
         for (i = 0; i < N_PORTS; i = i + 1) begin
             if (buf_valid[i]) begin
                 actual_d_pc[i*W_ADDR+:W_ADDR]   = buf_d_pc[i];
-                actual_hartid[i*W_DATA+:W_DATA] = buf_hartid[i];
                 actual_haddr[i*W_ADDR+:W_ADDR]  = buf_haddr[i];
                 actual_hwrite[i]                = buf_hwrite[i];
                 actual_hwdata[i*W_DATA+:W_DATA] = buf_hwdata[i];
@@ -135,7 +130,6 @@ module ahbl_arbiter #(
                 actual_hmaster[i*W_DATA+:W_DATA]= buf_hmaster[i];
             end else begin
                 actual_d_pc[i*W_ADDR+:W_ADDR]   = src_d_pc[i*W_ADDR+:W_ADDR];
-                actual_hartid[i*W_DATA+:W_DATA] = src_hartid[i*W_DATA+:W_DATA];
                 actual_haddr[i*W_ADDR+:W_ADDR]  = src_haddr[i*W_ADDR+:W_ADDR];
                 actual_hwrite[i]                = src_hwrite[i];
                 actual_hwdata[i*W_DATA+:W_DATA] = src_hwdata[i*W_DATA+:W_DATA];
@@ -199,7 +193,6 @@ module ahbl_arbiter #(
                 buf_valid[i]     <= 1'b0;
                 buf_htrans[i]    <= 2'h0;
                 buf_d_pc[i]      <= {W_ADDR{1'b0}};
-                buf_hartid[i]    <= {W_DATA{1'b0}};
                 buf_haddr[i]     <= {W_ADDR{1'b0}};
                 buf_hwrite[i]    <= 1'b0;
                 buf_hwdata[i]    <= {W_DATA{1'b0}};
@@ -233,7 +226,6 @@ module ahbl_arbiter #(
                     buf_valid[i]     <= 1'b1;
                     buf_htrans[i]    <= src_htrans[i*2+:2];
                     buf_d_pc[i]      <= src_d_pc[i*W_ADDR+:W_ADDR];
-                    buf_hartid[i]    <= src_hartid[i*W_DATA+:W_DATA];
                     buf_haddr[i]     <= src_haddr[i*W_ADDR+:W_ADDR];
                     buf_hwrite[i]    <= src_hwrite[i];
                     buf_hwdata[i]    <= src_hwdata[i*W_DATA+:W_DATA];
@@ -280,15 +272,6 @@ module ahbl_arbiter #(
         .in (actual_d_pc),
         .sel(mast_gnt_a),
         .out(dst_d_pc)
-    );
-
-    onehot_mux #(
-        .W_INPUT (W_DATA),
-        .N_INPUTS(N_PORTS)
-    ) mux_dst_hartid (
-        .in (actual_hartid),
-        .sel(mast_gnt_a),
-        .out(dst_hartid)
     );
 
     onehot_mux #(
@@ -384,20 +367,20 @@ module ahbl_arbiter #(
             $display(
                 "s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x,%x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x",
                 SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], dst_haddr,
-                src_hwrite, dst_hwrite, dst_hwdata, src_hready_resp, dst_hready_resp, dst_hartid,
+                src_hwrite, dst_hwrite, dst_hwdata, src_hready_resp, dst_hready_resp, dst_hmaster,
                 dst_d_pc);
             //$display("s%1d gnt_a=%x req_a=%x pc0=%x shaddr=%x pc1=%x shaddr=%x dhaddr=%x shwr=%2x dhwr=%1x shready_resp=%x dhready_resp=%x dh=%1x dpc=%x", 
             //	SLAVE_ID, mast_gnt_a, mast_req_a, src_d_pc[31:0], src_haddr[31:0], src_d_pc[63:32], src_haddr[63:32], dst_haddr, src_hwrite, dst_hwrite,
-            //	src_hready_resp, dst_hready_resp, dst_hartid, dst_d_pc);
+            //	src_hready_resp, dst_hready_resp, dst_hmaster, dst_d_pc);
         end
     end
-    always @(dst_haddr or dst_hwrite or dst_hartid or dst_htrans or dst_hready_resp or dst_hready) begin
+    always @(dst_haddr or dst_hwrite or dst_hmaster or dst_htrans or dst_hready_resp or dst_hready) begin
 `ifdef laur0
         if ((src_d_pc[63:32] >= pc_trace_start && src_d_pc[63:32] <= pc_trace_stop)) begin
             $display(
                 "  s%1d pc0=%x pc1=%x dpc=%x dhaddr=%x dhwr=%x dhrd=%x dh=%1x dhtrans=%x dhrdy_resp=%x dhrdy=%x shrdy=%x shrdy_resp=%x req_a=%x gnt_a=%x gnt_d=%x str=%x atr=%x btr=%x t=%8d",
                 SLAVE_ID, src_d_pc[31:0], src_d_pc[63:32], dst_d_pc, dst_haddr, dst_hwrite,
-                dst_hrdata, dst_hartid, dst_htrans, dst_hready_resp, dst_hready, src_hready_resp,
+                dst_hrdata, dst_hmaster, dst_htrans, dst_hready_resp, dst_hready, src_hready_resp,
                 src_hready, mast_req_a, mast_gnt_a, mast_gnt_d, src_htrans, actual_htrans,
                 buf_htrans, tcnt);
         end

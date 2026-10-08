@@ -28,7 +28,7 @@ module hazard3_riscv_timer #(
     output reg  [      31:0] prdata,
     output reg               pready,
     output wire              pslverr,
-    input  wire [W_DATA-1:0] phartid,
+    input  wire [W_DATA-1:0] phmaster,
     input  wire [W_ADDR-1:0] pd_pc,
 
     input wire dbg_halt,
@@ -72,7 +72,7 @@ module hazard3_riscv_timer #(
 `ifdef dbgstart
                 $display(
                     "\t h%1x pc=%x iowrite && paddr == ADDR_IPI %x && pwdata=%x soft_irq was %x t%d",
-                    phartid, pd_pc, paddr, pwdata, soft_irq, $time);
+                    phmaster, pd_pc, paddr, pwdata, soft_irq, $time);
 `endif
                 if (pwdata == 0) soft_irq[0] <= 0;
                 else soft_irq[0] <= 1;
@@ -82,7 +82,7 @@ module hazard3_riscv_timer #(
 `ifdef dbgstart
                     $display(
                         "\t h%1x pc=%x iowrite && paddr == ADDR_IPI+4 %x && pwdata=%x soft_irq was %x t%d",
-                        phartid, pd_pc, paddr, pwdata, soft_irq, $time);
+                        phmaster, pd_pc, paddr, pwdata, soft_irq, $time);
 `endif
                     if (pwdata == 0) soft_irq[N_HARTS-1] <= 0;
                     else soft_irq[N_HARTS-1] <= 1;

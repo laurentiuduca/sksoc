@@ -41,7 +41,6 @@ module ahbl_splitter #(
     input wire rst_n,
 
     input wire [W_ADDR-1:0] src_d_pc,
-    input wire [W_DATA-1:0] src_hartid,
 
     // From master; functions as slave port
     input  wire              src_hready,
@@ -75,7 +74,6 @@ module ahbl_splitter #(
     output wire [N_PORTS*W_DATA-1:0] dst_hwdata,
     input  wire [N_PORTS*W_DATA-1:0] dst_hrdata,
     output wire [N_PORTS*W_ADDR-1:0] dst_d_pc,
-    output wire [N_PORTS*W_DATA-1:0] dst_hartid,
     // exlusive access signaling
     output wire [       N_PORTS-1:0] dst_hexcl,
     output wire [N_PORTS*W_DATA-1:0] dst_hmaster,
@@ -125,7 +123,6 @@ module ahbl_splitter #(
     assign dst_hexcl     = {N_PORTS{src_hexcl}};
     assign dst_hmaster   = {N_PORTS{src_hmaster}};
     assign dst_d_pc      = {N_PORTS{src_d_pc}};
-    assign dst_hartid    = {N_PORTS{src_hartid}};
 
     always @(*) begin
         for (i = 0; i < N_PORTS; i = i + 1) begin
@@ -205,7 +202,7 @@ module ahbl_splitter #(
         if ($past(src_hwrite) && j < 30)  // && $past(src_haddr == 32'h4000400c))
             $display(
                 "past wr h%1x psrc_haddr=%x src_hwdata=%x src/dst_hready_resp=%x/%x slave_sel_d=%x %8d",
-                src_hartid,
+                src_hmaster,
                 $past(
                     src_haddr
                 ),
@@ -228,10 +225,9 @@ module ahbl_splitter #(
             osrc_htrans <= src_htrans;
             if (j < 20 || (src_d_pc >= pc_trace_start && src_d_pc <= pc_trace_stop && li < 20))
                 $display(
-                    "h%1x src_d_pc=%x hartid=%1x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=,%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x slave_sel_a,d=%x,%x src_hready_resp=%1x,ok=%1x %08d",
-                    src_hartid,
+                    "h%1x src_d_pc=%x src_haddr=%x,o=%x src_hready=%x,o=%x dst_hrdata=,%x src_hrdata=%x src_hwrite=%x,o=%x,%x,excl=%x slave_sel_a,d=%x,%x src_hready_resp=%1x,ok=%1x %08d",
+                    src_hmaster,
                     src_d_pc,
-                    src_hartid,
                     src_haddr,
                     osrc_haddr,
                     src_hready,
