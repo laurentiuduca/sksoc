@@ -158,7 +158,7 @@ module cache_ctrl #(
             end else if (i_wr_en) begin
                 state <= 10;
                 c_clr <= 1;
-                // write to ram only
+                // write to ram only because of mask
                 // will write to cache at next read on the same address
                 r_dram_wr <= 1;
                 r_dram_mask <= i_mask;
