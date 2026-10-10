@@ -160,6 +160,7 @@ module cache_ctrl #(
                 c_clr <= 1;
                 // write to ram only because of mask
                 // will write to cache at next read on the same address
+                // if the master writes a byte at an address outside of cache
                 r_dram_wr <= 1;
                 r_dram_mask <= i_mask;
                 r_dram_addr <= i_addr;

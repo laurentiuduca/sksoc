@@ -53,7 +53,7 @@ make clean
 make
 
 4. simulate in verilator
-cd ../hazard3
+cd ../h3
 - in Makefile and run.tcl, set
   for single core example_soc.v
   for dual core example_soc-dual.v
