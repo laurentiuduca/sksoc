@@ -157,7 +157,11 @@ module cache_ctrl #(
                 r_dram_mask <= i_mask;
             end else if (i_wr_en) begin
                 state <= 10;
-                c_clr <= 1;
+                if(i_mask == 4'hf) begin
+                    c_we <= 1;
+                    c_idata <= i_data;
+                end else
+                    c_clr <= 1;
                 // write to ram only because of mask
                 // will write to cache at next read on the same address
                 // if the master writes a byte at an address outside of cache
@@ -210,10 +214,10 @@ module cache_ctrl #(
 `endif
         end else if (state == 10) begin
             c_clr <= 0;
+            c_we <= 0;
             if (w_dram_busy) begin
                 state <= 11;
                 r_dram_wr <= 0;
-                //c_clr <= 0;
             end
         end else if (state == 11) begin
             if (!w_dram_busy) begin
