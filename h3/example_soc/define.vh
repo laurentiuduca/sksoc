@@ -61,8 +61,8 @@ define.vh `define SDCARD_CLK_DIV 3 // clk is 50mhz
 `define LAUR_MEM_RB_ONLY_CHECK
 `endif
 
-`define MEM_SIZE (256*1024)
-`define BBL_SIZE (256*1024) // initmem.bin
+`define MEM_SIZE (8*1024*1024)
+`define BBL_SIZE (8*1024*1024) // initmem.bin
 `define BIN_BBL_SIZE `BBL_SIZE
 `define BIN_DISK_SIZE 0
 `define BIN_SIZE (`BIN_BBL_SIZE + `BIN_DISK_SIZE)
