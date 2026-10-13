@@ -32,11 +32,11 @@ module l1cache
     output wire [        3:0] l1proc_hprot,
     output wire               l1proc_hmastlock,
     output wire               l1proc_hexcl,
-    output wire                l1proc_hready,
-    output wire                l1proc_hresp,
-    output wire                l1proc_hexokay,
+    input wire                l1proc_hready,
+    input wire                l1proc_hresp,
+    input wire                l1proc_hexokay,
     output wire [ W_DATA-1:0] l1proc_hwdata,
-    output wire [ W_DATA-1:0]  l1proc_hrdata,
+    input wire [ W_DATA-1:0]  l1proc_hrdata,
     output wire [ W_DATA-1:0] l1proc_hmaster,    
 
     input wire              sram0_hready_resp,
@@ -73,11 +73,6 @@ module l1cache
     assign l1proc_hwdata = proc_hwdata;
     assign proc_hrdata = l1proc_hrdata;
     assign l1proc_hmaster = proc_hmaster;
-
-    assign l1proc_hready  = sram0_hready;
-    assign l1proc_hready  = sram0_hready_resp;
-    assign l1proc_hexokay = sram0_hexokay;
-    assign l1proc_hrdata  = sram0_hrdata;
 
 endmodule
 
