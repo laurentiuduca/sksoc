@@ -456,6 +456,57 @@ module example_soc #(
     wire              bridge_hexokay = 1;
 
 
+    wire [ W_ADDR-1:0] l1d_pc;
+    wire [ W_ADDR-1:0] l1proc_haddr;
+    wire               l1proc_hwrite;
+    wire [        1:0] l1proc_htrans;
+    wire [        2:0] l1proc_hsize;
+    wire [        2:0] l1proc_hburst;
+    wire [        3:0] l1proc_hprot;
+    wire               l1proc_hmastlock;
+    wire               l1proc_hexcl;
+    wire               l1proc_hready;
+    wire               l1proc_hresp;
+    wire               l1proc_hexokay;
+    wire [ W_DATA-1:0] l1proc_hwdata;
+    wire [ W_DATA-1:0] l1proc_hrdata;
+    wire [ W_DATA-1:0] l1proc_hmaster; 
+    l1cache l1cache(
+      .d_pc(d_pc),                  .l1d_pc(l1d_pc),
+      .proc_haddr(proc_haddr),      .l1proc_haddr(l1proc_haddr),
+      .proc_hwrite(proc_hwrite),    .l1proc_hwrite(l1proc_hwrite),
+      .proc_htrans(proc_htrans),    .l1proc_htrans(l1proc_htrans),
+      .proc_hsize(proc_hsize),      .l1proc_hsize(l1proc_hsize),
+      .proc_hburst(proc_hburst),    .l1proc_hburst(l1proc_hburst),
+      .proc_hprot(proc_hprot),      .l1proc_hprot(l1proc_hprot),
+      .proc_hmastlock(proc_hmastlock),.l1proc_hmastlock(l1proc_hmastlock),
+      .proc_hexcl(proc_hexcl),      .l1proc_hexcl(l1proc_hexcl),
+      .proc_hready(proc_hready),    .l1proc_hready(l1proc_hready),
+      .proc_hresp(proc_hresp),      .l1proc_hresp(l1proc_hresp),
+      .proc_hexokay(proc_hexokay),  .l1proc_hexokay(l1proc_hexokay),
+      .proc_hwdata(proc_hwdata),    .l1proc_hwdata(l1proc_hwdata),
+      .proc_hrdata(proc_hrdata),    .l1proc_hrdata(l1proc_hrdata),
+      .proc_hmaster(proc_hmaster),  .l1proc_hmaster(l1proc_hmaster),
+  
+      .sram0_hready_resp(sram0_hready_resp),
+      .sram0_hready(sram0_hready),
+      .sram0_hresp(sram0_hresp),
+      .sram0_haddr(sram0_haddr),
+      .sram0_hwrite(sram0_hwrite),
+      .sram0_htrans(sram0_htrans),
+      .sram0_hsize(sram0_hsize),
+      .sram0_hburst(sram0_hburst),
+      .sram0_hprot(sram0_hprot),
+      .sram0_hmastlock(sram0_hmastlock),
+      .sram0_hwdata(sram0_hwdata),
+      .sram0_hrdata(sram0_hrdata),
+      .sram0_d_pc(sram0_d_pc),
+      .sram0_hexcl(sram0_hexcl),
+      .sram0_hmaster(sram0_hmaster),
+      .sram0_hexokay(sram0_hexokay)
+    );
+
+
     //`define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
@@ -466,23 +517,23 @@ module example_soc #(
         .clk  (clk),
         .rst_n(rst_n),
 
-        .src_hready_resp(proc_hready),
-        .src_hready     (proc_hready),
-        .src_hresp      (proc_hresp),
-        .src_haddr      (proc_haddr),
-        .src_hwrite     (proc_hwrite),
-        .src_htrans     (proc_htrans),
-        .src_hsize      (proc_hsize),
-        .src_hburst     (proc_hburst),
-        .src_hprot      (proc_hprot),
-        .src_hmastlock  (proc_hmastlock),
-        .src_hwdata     (proc_hwdata),
-        .src_hrdata     (proc_hrdata),
-        .src_d_pc       (d_pc),
+        .src_hready_resp(l1proc_hready),
+        .src_hready     (l1proc_hready),
+        .src_hresp      (l1proc_hresp),
+        .src_haddr      (l1proc_haddr),
+        .src_hwrite     (l1proc_hwrite),
+        .src_htrans     (l1proc_htrans),
+        .src_hsize      (l1proc_hsize),
+        .src_hburst     (l1proc_hburst),
+        .src_hprot      (l1proc_hprot),
+        .src_hmastlock  (l1proc_hmastlock),
+        .src_hwdata     (l1proc_hwdata),
+        .src_hrdata     (l1proc_hrdata),
+        .src_d_pc       (l1d_pc),
         // exclusive access signaling
-        .src_hexcl      (proc_hexcl),
-        .src_hmaster    (proc_hmaster),
-        .src_hexokay    (proc_hexokay),
+        .src_hexcl      (l1proc_hexcl),
+        .src_hmaster    (l1proc_hmaster),
+        .src_hexokay    (l1proc_hexokay),
         .slave_sel_d    (),
 
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),
@@ -519,23 +570,23 @@ module example_soc #(
         .rst_n(rst_n),
 
         // From masters; function as slave ports
-        .src_hready_resp({  proc_hready),
-        //.src_hready    (  proc_hready),
-        .src_hresp       (  proc_hresp),
-        .src_haddr       (  proc_haddr),
-        .src_hwrite      (  proc_hwrite),
-        .src_htrans      (  proc_htrans),
-        .src_hsize       (  proc_hsize),
-        .src_hburst      (  proc_hburst),
-        .src_hprot       (  proc_hprot),
-        .src_hmastlock   (  proc_hmastlock),
-        .src_hwdata      (  proc_hwdata),
-        .src_hrdata      (  proc_hrdata),
-        .src_d_pc       (d_pc),
+        .src_hready_resp({  l1proc_hready),
+        //.src_hready    (  l1proc_hready),
+        .src_hresp       (  l1proc_hresp),
+        .src_haddr       (  l1proc_haddr),
+        .src_hwrite      (  l1proc_hwrite),
+        .src_htrans      (  l1proc_htrans),
+        .src_hsize       (  l1proc_hsize),
+        .src_hburst      (  l1proc_hburst),
+        .src_hprot       (  l1proc_hprot),
+        .src_hmastlock   (  l1proc_hmastlock),
+        .src_hwdata      (  l1proc_hwdata),
+        .src_hrdata      (  l1proc_hrdata),
+        .src_d_pc       (l1d_pc),
         // exclusive access signaling
-        .src_hexcl      (proc_hexcl),
-        .src_hmaster    (proc_hmaster),
-        .src_hexokay    (proc_hexokay),
+        .src_hexcl      (l1proc_hexcl),
+        .src_hmaster    (l1proc_hmaster),
+        .src_hexokay    (l1proc_hexokay),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),
