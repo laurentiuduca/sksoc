@@ -290,7 +290,7 @@ module example_soc #(
     wire               proc_hexcl;
     wire               proc_hready;
     wire               proc_hresp;
-    wire               proc_hexokay = 1'b1;  // No global monitor
+    wire               proc_hexokay;
     wire [ W_DATA-1:0] proc_hwdata;
     wire [ W_DATA-1:0] proc_hrdata;
     wire [ W_DATA-1:0] proc_hmaster;
@@ -377,6 +377,7 @@ module example_soc #(
         .hexokay  (proc_hexokay),
         .hwdata   (proc_hwdata),
         .hrdata   (proc_hrdata),
+        .hmaster  (proc_hmaster),
 
         .dbg_req_halt         (hart_req_halt),
         .dbg_req_halt_on_reset(hart_req_halt_on_reset),
@@ -406,8 +407,7 @@ module example_soc #(
         // Level-sensitive interrupt sources
         .irq        (irq),          // -> mip.meip
         .soft_irq   (soft_irq),     // -> mip.msip
-        .timer_irq  (timer_irq),    // -> mip.mtip	
-        .hmaster  (proc_hmaster)
+        .timer_irq  (timer_irq)    // -> mip.mtip	
     );
 
     // ----------------------------------------------------------------------------
@@ -456,9 +456,6 @@ module example_soc #(
     wire              bridge_hexokay = 1;
 
 
-    wire              src_hexcl;  // exclusive access signaling
-    wire [W_DATA-1:0] src_hmaster = proc_hmaster;  // exclusive access signaling
-    wire              src_hexokay;  // exclusive access signaling
     //`define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
@@ -483,9 +480,9 @@ module example_soc #(
         .src_hrdata     (proc_hrdata),
         .src_d_pc       (d_pc),
         // exclusive access signaling
-        .src_hexcl      (src_hexcl),
-        .src_hmaster    (src_hmaster),
-        .src_hexokay    (src_hexokay),
+        .src_hexcl      (proc_hexcl),
+        .src_hmaster    (proc_hmaster),
+        .src_hexokay    (proc_hexokay),
         .slave_sel_d    (),
 
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),
@@ -536,9 +533,9 @@ module example_soc #(
         .src_hrdata      (  proc_hrdata),
         .src_d_pc       (d_pc),
         // exclusive access signaling
-        .src_hexcl      (src_hexcl),
-        .src_hmaster    (src_hmaster),
-        .src_hexokay    (src_hexokay),
+        .src_hexcl      (proc_hexcl),
+        .src_hmaster    (proc_hmaster),
+        .src_hexokay    (proc_hexokay),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),
