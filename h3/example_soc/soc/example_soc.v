@@ -471,7 +471,13 @@ module example_soc #(
     wire [ W_DATA-1:0] l1proc_hwdata;
     wire [ W_DATA-1:0] l1proc_hrdata;
     wire [ W_DATA-1:0] l1proc_hmaster; 
-    l1cache l1cache(
+
+    `define ADDR_MAP  64'h40000000_00000000
+    `define ADDR_MASK 64'he0000000_e0000000
+    l1cache #(
+        .N_SLAVES (2),
+        .ADDR_MAP (`ADDR_MAP),
+        .ADDR_MASK(`ADDR_MASK)) l1cache (
       .d_pc(d_pc),                  .l1d_pc(l1d_pc),
       .proc_haddr(proc_haddr),      .l1proc_haddr(l1proc_haddr),
       .proc_hwrite(proc_hwrite),    .l1proc_hwrite(l1proc_hwrite),
@@ -511,8 +517,8 @@ module example_soc #(
 `ifndef USECROSS
     ahbl_splitter #(
         .N_PORTS  (2),
-        .ADDR_MAP (64'h40000000_00000000),
-        .ADDR_MASK(64'he0000000_e0000000)
+        .ADDR_MAP (`ADDR_MAP),
+        .ADDR_MASK(`ADDR_MASK)
     ) splitter_u (
         .clk  (clk),
         .rst_n(rst_n),
@@ -562,8 +568,8 @@ module example_soc #(
         .N_SLAVES (2),
         .W_ADDR   (32),
         .W_DATA   (32),
-        .ADDR_MAP (64'h40000000_00000000),
-        .ADDR_MASK(64'he0000000_e0000000)
+        .ADDR_MAP (`ADDR_MAP),
+        .ADDR_MASK(`ADDR_MASK)
     ) ahbl_crossbar (
         // Global signals
         .clk  (clk),
@@ -677,7 +683,7 @@ module example_soc #(
         .ahbls_hmastlock  (bridge_hmastlock),
         .ahbls_hwdata     (bridge_hwdata),
         .ahbls_hrdata     (bridge_hrdata),
-        .ahbls_hmaster     (bridge_hmaster),
+        .ahbls_hmaster    (bridge_hmaster),
         .ahbls_hd_pc      (bridge_hd_pc),
 
         .apbm_paddr  (bridge_paddr),
@@ -718,7 +724,7 @@ module example_soc #(
         .apbm_pready ({eth_pready,  sd_pready,  uart_pready,  timer_pready}),
         .apbm_prdata ({eth_prdata,  sd_prdata,  uart_prdata,  timer_prdata}),
         .apbm_pslverr({eth_pslverr, sd_pslverr, uart_pslverr, timer_pslverr}),
-        .apbm_hmaster ({eth_phmaster, sd_phmaster, uart_phmaster, timer_phmaster}),
+        .apbm_hmaster({eth_phmaster, sd_phmaster, uart_phmaster, timer_phmaster}),
         .apbm_pd_pc  ({eth_pd_pc,   sd_pd_pc,   uart_pd_pc,   timer_pd_pc})
     );
 

@@ -4,6 +4,9 @@
 
 module l1cache
     # (
+    parameter N_SLAVES = 2,
+    parameter ADDR_MAP  = 64'h40000000_00000000,
+    parameter ADDR_MASK = 64'he0000000_e0000000,
     `include "hazard3_config.vh"
     )(
 
@@ -58,6 +61,27 @@ module l1cache
     input wire              sram0_hexokay
 );
 
+//`define usel1cache
+`ifdef usel1cache
+
+    input wire [ W_ADDR-1:0] d_pc,
+    input wire [ W_ADDR-1:0] proc_haddr,
+    input wire               proc_hwrite,
+    input wire [        1:0] proc_htrans,
+    input wire [        2:0] proc_hsize,
+    input wire [        2:0] proc_hburst,
+    input wire [        3:0] proc_hprot,
+    input wire               proc_hmastlock,
+    input wire               proc_hexcl,
+    output wire              proc_hready,
+    output wire              proc_hresp,
+    output wire              proc_hexokay,
+    input wire [ W_DATA-1:0] proc_hwdata,
+    output wire [ W_DATA-1:0] proc_hrdata,
+    input wire [ W_DATA-1:0] proc_hmaster,
+
+
+`else
     assign l1d_pc = d_pc;
     assign l1proc_haddr = proc_haddr;
     assign l1proc_hwrite = proc_hwrite;
@@ -73,6 +97,6 @@ module l1cache
     assign l1proc_hwdata = proc_hwdata;
     assign proc_hrdata = l1proc_hrdata;
     assign l1proc_hmaster = proc_hmaster;
-
+`endif
 endmodule
 
