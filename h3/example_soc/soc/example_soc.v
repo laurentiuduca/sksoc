@@ -513,7 +513,7 @@ module example_soc #(
     );
 
 
-    //`define USECROSS
+    `define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
         .N_PORTS  (2),
@@ -576,7 +576,7 @@ module example_soc #(
         .rst_n(rst_n),
 
         // From masters; function as slave ports
-        .src_hready_resp({  l1proc_hready),
+        .src_hready_resp (  l1proc_hready),
         //.src_hready    (  l1proc_hready),
         .src_hresp       (  l1proc_hresp),
         .src_haddr       (  l1proc_haddr),

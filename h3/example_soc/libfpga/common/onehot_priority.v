@@ -39,7 +39,9 @@ module onehot_priority #(
     reg deny;
     reg [W_INPUT-1:0] osel, sel;
     wire selchg;
+    /* verilator lint_off CMPCONST */
     assign selchg = (sel > 1 && !canchange) || (sel <= 1 && canchange);
+    /* verilator lint_on CMPCONST */
 
     always @(*) begin
         deny = 1'b0;
