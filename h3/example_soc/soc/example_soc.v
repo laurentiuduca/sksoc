@@ -372,7 +372,7 @@ module example_soc #(
         .hprot    (proc_hprot),
         .hmastlock(proc_hmastlock),
         .hexcl    (proc_hexcl),
-        .hready   (proc_hready),
+        .hready   (proc_hready),       // input
         .hresp    (proc_hresp),
         .hexokay  (proc_hexokay),
         .hwdata   (proc_hwdata),
@@ -513,7 +513,7 @@ module example_soc #(
     );
 
 
-    `define USECROSS
+`define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
         .N_PORTS  (2),

@@ -195,7 +195,7 @@ module example_soc #(
         .i_hburst(i_hburst),
         .i_hprot(i_hprot),
         .i_hmastlock(i_hmastlock),
-        .i_hready(i_hready),
+        .i_hready(i_hready),    // input
         .i_hresp(i_hresp),
         .i_hwdata(i_hwdata),
         .i_hrdata(i_hrdata),
@@ -214,7 +214,7 @@ module example_soc #(
         .d_hburst(d_hburst),
         .d_hprot(d_hprot),
         .d_hmastlock(d_hmastlock),
-        .d_hready(d_hready),
+        .d_hready(d_hready),    // input
         .d_hresp(d_hresp),
         .d_hwdata(d_hwdata),
         .d_hrdata(d_hrdata),
