@@ -173,8 +173,9 @@ module m_bram2 #(
     always @(posedge CLK) begin
         if (w_we) begin
             mem[w_addr] <= w_idata;
-        end
-        r_odata <= mem[w_addr];
+            r_odata <= w_idata;
+        end else
+            r_odata <= mem[w_addr];
         r_odata2 <= mem[w_addr2];
     end
 
