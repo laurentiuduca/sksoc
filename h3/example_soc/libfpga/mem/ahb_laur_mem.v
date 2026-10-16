@@ -171,6 +171,7 @@ module ahb_sync_sram #(
                     //$finish;
                 end
             end else begin
+                // if a master writes to excl_addr then excl transfer must fail
                 for (i = 0; i < N_HARTS; i = i + 1)
                 if (r_excl_addr[i] == ahbls_haddr) r_excl_addr_valid[i] <= 0;
                 r_ahbls_haddr <= ahbls_haddr;

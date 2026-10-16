@@ -478,6 +478,8 @@ module example_soc #(
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
         .ADDR_MASK(`ADDR_MASK)) l1cache (
+        .clk          (clk),
+        .rst_n        (rst_n),
       .d_pc(d_pc),                  .l1d_pc(l1d_pc),
       .proc_haddr(proc_haddr),      .l1proc_haddr(l1proc_haddr),
       .proc_hwrite(proc_hwrite),    .l1proc_hwrite(l1proc_hwrite),
