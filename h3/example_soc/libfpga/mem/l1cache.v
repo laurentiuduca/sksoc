@@ -63,24 +63,38 @@ module l1cache
 
 //`define usel1cache
 `ifdef usel1cache
+    reg [ W_ADDR-1:0] ad_pc;
+    reg [ W_ADDR-1:0] aproc_haddr;
+    reg               aproc_hwrite;
+    reg [        1:0] aproc_htrans;
+    reg [        2:0] aproc_hsize;
+    reg [        2:0] aproc_hburst;
+    reg [        3:0] aproc_hprot;
+    reg               aproc_hmastlock;
+    reg               aproc_hexcl;
+    reg               aproc_hready;
+    reg               aproc_hresp;
+    reg               aproc_hexokay;
+    reg [ W_DATA-1:0] aproc_hwdata;
+    reg [ W_DATA-1:0] aproc_hrdata;
+    reg [ W_DATA-1:0] aproc_hmaster;
 
-    input wire [ W_ADDR-1:0] d_pc,
-    input wire [ W_ADDR-1:0] proc_haddr,
-    input wire               proc_hwrite,
-    input wire [        1:0] proc_htrans,
-    input wire [        2:0] proc_hsize,
-    input wire [        2:0] proc_hburst,
-    input wire [        3:0] proc_hprot,
-    input wire               proc_hmastlock,
-    input wire               proc_hexcl,
-    output wire              proc_hready,
-    output wire              proc_hresp,
-    output wire              proc_hexokay,
-    input wire [ W_DATA-1:0] proc_hwdata,
-    output wire [ W_DATA-1:0] proc_hrdata,
-    input wire [ W_DATA-1:0] proc_hmaster,
-
-
+    wire weio = (proc_haddr >= (ADDR_MAP >> 32)) || proc_hwrite;
+    assign l1d_pc           = weio ? d_pc : ad_pc;
+    assign l1proc_haddr     = weio ? proc_haddr : aproc_haddr;
+    assign l1proc_hwrite    = weio ? proc_hwrite : aproc_hwrite;
+    assign l1proc_htrans    = weio ? proc_htrans : aproc_htrans;
+    assign l1proc_hsize     = weio ? proc_hsize : aproc_hsize;
+    assign l1proc_hburst    = weio ? proc_hburst : aproc_hburst;
+    assign l1proc_hprot     = weio ? proc_hprot : aproc_hprot;
+    assign l1proc_hmastlock = weio ? proc_hmastlock : aproc_hmastlock;
+    assign l1proc_hexcl     = weio ? proc_hexcl : aproc_hexcl;
+    assign proc_hready      = weio ? l1proc_hready : aproc_hready;
+    assign proc_hresp       = weio ? l1proc_hresp : aproc_hresp;
+    assign proc_hexokay     = weio ? l1proc_hexokay : aproc_hexokay;
+    assign l1proc_hwdata    = weio ? proc_hwdata : aproc_hwdata;
+    assign proc_hrdata      = weio ? l1proc_hrdata : aproc_hrdata;
+    assign l1proc_hmaster   = weio ? proc_hmaster : aproc_hmaster;
 `else
     assign l1d_pc = d_pc;
     assign l1proc_haddr = proc_haddr;
