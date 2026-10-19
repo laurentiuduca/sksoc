@@ -9,8 +9,7 @@ module l1cache
     parameter ADDR_MASK = 64'he0000000_e0000000,
     `include "hazard3_config.vh"
     )(
-        .clk          (clk),
-        .rst_n        (rst_n),
+    input wire clk, rst_n,
     input wire [ W_ADDR-1:0] d_pc,
     input wire [ W_ADDR-1:0] proc_haddr,
     input wire               proc_hwrite,
@@ -79,6 +78,7 @@ module l1cache
     reg [ W_DATA-1:0] aproc_hwdata;
     reg [ W_DATA-1:0] aproc_hrdata;
     reg [ W_DATA-1:0] aproc_hmaster;
+/*
 
     wire weio = (proc_haddr >= (ADDR_MAP >> 32)) || proc_hwrite;
     assign l1d_pc           = weio ? d_pc : ad_pc;
@@ -97,7 +97,7 @@ module l1cache
     assign proc_hrdata      = weio ? l1proc_hrdata : aproc_hrdata;
     assign l1proc_hmaster   = weio ? proc_hmaster : aproc_hmaster;
 
-
+/*
     // Decode AHBL controls
     wire [3:0] wmask_noshift = ~({4{1'b1}} << (1 << ahbls_hsize));
     wire [3:0] wmask = wmask_noshift << ahbls_haddr[1:0];
@@ -122,7 +122,7 @@ module l1cache
             end 
         end
     end
-
+*/
 
 `else
     // bypass cache
@@ -184,7 +184,8 @@ endmodule
 /**************************************************************************************************/
 /*** Simple Direct Mapped Cache Sync CLK for DRAM                                               ***/
 /**************************************************************************************************/
-module m_dram_cache #(
+module m_dram_cache2
+#(
     parameter ADDR_WIDTH = 30,
     D_WIDTH = 32,
     ENTRY = 1024
@@ -252,10 +253,10 @@ module m_dram_cache #(
         r_idx <= 0;
         r_tag2 <= 0;
         r_idx2 <= 0;
-      end else
+      end else begin
         r_tag <= w_tag;
         r_idx <= w_idx;
-        r_tag2 <= w_tag2
+        r_tag2 <= w_tag2;
         r_idx2 <= w_idx2;
       end
     end
