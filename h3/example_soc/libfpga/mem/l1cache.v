@@ -35,7 +35,7 @@ module l1cache
     output wire [        3:0] l1proc_hprot,
     output wire               l1proc_hmastlock,
     output wire               l1proc_hexcl,
-    input wire                l1proc_hready,
+    input wire                l1proc_hready_hresp,
     input wire                l1proc_hresp,
     input wire                l1proc_hexokay,
     output wire [ W_DATA-1:0] l1proc_hwdata,
@@ -89,7 +89,7 @@ module l1cache
     assign l1proc_hprot     = io ? proc_hprot : aproc_hprot;
     assign l1proc_hmastlock = io ? proc_hmastlock : aproc_hmastlock;
     assign l1proc_hexcl     = io ? proc_hexcl : aproc_hexcl;
-    assign proc_hready      = io ? l1proc_hready : aproc_hready;
+    assign proc_hready      = io ? l1proc_hready_hresp : aproc_hready;
     assign proc_hresp       = io ? l1proc_hresp : aproc_hresp;
     assign proc_hexokay     = io ? l1proc_hexokay : aproc_hexokay;
     assign l1proc_hwdata    = io ? proc_hwdata : aproc_hwdata;
@@ -115,7 +115,7 @@ module l1cache
         end else begin
             if(state == 0) begin
                 if (ahbls_hexcl) begin
-                    // bypass cache
+                    // bypass cache to make reservation
                 end
             end 
         end
@@ -132,7 +132,7 @@ module l1cache
     assign l1proc_hprot = proc_hprot;
     assign l1proc_hmastlock = proc_hmastlock;
     assign l1proc_hexcl = proc_hexcl;
-    assign proc_hready = l1proc_hready;
+    assign proc_hready = l1proc_hready_hresp;
     assign proc_hresp = l1proc_hresp;
     assign proc_hexokay = l1proc_hexokay;
     assign l1proc_hwdata = proc_hwdata;

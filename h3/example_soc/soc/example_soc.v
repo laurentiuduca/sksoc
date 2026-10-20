@@ -465,7 +465,7 @@ module example_soc #(
     wire [        3:0] l1proc_hprot;
     wire               l1proc_hmastlock;
     wire               l1proc_hexcl;
-    wire               l1proc_hready;
+    wire               l1proc_hready_hresp;
     wire               l1proc_hresp;
     wire               l1proc_hexokay;
     wire [ W_DATA-1:0] l1proc_hwdata;
@@ -489,7 +489,7 @@ module example_soc #(
       .proc_hprot(proc_hprot),      .l1proc_hprot(l1proc_hprot),
       .proc_hmastlock(proc_hmastlock),.l1proc_hmastlock(l1proc_hmastlock),
       .proc_hexcl(proc_hexcl),      .l1proc_hexcl(l1proc_hexcl),
-      .proc_hready(proc_hready),    .l1proc_hready(l1proc_hready),
+      .proc_hready(proc_hready),    .l1proc_hready_hresp(l1proc_hready_hresp),
       .proc_hresp(proc_hresp),      .l1proc_hresp(l1proc_hresp),
       .proc_hexokay(proc_hexokay),  .l1proc_hexokay(l1proc_hexokay),
       .proc_hwdata(proc_hwdata),    .l1proc_hwdata(l1proc_hwdata),
@@ -515,7 +515,7 @@ module example_soc #(
     );
 
 
-`define USECROSS
+//`define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
         .N_PORTS  (2),
@@ -525,8 +525,8 @@ module example_soc #(
         .clk  (clk),
         .rst_n(rst_n),
 
-        .src_hready_resp(l1proc_hready),
-        .src_hready     (l1proc_hready),
+        .src_hready_resp(l1proc_hready_hresp),
+        .src_hready     (l1proc_hready_hresp),
         .src_hresp      (l1proc_hresp),
         .src_haddr      (l1proc_haddr),
         .src_hwrite     (l1proc_hwrite),
@@ -578,8 +578,8 @@ module example_soc #(
         .rst_n(rst_n),
 
         // From masters; function as slave ports
-        .src_hready_resp (  l1proc_hready),
-        //.src_hready    (  l1proc_hready),
+        .src_hready_resp (  l1proc_hready_hresp),
+        //.src_hready    (  l1proc_hready_hresp),
         .src_hresp       (  l1proc_hresp),
         .src_haddr       (  l1proc_haddr),
         .src_hwrite      (  l1proc_hwrite),
