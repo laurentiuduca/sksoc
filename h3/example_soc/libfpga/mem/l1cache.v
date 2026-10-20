@@ -78,26 +78,24 @@ module l1cache
     reg [ W_DATA-1:0] aproc_hwdata;
     reg [ W_DATA-1:0] aproc_hrdata;
     reg [ W_DATA-1:0] aproc_hmaster;
-/*
 
-    wire weio = (proc_haddr >= (ADDR_MAP >> 32)) || proc_hwrite;
-    assign l1d_pc           = weio ? d_pc : ad_pc;
-    assign l1proc_haddr     = weio ? proc_haddr : aproc_haddr;
-    assign l1proc_hwrite    = weio ? proc_hwrite : aproc_hwrite;
-    assign l1proc_htrans    = weio ? proc_htrans : aproc_htrans;
-    assign l1proc_hsize     = weio ? proc_hsize : aproc_hsize;
-    assign l1proc_hburst    = weio ? proc_hburst : aproc_hburst;
-    assign l1proc_hprot     = weio ? proc_hprot : aproc_hprot;
-    assign l1proc_hmastlock = weio ? proc_hmastlock : aproc_hmastlock;
-    assign l1proc_hexcl     = weio ? proc_hexcl : aproc_hexcl;
-    assign proc_hready      = weio ? l1proc_hready : aproc_hready;
-    assign proc_hresp       = weio ? l1proc_hresp : aproc_hresp;
-    assign proc_hexokay     = weio ? l1proc_hexokay : aproc_hexokay;
-    assign l1proc_hwdata    = weio ? proc_hwdata : aproc_hwdata;
-    assign proc_hrdata      = weio ? l1proc_hrdata : aproc_hrdata;
-    assign l1proc_hmaster   = weio ? proc_hmaster : aproc_hmaster;
+    wire io = proc_htrans[1] && ((proc_haddr[31:28] & ADDR_MASK[63:60]) == ADDR_MAP[63:60]);
+    assign l1d_pc           = io ? d_pc : ad_pc;
+    assign l1proc_haddr     = io ? proc_haddr : aproc_haddr;
+    assign l1proc_hwrite    = io ? proc_hwrite : aproc_hwrite;
+    assign l1proc_htrans    = io ? proc_htrans : aproc_htrans;
+    assign l1proc_hsize     = io ? proc_hsize : aproc_hsize;
+    assign l1proc_hburst    = io ? proc_hburst : aproc_hburst;
+    assign l1proc_hprot     = io ? proc_hprot : aproc_hprot;
+    assign l1proc_hmastlock = io ? proc_hmastlock : aproc_hmastlock;
+    assign l1proc_hexcl     = io ? proc_hexcl : aproc_hexcl;
+    assign proc_hready      = io ? l1proc_hready : aproc_hready;
+    assign proc_hresp       = io ? l1proc_hresp : aproc_hresp;
+    assign proc_hexokay     = io ? l1proc_hexokay : aproc_hexokay;
+    assign l1proc_hwdata    = io ? proc_hwdata : aproc_hwdata;
+    assign proc_hrdata      = io ? l1proc_hrdata : aproc_hrdata;
+    assign l1proc_hmaster   = io ? proc_hmaster : aproc_hmaster;
 
-/*
     // Decode AHBL controls
     wire [3:0] wmask_noshift = ~({4{1'b1}} << (1 << ahbls_hsize));
     wire [3:0] wmask = wmask_noshift << ahbls_haddr[1:0];
@@ -122,7 +120,6 @@ module l1cache
             end 
         end
     end
-*/
 
 `else
     // bypass cache
