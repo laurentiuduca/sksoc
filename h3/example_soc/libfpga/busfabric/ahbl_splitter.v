@@ -149,6 +149,7 @@ module ahbl_splitter #(
 
             if (decode_err_d) begin
                 err_ph1 <= !err_ph1;
+                $finish;
             end else begin
                 err_ph1 <= 1'b0;
             end
