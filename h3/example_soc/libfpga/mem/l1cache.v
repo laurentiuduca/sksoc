@@ -7,6 +7,7 @@ module l1cache
     parameter N_SLAVES = 2,
     parameter ADDR_MAP  = 64'h40000000_00000000,
     parameter ADDR_MASK = 64'he0000000_e0000000,
+    parameter MHARTID_VAL = 0,
     `include "hazard3_config.vh"
     )(
     input wire clk, rst_n,
@@ -61,7 +62,15 @@ module l1cache
     input wire              sram0_hexokay
 );
 
-//`define usel1cache
+
+localparam hprot_instr = {
+        2'b00,                  // Noncacheable/nonbufferable
+        1'b1,                   // Privileged
+        1'b0                    // Instruction access
+};
+localparam HTRANS_IDLE = 2'b00;
+localparam HSIZE_WORD  = 3'd2;
+`define usel1cache
 `ifdef usel1cache
     reg [ W_ADDR-1:0] ad_pc;
     reg [ W_ADDR-1:0] aproc_haddr;
@@ -72,7 +81,7 @@ module l1cache
     reg [        3:0] aproc_hprot;
     reg               aproc_hmastlock;
     reg               aproc_hexcl;
-    reg               aproc_hready;
+    reg               aproc_hready_resp;
     reg               aproc_hresp;
     reg               aproc_hexokay;
     reg [ W_DATA-1:0] aproc_hwdata;
@@ -80,44 +89,80 @@ module l1cache
     reg [ W_DATA-1:0] aproc_hmaster;
 
     wire io = proc_htrans[1] && ((proc_haddr[31:28] & ADDR_MASK[63:60]) == ADDR_MAP[63:60]);
-    assign l1d_pc           = io ? d_pc : ad_pc;
-    assign l1proc_haddr     = io ? proc_haddr : aproc_haddr;
-    assign l1proc_hwrite    = io ? proc_hwrite : aproc_hwrite;
-    assign l1proc_htrans    = io ? proc_htrans : aproc_htrans;
-    assign l1proc_hsize     = io ? proc_hsize : aproc_hsize;
-    assign l1proc_hburst    = io ? proc_hburst : aproc_hburst;
-    assign l1proc_hprot     = io ? proc_hprot : aproc_hprot;
-    assign l1proc_hmastlock = io ? proc_hmastlock : aproc_hmastlock;
-    assign l1proc_hexcl     = io ? proc_hexcl : aproc_hexcl;
-    assign proc_hready      = io ? l1proc_hready_hresp : aproc_hready;
-    assign proc_hresp       = io ? l1proc_hresp : aproc_hresp;
-    assign proc_hexokay     = io ? l1proc_hexokay : aproc_hexokay;
-    assign l1proc_hwdata    = io ? proc_hwdata : aproc_hwdata;
-    assign proc_hrdata      = io ? l1proc_hrdata : aproc_hrdata;
-    assign l1proc_hmaster   = io ? proc_hmaster : aproc_hmaster;
+    assign l1d_pc           = ad_pc;
+    assign l1proc_haddr     = aproc_haddr;
+    assign l1proc_hwrite    = aproc_hwrite;
+    assign l1proc_htrans    = aproc_htrans;
+    assign l1proc_hsize     = aproc_hsize;
+    assign l1proc_hburst    = aproc_hburst;
+    assign l1proc_hprot     = aproc_hprot;
+    assign l1proc_hmastlock = aproc_hmastlock;
+    assign l1proc_hexcl     = aproc_hexcl;
+    assign proc_hready      = aproc_hready_resp;
+    assign proc_hresp       = 1'b0;
+    assign proc_hexokay     = aproc_hexokay;
+    assign l1proc_hwdata    = aproc_hwdata;
+    assign proc_hrdata      = aproc_hrdata;
+    assign l1proc_hmaster   = aproc_hmaster;
 
     // Decode AHBL controls
-    wire [3:0] wmask_noshift = ~({4{1'b1}} << (1 << ahbls_hsize));
-    wire [3:0] wmask = wmask_noshift << ahbls_haddr[1:0];
-    wire ahb_read_aphase = ahbls_htrans[1] && ahbls_hready && !ahbls_hwrite;
-    wire ahb_write_aphase = ahbls_htrans[1] && ahbls_hready && ahbls_hwrite;
-    // AHBL hookup
-    assign ahbls_hresp = 1'b0;
-    assign ahbls_hready_resp = (state == 0) ? !w_dram_busy :
-               (state == 21) ? !w_dram_busy : (state == 31);
-    assign ahbls_hrdata = w_dram_odata;
-    assign ahbls_hexokay = r_ahbls_hexokay;
+    //wire [3:0] wmask_noshift = ~({4{1'b1}} << (1 << proc_hsize));
+    //wire [3:0] wmask = wmask_noshift << proc_haddr[1:0];
+    wire proc_read_aphase = proc_htrans[1] && !proc_hwrite;
+    wire proc_write_aphase = proc_htrans[1] && proc_hwrite;
+
+
+    task preparea;
+    ad_pc           <= ad_pc;
+    aproc_haddr     <= aproc_haddr;
+    aproc_hwrite    <= aproc_hwrite;
+    aproc_htrans    <= aproc_htrans;
+    aproc_hsize     <= aproc_hsize;
+    aproc_hburst    <= aproc_hburst;
+    aproc_hprot     <= aproc_hprot;
+    aproc_hmastlock <= aproc_hmastlock;
+    aproc_hexcl     <= aproc_hexcl;
+    aproc_hwdata    <= aproc_hwdata;
+    aproc_hmaster   <= aproc_hmaster;
+    endtask
 
     reg [5:0] state;
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             state <= 0;
+            ad_pc <= 0;
+            aproc_haddr <= 0;
+            aproc_hwrite <= 0;
+            aproc_htrans <= HTRANS_IDLE;
+            aproc_hsize <= HSIZE_WORD;
+            aproc_hburst <= 0;
+            aproc_hprot <= hprot_instr;
+            aproc_hmastlock <= 0;
+            aproc_hexcl <= 0;
+            aproc_hready_resp <= 1;
+            aproc_hresp <= 0;
+            aproc_hexokay <= 0;
+            aproc_hwdata <= 0;
+            aproc_hrdata <= 0;
+            aproc_hmaster <= MHARTID_VAL;
         end else begin
+            aproc_hready_resp <= 0;
             if(state == 0) begin
-                if (ahbls_hexcl) begin
+                if(proc_read_aphase) begin
+                    preparea;
+                    state <= 1;
+                end else if(proc_write_aphase) begin
+                    preparea;
+                end 
+                //if (proc_hexcl) begin
                     // bypass cache to make reservation
-                end
-            end 
+                //end
+            end else if(state == 1) begin
+                // let splitter get the command
+                if(!l1proc_hready_resp)
+                    state <= 2;
+            end else if(state == 1) begin
+            end
         end
     end
 

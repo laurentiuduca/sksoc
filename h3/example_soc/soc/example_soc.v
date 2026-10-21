@@ -477,7 +477,8 @@ module example_soc #(
     l1cache #(
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
-        .ADDR_MASK(`ADDR_MASK)) l1cache (
+        .ADDR_MASK(`ADDR_MASK),
+        .MHARTID_VAL(0)) l1cache (
         .clk          (clk),
         .rst_n        (rst_n),
       .d_pc(d_pc),                  .l1d_pc(l1d_pc),
