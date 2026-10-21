@@ -7,7 +7,6 @@ module l1cache
     parameter N_SLAVES = 2,
     parameter ADDR_MAP  = 64'h40000000_00000000,
     parameter ADDR_MASK = 64'he0000000_e0000000,
-    parameter MHARTID_VAL = 0,
     `include "hazard3_config.vh"
     )(
     input wire clk, rst_n,
@@ -70,7 +69,8 @@ localparam hprot_instr = {
 };
 localparam HTRANS_IDLE = 2'b00;
 localparam HSIZE_WORD  = 3'd2;
-`define usel1cache
+
+//`define usel1cache
 `ifdef usel1cache
     reg [ W_ADDR-1:0] ad_pc;
     reg [ W_ADDR-1:0] aproc_haddr;
@@ -153,15 +153,38 @@ localparam HSIZE_WORD  = 3'd2;
                     state <= 1;
                 end else if(proc_write_aphase) begin
                     preparea;
+                    state <= 10;
                 end 
                 //if (proc_hexcl) begin
                     // bypass cache to make reservation
                 //end
             end else if(state == 1) begin
                 // let splitter get the command
-                if(!l1proc_hready_resp)
+                if(!l1proc_hready_resp) begin
+                    aproc_htrans <= HTRANS_IDLE;
                     state <= 2;
-            end else if(state == 1) begin
+                end
+            end else if(state == 2) begin
+                if(l1proc_hready_resp) begin
+                    aproc_hready_resp <= 1;
+                    aproc_hrdata <= l1proc_hrdata;
+                    state <= 0;
+                end
+            end else if(state == 10) begin
+                // data phase of wr
+                aproc_hwdata <= proc_hwdata;
+                state <= 11;
+            end else if(state == 11) begin
+                // let splitter get the command
+                if(!l1proc_hready_resp) begin
+                    aproc_htrans <= HTRANS_IDLE;
+                    state <= 12;
+                end
+            end else if(state == 12) begin
+                if(l1proc_hready_resp) begin
+                    aproc_hready_resp <= 1;
+                    state <= 0;
+                end
             end
         end
     end
