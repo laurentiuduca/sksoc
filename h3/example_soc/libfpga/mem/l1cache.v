@@ -35,7 +35,7 @@ module l1cache
     output wire [        3:0] l1proc_hprot,
     output wire               l1proc_hmastlock,
     output wire               l1proc_hexcl,
-    input wire                l1proc_hready_hresp,
+    input wire                l1proc_hready_resp,
     input wire                l1proc_hresp,
     input wire                l1proc_hexokay,
     output wire [ W_DATA-1:0] l1proc_hwdata,
@@ -92,7 +92,7 @@ localparam HSIZE_WORD  = 3'd2;
     assign l1d_pc           = ad_pc;
     assign l1proc_haddr     = aproc_haddr;
     assign l1proc_hwrite    = aproc_hwrite;
-    assign l1proc_htrans    = aproc_htrans;
+    assign l1proc_htrans    = (state == 2 || state == 12) && l1proc_hready_resp ? HTRANS_IDLE : aproc_htrans;
     assign l1proc_hsize     = aproc_hsize;
     assign l1proc_hburst    = aproc_hburst;
     assign l1proc_hprot     = aproc_hprot;
@@ -113,17 +113,17 @@ localparam HSIZE_WORD  = 3'd2;
 
 
     task preparea;
-    ad_pc           <= ad_pc;
-    aproc_haddr     <= aproc_haddr;
-    aproc_hwrite    <= aproc_hwrite;
-    aproc_htrans    <= aproc_htrans;
-    aproc_hsize     <= aproc_hsize;
-    aproc_hburst    <= aproc_hburst;
-    aproc_hprot     <= aproc_hprot;
-    aproc_hmastlock <= aproc_hmastlock;
-    aproc_hexcl     <= aproc_hexcl;
-    aproc_hwdata    <= aproc_hwdata;
-    aproc_hmaster   <= aproc_hmaster;
+    ad_pc           <= d_pc;
+    aproc_haddr     <= proc_haddr;
+    aproc_hwrite    <= proc_hwrite;
+    aproc_htrans    <= proc_htrans;
+    aproc_hsize     <= proc_hsize;
+    aproc_hburst    <= proc_hburst;
+    aproc_hprot     <= proc_hprot;
+    aproc_hmastlock <= proc_hmastlock;
+    aproc_hexcl     <= proc_hexcl;
+    aproc_hwdata    <= proc_hwdata;
+    aproc_hmaster   <= proc_hmaster;
     endtask
 
     reg [5:0] state;
@@ -146,12 +146,12 @@ localparam HSIZE_WORD  = 3'd2;
             aproc_hrdata <= 0;
             aproc_hmaster <= MHARTID_VAL;
         end else begin
-            aproc_hready_resp <= 0;
             if(state == 0) begin
-                if(proc_read_aphase) begin
+                aproc_hready_resp <= 0;
+                if(proc_read_aphase && l1proc_hready_resp) begin
                     preparea;
                     state <= 1;
-                end else if(proc_write_aphase) begin
+                end else if(proc_write_aphase && l1proc_hready_resp) begin
                     preparea;
                     state <= 10;
                 end 
@@ -161,30 +161,34 @@ localparam HSIZE_WORD  = 3'd2;
             end else if(state == 1) begin
                 // let splitter get the command
                 if(!l1proc_hready_resp) begin
-                    aproc_htrans <= HTRANS_IDLE;
                     state <= 2;
                 end
             end else if(state == 2) begin
                 if(l1proc_hready_resp) begin
+                    aproc_htrans <= HTRANS_IDLE;
                     aproc_hready_resp <= 1;
                     aproc_hrdata <= l1proc_hrdata;
-                    state <= 0;
+                    state <= 20;
                 end
             end else if(state == 10) begin
                 // data phase of wr
+                //aproc_hready_resp <= 1;
                 aproc_hwdata <= proc_hwdata;
                 state <= 11;
             end else if(state == 11) begin
                 // let splitter get the command
                 if(!l1proc_hready_resp) begin
-                    aproc_htrans <= HTRANS_IDLE;
                     state <= 12;
                 end
             end else if(state == 12) begin
                 if(l1proc_hready_resp) begin
+                    aproc_htrans <= HTRANS_IDLE;
                     aproc_hready_resp <= 1;
-                    state <= 0;
+                    state <= 20;
                 end
+            end else if(state == 20) begin
+                aproc_hready_resp <= 0;
+                state <= 0;
             end
         end
     end
@@ -200,7 +204,7 @@ localparam HSIZE_WORD  = 3'd2;
     assign l1proc_hprot = proc_hprot;
     assign l1proc_hmastlock = proc_hmastlock;
     assign l1proc_hexcl = proc_hexcl;
-    assign proc_hready = l1proc_hready_hresp;
+    assign proc_hready = l1proc_hready_resp;
     assign proc_hresp = l1proc_hresp;
     assign proc_hexokay = l1proc_hexokay;
     assign l1proc_hwdata = proc_hwdata;
