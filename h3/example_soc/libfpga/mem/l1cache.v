@@ -10,6 +10,7 @@ module l1cache
     `include "hazard3_config.vh"
     )(
     input wire clk, rst_n,
+    input wire [ W_DATA-1:0] mhartid_val,
     input wire [ W_ADDR-1:0] d_pc,
     input wire [ W_ADDR-1:0] proc_haddr,
     input wire               proc_hwrite,
@@ -141,10 +142,10 @@ localparam HSIZE_WORD  = 3'd2;
             aproc_hexcl <= 0;
             aproc_hready_resp <= 1;
             aproc_hresp <= 0;
-            aproc_hexokay <= 0;
+            aproc_hexokay <= 1;
             aproc_hwdata <= 0;
             aproc_hrdata <= 0;
-            aproc_hmaster <= MHARTID_VAL;
+            aproc_hmaster <= mhartid_val;
         end else begin
             if(state == 0) begin
                 aproc_hready_resp <= 0;

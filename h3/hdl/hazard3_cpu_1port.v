@@ -7,6 +7,10 @@
 // Hazard3 core, and arbitrates its instruction fetch and load/store signals
 // down to a single AHB5 master port.
 
+`ifdef HAZARD3_RVFI_STANDALONE
+`include "hazard3_rvfi_standalone_defs.vh"
+`endif
+
 `default_nettype none
 
 module hazard3_cpu_1port #(
@@ -45,6 +49,11 @@ module hazard3_cpu_1port #(
 	output wire [W_DATA-1:0]  hwdata,
 	input  wire [W_DATA-1:0]  hrdata,
 
+	// Memory ordering signals
+	output wire               fence_i_vld,
+	output wire               fence_d_vld,
+	input  wire               fence_rdy,
+
 	// Debugger run/halt control
 	input  wire               dbg_req_halt,
 	input  wire               dbg_req_halt_on_reset,
@@ -71,6 +80,10 @@ module hazard3_cpu_1port #(
 	output wire               dbg_sbus_err,
 	input  wire [W_DATA-1:0]  dbg_sbus_wdata,
 	output wire [W_DATA-1:0]  dbg_sbus_rdata,
+
+	// Identification CSR values
+	input  wire [W_DATA-1:0]  mhartid_val,
+	input  wire [3:0]         eco_version,
 
 	// Level-sensitive interrupt sources
 	input wire [NUM_IRQS-1:0] irq,       // -> mip.meip
@@ -152,6 +165,10 @@ hazard3_core #(
 	.bus_wdata_d                (core_wdata_d),
 	.bus_rdata_d                (core_rdata_d),
 
+	.fence_i_vld                (fence_i_vld),
+	.fence_d_vld                (fence_d_vld),
+	.fence_rdy                  (fence_rdy),
+
 	.dbg_req_halt               (dbg_req_halt),
 	.dbg_req_halt_on_reset      (dbg_req_halt_on_reset),
 	.dbg_req_resume             (dbg_req_resume),
@@ -166,7 +183,8 @@ hazard3_core #(
 	.dbg_instr_caught_exception (dbg_instr_caught_exception),
 	.dbg_instr_caught_ebreak    (dbg_instr_caught_ebreak),
 
-
+	.mhartid_val                (mhartid_val),
+	.eco_version                (eco_version),
 
 	.irq                        (irq),
 	.soft_irq                   (soft_irq),
@@ -275,7 +293,7 @@ always @ (*) begin
 		hsize   = core_hsize_d;
 		hwrite  = core_hwrite_d;
 		hprot   = hprot_data;
-		hmaster = MHARTID_VAL; 
+		hmaster = mhartid_val;
 	end else if (bus_gnt_i) begin
 		htrans  = HTRANS_NSEQ;
 		hexcl   = 1'b0;
@@ -283,7 +301,7 @@ always @ (*) begin
 		hsize   = core_hsize_i;
 		hwrite  = 1'b0;
 		hprot   = hprot_instr;
-		hmaster = MHARTID_VAL; 
+		hmaster = mhartid_val;
 	end else begin
 		htrans  = HTRANS_IDLE;
 		hexcl   = 1'b0;
@@ -291,7 +309,7 @@ always @ (*) begin
 		hsize   = 3'h0;
 		hwrite  = 1'b0;
 		hprot   = 4'h0;
-		hmaster = MHARTID_VAL;
+		hmaster = mhartid_val;
 	end
 end
 

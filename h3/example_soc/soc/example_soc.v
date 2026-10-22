@@ -89,9 +89,6 @@ module example_soc #(
     output wire       MAX7219_LOAD
 );
 
-    //localparam W_ADDR = 32;
-    //localparam W_DATA = 32;
-
     // ----------------------------------------------------------------------------
     // Processor debug
 
@@ -157,6 +154,26 @@ module example_soc #(
             assign tdo = 1'b0;
 
             hazard3_ecp5_jtag_dtm dtm_u (
+		.dmihardreset_req (dmihardreset_req),
+
+		.clk_dmi          (clk),
+		.rst_n_dmi        (rst_n_dmi),
+
+		.dmi_psel         (dmi_psel),
+		.dmi_penable      (dmi_penable),
+		.dmi_pwrite       (dmi_pwrite),
+		.dmi_paddr        (dmi_paddr),
+		.dmi_pwdata       (dmi_pwdata),
+		.dmi_prdata       (dmi_prdata),
+		.dmi_pready       (dmi_pready),
+		.dmi_pslverr      (dmi_pslverr)
+	);
+
+end else if (DTM_TYPE == "XILINX7") begin
+
+	assign tdo = 1'b0;
+
+	hazard3_xilinx7_jtag_dtm dtm_u (
                 .dmihardreset_req(dmihardreset_req),
 
                 .clk_dmi  (clk),
@@ -174,6 +191,7 @@ module example_soc #(
 
         end
     endgenerate
+
 
 
     localparam XLEN = 32;
@@ -279,6 +297,7 @@ module example_soc #(
     // ----------------------------------------------------------------------------
     // Processor
 
+    wire [ W_DATA-1:0] mhartid_val=0;
     wire [ W_ADDR-1:0] d_pc;
     wire [ W_ADDR-1:0] proc_haddr;
     wire               proc_hwrite;
@@ -320,13 +339,19 @@ module example_soc #(
         // instantiation of example_soc():
         .EXTENSION_A        (EXTENSION_A),
         .EXTENSION_C        (EXTENSION_C),
+	.EXTENSION_E         (EXTENSION_E),
         .EXTENSION_M        (EXTENSION_M),
         .EXTENSION_ZBA      (EXTENSION_ZBA),
         .EXTENSION_ZBB      (EXTENSION_ZBB),
         .EXTENSION_ZBC      (EXTENSION_ZBC),
-        .EXTENSION_ZBS      (EXTENSION_ZBS),
         .EXTENSION_ZBKB     (EXTENSION_ZBKB),
+	.EXTENSION_ZBKX      (EXTENSION_ZBKX),
+	.EXTENSION_ZBS       (EXTENSION_ZBS),
+	.EXTENSION_ZCB       (EXTENSION_ZCB),
+	.EXTENSION_ZCLSD     (EXTENSION_ZCLSD),
+	.EXTENSION_ZCMP      (EXTENSION_ZCMP),
         .EXTENSION_ZIFENCEI (EXTENSION_ZIFENCEI),
+	.EXTENSION_ZILSD     (EXTENSION_ZILSD),
         .EXTENSION_XH3BEXTM (EXTENSION_XH3BEXTM),
         .EXTENSION_XH3IRQ   (EXTENSION_XH3IRQ),
         .EXTENSION_XH3PMPM  (EXTENSION_XH3PMPM),
@@ -341,8 +366,6 @@ module example_soc #(
         .MVENDORID_VAL      (MVENDORID_VAL),
         .BREAKPOINT_TRIGGERS(BREAKPOINT_TRIGGERS),
         .IRQ_PRIORITY_BITS  (IRQ_PRIORITY_BITS),
-        .MIMPID_VAL         (MIMPID_VAL),
-        .MHARTID_VAL        (MHARTID_VAL),
         .REDUCED_BYPASS     (REDUCED_BYPASS),
         .MULDIV_UNROLL      (MULDIV_UNROLL),
         .MUL_FAST           (MUL_FAST),
@@ -356,6 +379,7 @@ module example_soc #(
         .clk_always_on(clk),
         .rst_n        (rst_n),
 
+        .mhartid_val        (mhartid_val),
         .d_pc  (d_pc),
 
         .pwrup_req  (pwrup_req),
@@ -371,13 +395,17 @@ module example_soc #(
         .hburst   (proc_hburst),
         .hprot    (proc_hprot),
         .hmastlock(proc_hmastlock),
+	.hmaster                    (proc_hmaster),
         .hexcl    (proc_hexcl),
-        .hready   (proc_hready),       // input
+	.hready   (proc_hready),
         .hresp    (proc_hresp),
         .hexokay  (proc_hexokay),
         .hwdata   (proc_hwdata),
         .hrdata   (proc_hrdata),
-        .hmaster  (proc_hmaster),
+
+	.fence_i_vld                (/* unused */),
+	.fence_d_vld                (/* unused */),
+	.fence_rdy                  (1'b1),
 
         .dbg_req_halt         (hart_req_halt),
         .dbg_req_halt_on_reset(hart_req_halt_on_reset),
@@ -404,11 +432,14 @@ module example_soc #(
         .dbg_sbus_wdata(sbus_wdata),
         .dbg_sbus_rdata(sbus_rdata),
 
+	.eco_version                (4'd0),
+
         // Level-sensitive interrupt sources
         .irq        (irq),          // -> mip.meip
         .soft_irq   (soft_irq),     // -> mip.msip
         .timer_irq  (timer_irq)    // -> mip.mtip	
     );
+
 
     // ----------------------------------------------------------------------------
     // Bus fabric
@@ -477,10 +508,11 @@ module example_soc #(
     l1cache #(
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
-        .ADDR_MASK(`ADDR_MASK),
-        .MHARTID_VAL(0)) l1cache (
+        .ADDR_MASK(`ADDR_MASK)
+        ) l1cache (
         .clk          (clk),
         .rst_n        (rst_n),
+      .mhartid_val    (mhartid_val),
       .d_pc(d_pc),                  .l1d_pc(l1d_pc),
       .proc_haddr(proc_haddr),      .l1proc_haddr(l1proc_haddr),
       .proc_hwrite(proc_hwrite),    .l1proc_hwrite(l1proc_hwrite),

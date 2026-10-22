@@ -4,6 +4,7 @@
 \*****************************************************************************/
 
 `define dbgstart
+// Hazard3 CPU configuration parameters
 
 // To configure Hazard3 you can either edit this file, or set parameters on
 // your top-level instantiation, it's up to you. These parameters are all
@@ -22,7 +23,7 @@ parameter N_HARTS = 2,
 // Reset state configuration
 
 // RESET_VECTOR: Address of first instruction executed.
-parameter RESET_VECTOR        = 32'h00000040,
+parameter RESET_VECTOR        = 32'h00000000,
 
 // MTVEC_INIT: Initial value of trap vector base. Bits clear in MTVEC_WMASK
 // will never change from this initial value. Bits set in MTVEC_WMASK can be
@@ -44,6 +45,10 @@ parameter EXTENSION_A         = 1,
 // EXTENSION_C: Support for compressed (variable-width) instructions
 parameter EXTENSION_C         = 1,
 
+// EXTENSION_E: Implement the RV32E base extension rather than RV32I. This
+// reduces the number of integer registers from 31 to 15.
+parameter EXTENSION_E         = 0,
+
 // EXTENSION_M: Support for hardware multiply/divide/modulo instructions
 parameter EXTENSION_M         = 1,
 
@@ -56,17 +61,24 @@ parameter EXTENSION_ZBB       = 0,
 // EXTENSION_ZBC: Support for Zbc carry-less multiplication instructions
 parameter EXTENSION_ZBC       = 0,
 
-// EXTENSION_ZBS: Support for Zbs single-bit manipulation instructions
-parameter EXTENSION_ZBS       = 0,
-
 // EXTENSION_ZBKB: Support for Zbkb basic bit manipulation for cryptography
 // Requires: Zbb. (This flag enables instructions in Zbkb which aren't in Zbb.)
 parameter EXTENSION_ZBKB      = 0,
+
+// EXTENSION_ZBKX: support for Zbkx crossbar permutation instructions
+parameter EXTENSION_ZBKX      = 0,
+
+// EXTENSION_ZBS: Support for Zbs single-bit manipulation instructions
+parameter EXTENSION_ZBS       = 0,
 
 // EXTENSION_ZCB: Support for Zcb basic additional compressed instructions
 // Requires: EXTENSION_C. (Some Zcb instructions also require Zbb or M.)
 // Note Zca is equivalent to C, as we do not support the F extension.
 parameter EXTENSION_ZCB       = 0,
+
+// EXTENSION_ZCLSD: Support for Zclsd compressed load/store pair instructions
+// Requires: EXTENSION_ZILSD, EXTENSION_C.
+parameter EXTENSION_ZCLSD     = 0,
 
 // EXTENSION_ZCMP: Support for Zcmp push/pop instructions.
 // Requires: EXTENSION_C.
@@ -75,6 +87,9 @@ parameter EXTENSION_ZCMP      = 0,
 // EXTENSION_ZIFENCEI: Support for the fence.i instruction
 // Optional, since a plain branch/jump will also flush the prefetch queue.
 parameter EXTENSION_ZIFENCEI  = 0,
+
+// EXTENSION_ZILSD: Support for Zilsd load/store pair instructions
+parameter EXTENSION_ZILSD     = 0,
 
 // ----------------------------------------------------------------------------
 // Custom RISC-V extensions
@@ -128,6 +143,15 @@ parameter PMP_REGIONS         = 0,
 // read-only-0 when PMPCFG.A is OFF, and read-only-1 when PMPCFG.A is NAPOT.
 parameter PMP_GRAIN           = 0,
 
+// PMP_MATCH_NAPOT: Enable PMP support for the NAPOT (naturally-aligned
+// power-of-two) and NA4 (naturally-aligned four-byte) matching modes. When
+// disabled, attempting to select these modes will set the PMP region to OFF.
+parameter PMP_MATCH_NAPOT     = 1,
+
+// PMP_MATCH_TOR: Enable PMP support for the TOR (top-of-range) matching mode.
+// When disabled, attempting to select this mode will set the region to OFF.
+parameter PMP_MATCH_TOR       = 0,
+
 // PMPADDR_HARDWIRED: If a bit is 1, the corresponding region's pmpaddr and
 // pmpcfg registers are read-only. PMP_GRAIN is ignored on hardwired regions.
 // It's recommended to make hardwired regions the highest-numbered, so they
@@ -157,7 +181,7 @@ parameter BREAKPOINT_TRIGGERS = 0,
 // NUM_IRQS: Number of external IRQs. Minimum 1, maximum 512. Note that if
 // EXTENSION_XH3IRQ (Hazard3 interrupt controller) is disabled then multiple
 // external interrupts are simply OR'd into mip.meip.
-parameter NUM_IRQS            = 32,
+parameter NUM_IRQS            = 1,
 
 // IRQ_PRIORITY_BITS: Number of priority bits implemented for each interrupt
 // in meipra, if EXTENSION_XH3IRQ is enabled. The number of distinct levels
@@ -177,12 +201,6 @@ parameter IRQ_INPUT_BYPASS    = {(NUM_IRQS > 0 ? NUM_IRQS : 1){1'b0}},
 // [...] this is a non-commercial implementation" (RISC-V spec).
 // 31:7 is continuation code count, 6:0 is ID. Parity bit is not stored.
 parameter MVENDORID_VAL       = 32'h0,
-
-// Implementation ID for this specific version of Hazard3. Git hash is perfect.
-parameter MIMPID_VAL          = 32'h0,
-
-// Each core has a single hardware thread. Multiple cores should have unique IDs.
-parameter MHARTID_VAL         = 32'h0, // [0..N_HARTS] are reserved for cpus and jtag
 
 // Pointer to configuration structure blob, or all-zeroes. Must be at least
 // 4-byte-aligned.

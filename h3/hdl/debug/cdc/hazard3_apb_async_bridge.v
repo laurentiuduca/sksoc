@@ -131,7 +131,7 @@ always @ (posedge clk_src or negedge rst_n_src) begin
         // paddr, pwdata and pwrite are all valid during the setup phase, and
         // APB defines the setup phase to always last one cycle and proceed
         // to access phase. So, we can ignore penable, and pready is ignored.
-        if (src_psel) begin
+        if (src_psel && !src_penable) begin
             src_pready_r <= 1'b0;
             src_req <= 1'b1;
             src_waiting_for_downstream <= 1'b1;
@@ -169,6 +169,7 @@ always @ (posedge clk_dst or negedge rst_n_dst) begin
     if (!rst_n_dst) begin
         dst_psel_r <= 1'b0;
         dst_penable_r <= 1'b0;
+        dst_paddr_pwdata_pwrite <= {W_ADDR + W_DATA + 1{1'b0}};
     end else if (dst_req && !dst_ack) begin
         dst_psel_r <= 1'b1;
         // Note this assignment is cross-domain. The src register has been
