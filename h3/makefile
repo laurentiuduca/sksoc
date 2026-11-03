@@ -51,7 +51,7 @@ tb.out:
 	$(CLANGXX) -O3 -std=c++14 $(addprefix -D,$(CDEFINES) -I $(shell yosys-config --datdir)/include/backends/cxxrtl/runtime -I $(BUILD_DIR) main.cpp -o tb.out
 
 clean:
-	rm -f simple.vvp *.vcd *.out result.txt simv ucli.key vcs-result.txt log.txt diff.txt final_mem.txt log.txt.gz trace.txt
+	rm -f simple.vvp *.vcd *.out result.txt simv ucli.key vcs-result.txt log.txt diff.txt final_mem.txt log.txt.gz trace.txt n.txt
 	rm -rf simv.daidir csrc
 	rm -rf obj_dir example_soc/libfpga/sd/*o example_soc/libfpga/sd/*cf *edf *json yosys*log *.il
 	rm -rf synth.vg impl serialout.txt ftn.txt *out stip*.txt
