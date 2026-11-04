@@ -133,6 +133,8 @@ wire              core_hwrite_d;
 wire [W_DATA-1:0] core_wdata_d;
 wire [W_DATA-1:0] core_rdata_d;
 
+wire [W_ADDR-1:0]    d_pc;
+
 hazard3_core #(
 `include "hazard3_config_inst.vh"
 ) core (
@@ -190,6 +192,8 @@ hazard3_core #(
 	.dbg_instr_data_rdy         (dbg_instr_data_rdy),
 	.dbg_instr_caught_exception (dbg_instr_caught_exception),
 	.dbg_instr_caught_ebreak    (dbg_instr_caught_ebreak),
+
+    .d_pc (d_pc),
 
 	.mhartid_val                (mhartid_val),
 	.eco_version                (eco_version),

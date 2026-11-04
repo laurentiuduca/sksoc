@@ -3,6 +3,8 @@
 
 `default_nettype none
 
+`include "define.vh"
+
 module hazard3_2cpu #(
 	//parameter W_ADDR = 32, // do not modify
 	//parameter W_DATA = 32  // do not modify
@@ -36,6 +38,14 @@ module hazard3_2cpu #(
 	output wire [W_DATA-1:0]  i_hwdata,
 	input  wire [W_DATA-1:0]  i_hrdata,
 
+        // Memory ordering signals
+        output wire               i_fence_i_vld,
+        output wire               i_fence_d_vld,
+        input  wire               i_fence_rdy,
+        // Identification CSR values
+        input  wire [W_DATA-1:0]  i_mhartid_val,
+        input  wire [3:0]         i_eco_version,    
+
 	// Core 1 bus (named D for consistency with 1-core 2-port tb)
 	output wire [W_ADDR-1:0]  d_d_pc,
 	output wire [W_ADDR-1:0]  d_haddr,
@@ -52,6 +62,14 @@ module hazard3_2cpu #(
 	input  wire               d_hexokay,
 	output wire [W_DATA-1:0]  d_hwdata,
 	input  wire [W_DATA-1:0]  d_hrdata,
+
+        // Memory ordering signals
+        output wire               d_fence_i_vld,
+        output wire               d_fence_d_vld,
+        input  wire               d_fence_rdy,
+        // Identification CSR values
+        input  wire [W_DATA-1:0]  d_mhartid_val,
+        input  wire [3:0]         d_eco_version,
 
 	// Level-sensitive interrupt sources
 	input wire [NUM_IRQS-1:0] irq,       // -> mip.meip
@@ -229,7 +247,6 @@ wire unblock_out_cpu0;
 wire unblock_out_cpu1;
 
 hazard3_cpu_1port #(
-	.MHARTID_VAL (32'h0000_0000),
 `define HAZARD3_CONFIG_INST_NO_MHARTID
 `include "hazard3_config_inst.vh"
 ) cpu0 (
@@ -237,7 +254,7 @@ hazard3_cpu_1port #(
 	.clk_always_on              (clk),
 	.rst_n                      (rst_n_cpu0),
 
-        .d_pc(i_d_pc),
+    .d_pc(i_d_pc),
 
 	.pwrup_req                  (pwrup_req_cpu0),
 	.pwrup_ack                  (pwrup_req_cpu0),
@@ -259,6 +276,12 @@ hazard3_cpu_1port #(
 	.hexokay                    (i_hexokay),
 	.hwdata                     (i_hwdata),
 	.hrdata                     (i_hrdata),
+
+    .fence_i_vld                (i_fence_i_vld),
+    .fence_d_vld                (i_fence_d_vld),
+    .fence_rdy                  (i_fence_rdy),
+    .mhartid_val                (i_mhartid_val),
+    .eco_version                (i_eco_version),  
 
 	.dbg_req_halt               (hart_req_halt              [0]),
 	.dbg_req_halt_on_reset      (hart_req_halt_on_reset     [0]),
@@ -292,7 +315,6 @@ hazard3_cpu_1port #(
 );
 
 hazard3_cpu_1port #(
-	.MHARTID_VAL (32'h0000_0001),
 `define HAZARD3_CONFIG_INST_NO_MHARTID
 `include "hazard3_config_inst.vh"
 ) cpu1 (
@@ -322,6 +344,12 @@ hazard3_cpu_1port #(
 	.hexokay                    (d_hexokay),
 	.hwdata                     (d_hwdata),
 	.hrdata                     (d_hrdata),
+
+    .fence_i_vld                (d_fence_i_vld),
+    .fence_d_vld                (d_fence_d_vld),
+    .fence_rdy                  (d_fence_rdy),
+    .mhartid_val                (d_mhartid_val),
+    .eco_version                (d_eco_version),
 
 	.dbg_req_halt               (hart_req_halt              [1]),
 	.dbg_req_halt_on_reset      (hart_req_halt_on_reset     [1]),

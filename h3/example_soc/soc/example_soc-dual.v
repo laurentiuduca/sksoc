@@ -116,6 +116,7 @@ module example_soc #(
     wire i_hexokay, d_hexokay;  // exclusive access signaling
     wire [W_DATA-1:0] i_hwdata, d_hwdata;
     wire [W_DATA-1:0] i_hrdata, d_hrdata;
+    wire [W_DATA-1:0] i_mhartid_val=0, d_mhartid_val=1;
     // The address phase of an
     // Exclusive Transfer must not be issued while the data phase of an earlier Exclusive Transfer is in progress. This
     // applies whether the transfers are part of the same Exclusive access sequence or not.
@@ -148,8 +149,12 @@ module example_soc #(
         .EXTENSION_ZBA      (EXTENSION_ZBA),
         .EXTENSION_ZBB      (EXTENSION_ZBB),
         .EXTENSION_ZBC      (EXTENSION_ZBC),
-        .EXTENSION_ZBS      (EXTENSION_ZBS),
         .EXTENSION_ZBKB     (EXTENSION_ZBKB),
+        .EXTENSION_ZBKX     (EXTENSION_ZBKX),
+        .EXTENSION_ZBS      (EXTENSION_ZBS),
+        .EXTENSION_ZCB      (EXTENSION_ZCB),
+        .EXTENSION_ZCLSD    (EXTENSION_ZCLSD),
+        .EXTENSION_ZCMP     (EXTENSION_ZCMP),
         .EXTENSION_ZIFENCEI (EXTENSION_ZIFENCEI),
         .EXTENSION_XH3BEXTM (EXTENSION_XH3BEXTM),
         .EXTENSION_XH3IRQ   (EXTENSION_XH3IRQ),
@@ -165,8 +170,6 @@ module example_soc #(
         .MVENDORID_VAL      (MVENDORID_VAL),
         .BREAKPOINT_TRIGGERS(BREAKPOINT_TRIGGERS),
         .IRQ_PRIORITY_BITS  (IRQ_PRIORITY_BITS),
-        .MIMPID_VAL         (MIMPID_VAL),
-        .MHARTID_VAL        (MHARTID_VAL),
         .REDUCED_BYPASS     (REDUCED_BYPASS),
         .MULDIV_UNROLL      (MULDIV_UNROLL),
         .MUL_FAST           (MUL_FAST),
@@ -187,6 +190,7 @@ module example_soc #(
         .tdo(tdo),
 
         // Core 0 bus (named I for consistency with 1-core 2-port tb)
+        .i_mhartid_val        (i_mhartid_val),
         .i_d_pc(i_d_pc),
         .i_haddr(i_haddr),
         .i_hwrite(i_hwrite),
@@ -203,9 +207,13 @@ module example_soc #(
         .i_hexcl(i_hexcl),
         .i_hmaster(i_hmaster),
         .i_hexokay(i_hexokay),
-
+        .i_fence_i_vld                (/* unused */),
+        .i_fence_d_vld                (/* unused */),
+        .i_fence_rdy                  (1'b1),
+        .i_eco_version                (4'd0),
 
         // Core 1 bus (named D for consistency with 1-core 2-port tb)
+        .d_mhartid_val        (d_mhartid_val),
         .d_d_pc(d_d_pc),
         .d_haddr(d_haddr),
         .d_hwrite(d_hwrite),
@@ -222,6 +230,10 @@ module example_soc #(
         .d_hexcl(d_hexcl),
         .d_hmaster(d_hmaster),
         .d_hexokay(d_hexokay),
+        .d_fence_i_vld                (/* unused */),
+        .d_fence_d_vld                (/* unused */),
+        .d_fence_rdy                  (1'b1),
+        .d_eco_version                (4'd0),
 
         // Level-sensitive interrupt sources
         .irq        (irq),          // -> mip.meip
