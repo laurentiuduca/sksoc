@@ -284,7 +284,7 @@ module ahb_sync_sram #(
     // AHBL hookup
 
     assign ahbls_hresp = 1'b0;
-    assign ahbls_hready_resp = (state == 0 && ostate != 0) && !w_dram_busy;
+    assign ahbls_hready_resp = (state == 0) && !w_dram_busy;
     assign ahbls_hrdata = r_ahbls_hrdata;
 
     assign ahbls_hexokay = r_ahbls_hexokay;
