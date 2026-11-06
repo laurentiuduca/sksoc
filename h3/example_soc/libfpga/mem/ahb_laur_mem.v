@@ -107,8 +107,8 @@ module ahb_sync_sram #(
     wire [3:0] wmask = wmask_noshift << ahbls_haddr[1:0];
 
     // Decode AHBL controls
-    wire ahb_read_aphase = ahbls_htrans[1] && ahbls_hready && !ahbls_hwrite;
-    wire ahb_write_aphase = ahbls_htrans[1] && ahbls_hready && ahbls_hwrite;
+    wire ahb_read_aphase = ahbls_htrans[1] && ahbls_hready && !ahbls_hwrite; // && (state == 0) && (ostate != 10);
+    wire ahb_write_aphase = ahbls_htrans[1] && ahbls_hready && ahbls_hwrite; // && (state == 0) && (ostate != 21 && ostate != 31);
 
     reg [5:0] state, ostate;
     reg [W_ADDR-1:0] r_ahbls_haddr;
@@ -119,7 +119,7 @@ module ahb_sync_sram #(
 
 
     // RAM 
-    reg r_dram_le, r_dram_wr;
+    reg r_dram_wr;
     wire sdram_fail;
     wire w_late_refresh;
     wire [7:0] w_mem_state;
@@ -139,9 +139,11 @@ module ahb_sync_sram #(
     reg [W_ADDR-1:0] r_excl_addr[0:N_HARTS-1];
     reg r_excl_addr_valid[0:N_HARTS-1];
     reg exclwrdisplay;
-    task check_new_req;
-        if (ahb_read_aphase) begin
-            state  <= 0;
+    reg [W_DATA-1:0] r_hmaster;
+
+    task start_read_aphase;
+            r_hmaster <= ahbls_hmaster;
+            state  <= 10;
             //r_ahbls_haddr <= ahbls_haddr;
             r_mask <= wmask;
             // exclusive transfers
@@ -150,8 +152,10 @@ module ahb_sync_sram #(
                 r_excl_addr[ahbls_hmaster] <= ahbls_haddr;
                 r_excl_addr_valid[ahbls_hmaster] <= 1;
             end
-        end else if (ahb_write_aphase) begin
-            if (ahbls_hexcl) begin
+    endtask
+    task start_write_aphase;
+            r_hmaster <= ahbls_hmaster;
+             if (ahbls_hexcl) begin
                 if (r_excl_addr[ahbls_hmaster] == ahbls_haddr && r_excl_addr_valid[ahbls_hmaster]) begin
                     r_ahbls_hexokay <= 1;
                     for (i = 0; i < N_HARTS; i = i + 1)
@@ -179,17 +183,25 @@ module ahb_sync_sram #(
                 r_mask <= wmask;
                 r_ahbls_hwdata <= ahbls_hwdata;  // this must also be in state 22
             end
+    endtask
+
+    task check_new_req;
+        if (ahb_read_aphase) begin
+            start_read_aphase;
+        end else if (ahb_write_aphase) begin
+             start_write_aphase;
         end else begin
             state <= 0;
         end
     endtask
+
     task check_debug;
 `ifdef SIM_MODE
 `ifdef dbgstart
         if ((ahb_read_aphase || ahb_write_aphase) && k < 10) begin
             $display(
-                "d_pc=%x h=%1x ahb_read_aphase=%x || ahb_write_aphase=%x state=%d ahbls_haddr=%x time %8d",
-                d_pc, ahbls_hmaster, ahb_read_aphase, ahb_write_aphase, state, ahbls_haddr, $time);
+                "d_pc=%x h=%1x ahb_read_aphase=%x || ahb_write_aphase=%x state=%d ahbls_haddr=%x w_dram_le=%1b time %8d",
+                d_pc, ahbls_hmaster, ahb_read_aphase, ahb_write_aphase, state, ahbls_haddr, w_dram_le, $time);
             k <= k + 1;
         end
 `endif
@@ -200,9 +212,9 @@ module ahb_sync_sram #(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             state <= 0;
-            ostate <= 0;
+            ostate <= ~0;
+            r_hmaster <= 0;
             r_mask <= 0;
-            r_dram_le <= 0;
             r_dram_wr <= 0;
             r_ahbls_hrdata <= 0;
             r_ahbls_hwdata <= 0;
@@ -212,9 +224,16 @@ module ahb_sync_sram #(
             for (i = 0; i < N_HARTS; i = i + 1) r_excl_addr_valid[i] <= 0;
             exclwrdisplay <= 0;
         end else begin
+            ostate <= state;
             if (state == 0) begin
                 check_new_req;
                 check_debug;
+            end else if (state == 10) begin
+                if (!w_dram_busy) begin
+                    r_ahbls_hrdata = w_dram_odata;
+                    check_debug;
+                    state <= 0;
+                end
             end else if (state == 20) begin
                 if (w_dram_busy) begin
                     state <= 21;
@@ -223,7 +242,7 @@ module ahb_sync_sram #(
             end else if (state == 21) begin
                 if (!w_dram_busy) begin
                     check_debug;
-                    check_new_req;
+                    state <= 0;
                 end
             end else if (state == 22) begin
                 r_ahbls_hwdata <= ahbls_hwdata;
@@ -231,8 +250,8 @@ module ahb_sync_sram #(
                 state <= 20;
                 if (ahb_read_aphase || ahb_write_aphase) begin
 `ifdef SIM_MODE
-                    $display("ahb_read_aphase or write aphase in write dphase");
-                    $finish;
+                    //$display("ahb_read_aphase or write aphase in write dphase");
+                    //$finish;
 `endif
                 end
 `ifdef dbghexcl
@@ -248,7 +267,7 @@ module ahb_sync_sram #(
                 state <= 31;
             end else if (state == 31) begin
                 // excl write fail
-                check_new_req;
+                state <= 0;
             end
 
             if (ahbls_htrans == 2'b01 || ahbls_htrans == 2'b11) begin
@@ -265,9 +284,8 @@ module ahb_sync_sram #(
     // AHBL hookup
 
     assign ahbls_hresp = 1'b0;
-    assign ahbls_hready_resp = (state == 0) ? !w_dram_busy : 
-			   (state == 21) ? !w_dram_busy : (state == 31);
-    assign ahbls_hrdata = w_dram_odata;
+    assign ahbls_hready_resp = (state == 0) && !w_dram_busy;
+    assign ahbls_hrdata = r_ahbls_hrdata;
 
     assign ahbls_hexokay = r_ahbls_hexokay;
     // ----------------------------------------------------------------------------

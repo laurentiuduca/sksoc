@@ -155,7 +155,9 @@ module cache_ctrl #(
                 state <= 1;
                 r_dram_addr <= i_addr;
                 r_dram_mask <= i_mask;
+                //$write("cache read addr %8x\n", i_addr);
             end else if (i_wr_en) begin
+                //$write("cache write addr %8x\n", i_addr);
                 state <= 10;
                 if(i_mask == 4'hf) begin
                     c_we <= 1;

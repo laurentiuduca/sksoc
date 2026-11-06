@@ -302,6 +302,8 @@ always @ (*) begin
 		hwrite  = 1'b0;
 		hprot   = hprot_instr;
 		hmaster = mhartid_val;
+        //if(d_pc < 32'h10)
+            //$display("core_haddr_d=%x", core_haddr_d);
 	end else begin
 		htrans  = HTRANS_IDLE;
 		hexcl   = 1'b0;

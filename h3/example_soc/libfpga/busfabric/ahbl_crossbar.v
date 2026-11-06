@@ -42,6 +42,7 @@ module ahbl_crossbar #(
     input wire rst_n,
 
     // From masters; function as slave ports
+    input wire  [       N_MASTERS-1:0] src_hready,
     output wire [       N_MASTERS-1:0] src_hready_resp,
     output wire [       N_MASTERS-1:0] src_hresp,
     input  wire [N_MASTERS*W_ADDR-1:0] src_haddr,
@@ -190,7 +191,7 @@ module ahbl_crossbar #(
                 .clk(clk),
                 .rst_n(rst_n),
                 .src_d_pc(src_d_pc[W_ADDR*i+:W_ADDR]),
-                .src_hready(src_hready_resp[i]),  // HREADY_RESP tied -> HREADY at master level
+                .src_hready(src_hready[i]),  // HREADY_RESP tied -> HREADY at master level
                 .src_hready_resp(src_hready_resp[i]),  // this goes to the master
                 .src_hresp(src_hresp[i]),
                 .src_haddr(src_haddr[W_ADDR*i+:W_ADDR]),

@@ -307,7 +307,7 @@ end else if (DTM_TYPE == "XILINX7") begin
     wire [        3:0] proc_hprot;
     wire               proc_hmastlock;
     wire               proc_hexcl;
-    wire               proc_hready;
+    wire               proc_hready, hready;
     wire               proc_hresp;
     wire               proc_hexokay;
     wire [ W_DATA-1:0] proc_hwdata;
@@ -522,6 +522,7 @@ end else if (DTM_TYPE == "XILINX7") begin
       .proc_hprot(proc_hprot),      .l1proc_hprot(l1proc_hprot),
       .proc_hmastlock(proc_hmastlock),.l1proc_hmastlock(l1proc_hmastlock),
       .proc_hexcl(proc_hexcl),      .l1proc_hexcl(l1proc_hexcl),
+      .hready(hready),
       .proc_hready(proc_hready),    .l1proc_hready_resp(l1proc_hready_resp),
       .proc_hresp(proc_hresp),      .l1proc_hresp(l1proc_hresp),
       .proc_hexokay(proc_hexokay),  .l1proc_hexokay(l1proc_hexokay),
@@ -559,7 +560,7 @@ end else if (DTM_TYPE == "XILINX7") begin
         .rst_n(rst_n),
 
         .src_hready_resp(l1proc_hready_resp),
-        .src_hready     (l1proc_hready_resp),
+        .src_hready     (hready),
         .src_hresp      (l1proc_hresp),
         .src_haddr      (l1proc_haddr),
         .src_hwrite     (l1proc_hwrite),
@@ -612,7 +613,7 @@ end else if (DTM_TYPE == "XILINX7") begin
 
         // From masters; function as slave ports
         .src_hready_resp (  l1proc_hready_resp),
-        //.src_hready    (  l1proc_hready_resp),
+        .src_hready      (  hready),
         .src_hresp       (  l1proc_hresp),
         .src_haddr       (  l1proc_haddr),
         .src_hwrite      (  l1proc_hwrite),

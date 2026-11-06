@@ -27,6 +27,7 @@ module l1cache
     output wire [ W_DATA-1:0] proc_hrdata,
     input wire [ W_DATA-1:0] proc_hmaster,
 
+    output wire               hready,
     output wire [ W_ADDR-1:0] l1d_pc,
     output wire [ W_ADDR-1:0] l1proc_haddr,
     output wire               l1proc_hwrite,
@@ -73,6 +74,7 @@ localparam HSIZE_WORD  = 3'd2;
 
 //`define usel1cache
 `ifdef usel1cache
+    reg               rhready;
     reg [ W_ADDR-1:0] ad_pc;
     reg [ W_ADDR-1:0] aproc_haddr;
     reg               aproc_hwrite;
@@ -90,10 +92,11 @@ localparam HSIZE_WORD  = 3'd2;
     reg [ W_DATA-1:0] aproc_hmaster;
 
     wire io = proc_htrans[1] && ((proc_haddr[31:28] & ADDR_MASK[63:60]) == ADDR_MAP[63:60]);
+    assign hready           = rhready;
     assign l1d_pc           = ad_pc;
     assign l1proc_haddr     = aproc_haddr;
     assign l1proc_hwrite    = aproc_hwrite;
-    assign l1proc_htrans    = (state == 2 || state == 12) && l1proc_hready_resp ? HTRANS_IDLE : aproc_htrans;
+    assign l1proc_htrans    = aproc_htrans; //(state == 2 || state == 12) && l1proc_hready_resp ? HTRANS_IDLE : aproc_htrans;
     assign l1proc_hsize     = aproc_hsize;
     assign l1proc_hburst    = aproc_hburst;
     assign l1proc_hprot     = aproc_hprot;
@@ -114,6 +117,7 @@ localparam HSIZE_WORD  = 3'd2;
 
 
     task preparea;
+    rhready <= 1;
     ad_pc           <= d_pc;
     aproc_haddr     <= proc_haddr;
     aproc_hwrite    <= proc_hwrite;
@@ -131,6 +135,7 @@ localparam HSIZE_WORD  = 3'd2;
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             state <= 0;
+            rhready <= 0;
             ad_pc <= 0;
             aproc_haddr <= 0;
             aproc_hwrite <= 0;
@@ -140,7 +145,7 @@ localparam HSIZE_WORD  = 3'd2;
             aproc_hprot <= hprot_instr;
             aproc_hmastlock <= 0;
             aproc_hexcl <= 0;
-            aproc_hready_resp <= 1;
+            aproc_hready_resp <= 0;
             aproc_hresp <= 0;
             aproc_hexokay <= 1;
             aproc_hwdata <= 0;
@@ -162,7 +167,8 @@ localparam HSIZE_WORD  = 3'd2;
             end else if(state == 1) begin
                 // let splitter get the command
                 if(!l1proc_hready_resp) begin
-                    state <= 2;
+                     rhready <= 0;
+                     state <= 2;
                 end
             end else if(state == 2) begin
                 if(l1proc_hready_resp) begin
@@ -179,6 +185,7 @@ localparam HSIZE_WORD  = 3'd2;
             end else if(state == 11) begin
                 // let splitter get the command
                 if(!l1proc_hready_resp) begin
+                    rhready <= 0;
                     state <= 12;
                 end
             end else if(state == 12) begin
@@ -205,6 +212,7 @@ localparam HSIZE_WORD  = 3'd2;
     assign l1proc_hprot = proc_hprot;
     assign l1proc_hmastlock = proc_hmastlock;
     assign l1proc_hexcl = proc_hexcl;
+    assign hready = l1proc_hready_resp;
     assign proc_hready = l1proc_hready_resp;
     assign proc_hresp = l1proc_hresp;
     assign proc_hexokay = l1proc_hexokay;
