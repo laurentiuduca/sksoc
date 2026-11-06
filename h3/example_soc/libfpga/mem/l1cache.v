@@ -72,7 +72,7 @@ localparam hprot_instr = {
 localparam HTRANS_IDLE = 2'b00;
 localparam HSIZE_WORD  = 3'd2;
 
-//`define usel1cache
+`define usel1cache
 `ifdef usel1cache
     reg               rhready;
     reg [ W_ADDR-1:0] ad_pc;
@@ -135,7 +135,7 @@ localparam HSIZE_WORD  = 3'd2;
     always @(posedge clk or negedge rst_n) begin
         if(!rst_n) begin
             state <= 0;
-            rhready <= 0;
+            rhready <= 1;
             ad_pc <= 0;
             aproc_haddr <= 0;
             aproc_hwrite <= 0;
@@ -175,7 +175,7 @@ localparam HSIZE_WORD  = 3'd2;
                     aproc_htrans <= HTRANS_IDLE;
                     aproc_hready_resp <= 1;
                     aproc_hrdata <= l1proc_hrdata;
-                    state <= 20;
+                    state <= 0;
                 end
             end else if(state == 10) begin
                 // data phase of wr
@@ -192,7 +192,7 @@ localparam HSIZE_WORD  = 3'd2;
                 if(l1proc_hready_resp) begin
                     aproc_htrans <= HTRANS_IDLE;
                     aproc_hready_resp <= 1;
-                    state <= 20;
+                    state <= 0;
                 end
             end else if(state == 20) begin
                 aproc_hready_resp <= 0;
