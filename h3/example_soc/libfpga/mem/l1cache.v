@@ -166,10 +166,10 @@ localparam HSIZE_WORD  = 3'd2;
                 //end
             end else if(state == 1) begin
                 // let splitter get the command
-                if(!l1proc_hready_resp) begin
+                //if(!l1proc_hready_resp) begin
                      rhready <= 0;
                      state <= 2;
-                end
+                //end
             end else if(state == 2) begin
                 if(l1proc_hready_resp) begin
                     aproc_htrans <= HTRANS_IDLE;

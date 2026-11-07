@@ -229,12 +229,6 @@ module ahb_sync_sram #(
                 r_ahbls_hwdata <= ahbls_hwdata;
                 r_dram_wr <= 1;
                 state <= 20;
-                if (ahb_read_aphase || ahb_write_aphase) begin
-`ifdef SIM_MODE
-                    $display("ahb_read_aphase or write aphase in write dphase");
-                    $finish;
-`endif
-                end
 `ifdef dbghexcl
                 if (exclwrdisplay) begin
                     exclwrdisplay <= 0;
