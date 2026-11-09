@@ -395,7 +395,7 @@ end else if (DTM_TYPE == "XILINX7") begin
         .hburst   (proc_hburst),
         .hprot    (proc_hprot),
         .hmastlock(proc_hmastlock),
-    	.hmaster                    (proc_hmaster),
+    	.hmaster  (proc_hmaster),
         .hexcl    (proc_hexcl),
 	    .hready   (proc_hready),
         .hresp    (proc_hresp),

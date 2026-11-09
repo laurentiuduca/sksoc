@@ -244,7 +244,7 @@ module example_soc #(
     );
     // ----------------------------------------------------------------------------
     // l1 cache
-    wire i_hready, d_hready;
+    wire l1i_hready, l1d_hready;
     wire [ W_ADDR-1:0] l1i_d_pc;
     wire [ W_ADDR-1:0] l1i_haddr;
     wire               l1i_hwrite;
@@ -280,7 +280,7 @@ module example_soc #(
       .proc_hprot(i_hprot),             .l1proc_hprot(l1i_hprot),
       .proc_hmastlock(i_hmastlock),     .l1proc_hmastlock(l1i_hmastlock),
       .proc_hexcl(i_hexcl),             .l1proc_hexcl(l1i_hexcl),
-      .hready(i_hready),
+      .hready(l1i_hready),
       .proc_hready(i_proc_hready),      .l1proc_hready_resp(l1i_hready_resp),
       .proc_hresp(i_hresp),        .l1proc_hresp(l1i_hresp),
       .proc_hexokay(i_hexokay),    .l1proc_hexokay(l1i_hexokay),
@@ -339,7 +339,7 @@ module example_soc #(
       .proc_hprot(d_hprot),             .l1proc_hprot(l1d_hprot),
       .proc_hmastlock(d_hmastlock),     .l1proc_hmastlock(l1d_hmastlock),
       .proc_hexcl(d_hexcl),             .l1proc_hexcl(l1d_hexcl),
-      .hready(d_hready),
+      .hready(l1d_hready),
       .proc_hready(d_proc_hready),      .l1proc_hready_resp(l1d_hready_resp),
       .proc_hresp(d_hresp),        .l1proc_hresp(l1d_hresp),
       .proc_hexokay(d_hexokay),    .l1proc_hexokay(l1d_hexokay),
@@ -423,23 +423,23 @@ module example_soc #(
         .rst_n(rst_n),
 
         // From masters; function as slave ports
-        .src_hready     ({d_hready, i_hready}),
-        .src_hready_resp({d_hready_resp, i_hready_resp}),
-        .src_hresp      ({d_hresp, i_hresp}),
-        .src_haddr      ({d_haddr, i_haddr}),
-        .src_hwrite     ({d_hwrite, i_hwrite}),
-        .src_htrans     ({d_htrans, i_htrans}),
-        .src_hsize      ({d_hsize, i_hsize}),
-        .src_hburst     ({d_hburst, i_hburst}),
-        .src_hprot      ({d_hprot, i_hprot}),
-        .src_hmastlock  ({d_hmastlock, i_hmastlock}),
-        .src_hwdata     ({d_hwdata, i_hwdata}),
-        .src_hrdata     ({d_hrdata, i_hrdata}),
-        .src_d_pc       ({d_d_pc, i_d_pc}),
+        .src_hready     ({l1d_hready, l1i_hready}),
+        .src_hready_resp({l1d_hready_resp, l1i_hready_resp}),
+        .src_hresp      ({l1d_hresp, l1i_hresp}),
+        .src_haddr      ({l1d_haddr, l1i_haddr}),
+        .src_hwrite     ({l1d_hwrite, l1i_hwrite}),
+        .src_htrans     ({l1d_htrans, l1i_htrans}),
+        .src_hsize      ({l1d_hsize, l1i_hsize}),
+        .src_hburst     ({l1d_hburst, l1i_hburst}),
+        .src_hprot      ({l1d_hprot, l1i_hprot}),
+        .src_hmastlock  ({l1d_hmastlock, l1i_hmastlock}),
+        .src_hwdata     ({l1d_hwdata, l1i_hwdata}),
+        .src_hrdata     ({l1d_hrdata, l1i_hrdata}),
+        .src_d_pc       ({l1d_d_pc, l1i_d_pc}),
         // exclusive access signaling
-        .src_hexcl      ({d_hexcl, i_hexcl}),
-        .src_hmaster    ({d_hmaster, i_hmaster}),
-        .src_hexokay    ({d_hexokay, i_hexokay}),
+        .src_hexcl      ({l1d_hexcl, l1i_hexcl}),
+        .src_hmaster    ({l1d_hmaster, l1i_hmaster}),
+        .src_hexokay    ({l1d_hexokay, l1i_hexokay}),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),

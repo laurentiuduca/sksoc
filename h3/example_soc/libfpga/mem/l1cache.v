@@ -72,7 +72,6 @@ localparam hprot_instr = {
 localparam HTRANS_IDLE = 2'b00;
 localparam HSIZE_WORD  = 3'd2;
 
-`define usel1cache
 `ifdef usel1cache
     reg               rhready;
     reg [ W_ADDR-1:0] ad_pc;
@@ -213,7 +212,7 @@ localparam HSIZE_WORD  = 3'd2;
     assign l1proc_hmastlock = proc_hmastlock;
     assign l1proc_hexcl = proc_hexcl;
     assign hready = l1proc_hready_resp;
-    assign proc_hready = l1proc_hready_resp;
+    assign proc_hready = hready;
     assign proc_hresp = l1proc_hresp;
     assign proc_hexokay = l1proc_hexokay;
     assign l1proc_hwdata = proc_hwdata;
