@@ -111,7 +111,8 @@ module example_soc #(
     wire [3:0] i_hprot, d_hprot;
     wire i_hmastlock, d_hmastlock;
     wire [W_DATA-1:0] i_hmaster, d_hmaster;  // exclusive access signaling
-    wire i_hready, d_hready;
+    wire i_proc_hready, d_proc_hready;
+    wire i_hready_resp, d_hready_resp;
     wire i_hresp, d_hresp;
     wire i_hexokay, d_hexokay;  // exclusive access signaling
     wire [W_DATA-1:0] i_hwdata, d_hwdata;
@@ -199,7 +200,7 @@ module example_soc #(
         .i_hburst(i_hburst),
         .i_hprot(i_hprot),
         .i_hmastlock(i_hmastlock),
-        .i_hready(i_hready),    // input
+        .i_hready(i_proc_hready),    // input
         .i_hresp(i_hresp),
         .i_hwdata(i_hwdata),
         .i_hrdata(i_hrdata),
@@ -222,7 +223,7 @@ module example_soc #(
         .d_hburst(d_hburst),
         .d_hprot(d_hprot),
         .d_hmastlock(d_hmastlock),
-        .d_hready(d_hready),    // input
+        .d_hready(d_proc_hready),    // input
         .d_hresp(d_hresp),
         .d_hwdata(d_hwdata),
         .d_hrdata(d_hrdata),
@@ -240,6 +241,128 @@ module example_soc #(
         .soft_irq   (soft_irq),     // -> mip.msip
         .timer_irq  (timer_irq),    // -> mip.mtip	
         .hart_halted(hart_halted)
+    );
+    // ----------------------------------------------------------------------------
+    // l1 cache
+    wire i_hready, d_hready;
+    wire [ W_ADDR-1:0] l1i_d_pc;
+    wire [ W_ADDR-1:0] l1i_haddr;
+    wire               l1i_hwrite;
+    wire [        1:0] l1i_htrans;
+    wire [        2:0] l1i_hsize;
+    wire [        2:0] l1i_hburst;
+    wire [        3:0] l1i_hprot;
+    wire               l1i_hmastlock;
+    wire               l1i_hexcl;
+    wire               l1i_hready_resp;
+    wire               l1i_hresp;
+    wire               l1i_hexokay;
+    wire [ W_DATA-1:0] l1i_hwdata;
+    wire [ W_DATA-1:0] l1i_hrdata;
+    wire [ W_DATA-1:0] l1i_hmaster;
+
+    `define ADDR_MAP  64'h40000000_00000000
+    `define ADDR_MASK 64'he0000000_e0000000
+    l1cache #(
+        .N_SLAVES (2),
+        .ADDR_MAP (`ADDR_MAP),
+        .ADDR_MASK(`ADDR_MASK)
+        ) l1i (
+        .clk          (clk),
+        .rst_n        (rst_n),
+      .mhartid_val    (i_mhartid_val),
+      .d_pc(i_d_pc),                    .l1d_pc(l1i_d_pc),
+      .proc_haddr(i_haddr),             .l1proc_haddr(l1i_haddr),
+      .proc_hwrite(i_hwrite),           .l1proc_hwrite(l1i_hwrite),
+      .proc_htrans(i_htrans),           .l1proc_htrans(l1i_htrans),
+      .proc_hsize(i_hsize),             .l1proc_hsize(l1i_hsize),
+      .proc_hburst(i_hburst),           .l1proc_hburst(l1i_hburst),
+      .proc_hprot(i_hprot),             .l1proc_hprot(l1i_hprot),
+      .proc_hmastlock(i_hmastlock),     .l1proc_hmastlock(l1i_hmastlock),
+      .proc_hexcl(i_hexcl),             .l1proc_hexcl(l1i_hexcl),
+      .hready(i_hready),
+      .proc_hready(i_proc_hready),      .l1proc_hready_resp(l1i_hready_resp),
+      .proc_hresp(i_hresp),        .l1proc_hresp(l1i_hresp),
+      .proc_hexokay(i_hexokay),    .l1proc_hexokay(l1i_hexokay),
+      .proc_hwdata(i_hwdata),      .l1proc_hwdata(l1i_hwdata),
+      .proc_hrdata(i_hrdata),      .l1proc_hrdata(l1i_hrdata),
+      .proc_hmaster(i_hmaster),    .l1proc_hmaster(l1i_hmaster),
+
+      .sram0_hready_resp(sram0_hready_resp),
+      .sram0_hready(sram0_hready),
+      .sram0_hresp(sram0_hresp),
+      .sram0_haddr(sram0_haddr),
+      .sram0_hwrite(sram0_hwrite),
+      .sram0_htrans(sram0_htrans),
+      .sram0_hsize(sram0_hsize),
+      .sram0_hburst(sram0_hburst),
+      .sram0_hprot(sram0_hprot),
+      .sram0_hmastlock(sram0_hmastlock),
+      .sram0_hwdata(sram0_hwdata),
+      .sram0_hrdata(sram0_hrdata),
+      .sram0_d_pc(sram0_d_pc),
+      .sram0_hexcl(sram0_hexcl),
+      .sram0_hmaster(sram0_hmaster),
+      .sram0_hexokay(sram0_hexokay)
+    );
+
+    wire [ W_ADDR-1:0] l1d_d_pc;
+    wire [ W_ADDR-1:0] l1d_haddr;
+    wire               l1d_hwrite;
+    wire [        1:0] l1d_htrans;
+    wire [        2:0] l1d_hsize;
+    wire [        2:0] l1d_hburst;
+    wire [        3:0] l1d_hprot;
+    wire               l1d_hmastlock;
+    wire               l1d_hexcl;
+    wire               l1d_hready_resp;
+    wire               l1d_hresp;
+    wire               l1d_hexokay;
+    wire [ W_DATA-1:0] l1d_hwdata;
+    wire [ W_DATA-1:0] l1d_hrdata;
+    wire [ W_DATA-1:0] l1d_hmaster;
+
+    l1cache #(
+        .N_SLAVES (2),
+        .ADDR_MAP (`ADDR_MAP),
+        .ADDR_MASK(`ADDR_MASK)
+        ) l1d (
+        .clk          (clk),
+        .rst_n        (rst_n),
+      .mhartid_val    (d_mhartid_val),
+      .d_pc(d_d_pc),                    .l1d_pc(l1d_d_pc),
+      .proc_haddr(d_haddr),             .l1proc_haddr(l1d_haddr),
+      .proc_hwrite(d_hwrite),           .l1proc_hwrite(l1d_hwrite),
+      .proc_htrans(d_htrans),           .l1proc_htrans(l1d_htrans),
+      .proc_hsize(d_hsize),             .l1proc_hsize(l1d_hsize),
+      .proc_hburst(d_hburst),           .l1proc_hburst(l1d_hburst),
+      .proc_hprot(d_hprot),             .l1proc_hprot(l1d_hprot),
+      .proc_hmastlock(d_hmastlock),     .l1proc_hmastlock(l1d_hmastlock),
+      .proc_hexcl(d_hexcl),             .l1proc_hexcl(l1d_hexcl),
+      .hready(d_hready),
+      .proc_hready(d_proc_hready),      .l1proc_hready_resp(l1d_hready_resp),
+      .proc_hresp(d_hresp),        .l1proc_hresp(l1d_hresp),
+      .proc_hexokay(d_hexokay),    .l1proc_hexokay(l1d_hexokay),
+      .proc_hwdata(d_hwdata),      .l1proc_hwdata(l1d_hwdata),
+      .proc_hrdata(d_hrdata),      .l1proc_hrdata(l1d_hrdata),
+      .proc_hmaster(d_hmaster),    .l1proc_hmaster(l1d_hmaster),
+
+      .sram0_hready_resp(sram0_hready_resp),
+      .sram0_hready(sram0_hready),
+      .sram0_hresp(sram0_hresp),
+      .sram0_haddr(sram0_haddr),
+      .sram0_hwrite(sram0_hwrite),
+      .sram0_htrans(sram0_htrans),
+      .sram0_hsize(sram0_hsize),
+      .sram0_hburst(sram0_hburst),
+      .sram0_hprot(sram0_hprot),
+      .sram0_hmastlock(sram0_hmastlock),
+      .sram0_hwdata(sram0_hwdata),
+      .sram0_hrdata(sram0_hrdata),
+      .sram0_d_pc(sram0_d_pc),
+      .sram0_hexcl(sram0_hexcl),
+      .sram0_hmaster(sram0_hmaster),
+      .sram0_hexokay(sram0_hexokay)
     );
 
     // ----------------------------------------------------------------------------
@@ -300,8 +423,8 @@ module example_soc #(
         .rst_n(rst_n),
 
         // From masters; function as slave ports
-        .src_hready_resp({d_hready, i_hready}),
-        //.src_hready    ({d_hready, i_hready}),
+        .src_hready     ({d_hready, i_hready}),
+        .src_hready_resp({d_hready_resp, i_hready_resp}),
         .src_hresp      ({d_hresp, i_hresp}),
         .src_haddr      ({d_haddr, i_haddr}),
         .src_hwrite     ({d_hwrite, i_hwrite}),

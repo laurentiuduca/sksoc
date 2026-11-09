@@ -339,19 +339,19 @@ end else if (DTM_TYPE == "XILINX7") begin
         // instantiation of example_soc():
         .EXTENSION_A        (EXTENSION_A),
         .EXTENSION_C        (EXTENSION_C),
-	.EXTENSION_E         (EXTENSION_E),
+	    .EXTENSION_E         (EXTENSION_E),
         .EXTENSION_M        (EXTENSION_M),
         .EXTENSION_ZBA      (EXTENSION_ZBA),
         .EXTENSION_ZBB      (EXTENSION_ZBB),
         .EXTENSION_ZBC      (EXTENSION_ZBC),
         .EXTENSION_ZBKB     (EXTENSION_ZBKB),
-	.EXTENSION_ZBKX      (EXTENSION_ZBKX),
-	.EXTENSION_ZBS       (EXTENSION_ZBS),
-	.EXTENSION_ZCB       (EXTENSION_ZCB),
-	.EXTENSION_ZCLSD     (EXTENSION_ZCLSD),
-	.EXTENSION_ZCMP      (EXTENSION_ZCMP),
+    	.EXTENSION_ZBKX      (EXTENSION_ZBKX),
+	    .EXTENSION_ZBS       (EXTENSION_ZBS),
+    	.EXTENSION_ZCB       (EXTENSION_ZCB),
+	    .EXTENSION_ZCLSD     (EXTENSION_ZCLSD),
+    	.EXTENSION_ZCMP      (EXTENSION_ZCMP),
         .EXTENSION_ZIFENCEI (EXTENSION_ZIFENCEI),
-	.EXTENSION_ZILSD     (EXTENSION_ZILSD),
+	    .EXTENSION_ZILSD     (EXTENSION_ZILSD),
         .EXTENSION_XH3BEXTM (EXTENSION_XH3BEXTM),
         .EXTENSION_XH3IRQ   (EXTENSION_XH3IRQ),
         .EXTENSION_XH3PMPM  (EXTENSION_XH3PMPM),
@@ -395,17 +395,17 @@ end else if (DTM_TYPE == "XILINX7") begin
         .hburst   (proc_hburst),
         .hprot    (proc_hprot),
         .hmastlock(proc_hmastlock),
-	.hmaster                    (proc_hmaster),
+    	.hmaster                    (proc_hmaster),
         .hexcl    (proc_hexcl),
-	.hready   (proc_hready),
+	    .hready   (proc_hready),
         .hresp    (proc_hresp),
         .hexokay  (proc_hexokay),
         .hwdata   (proc_hwdata),
         .hrdata   (proc_hrdata),
 
-	.fence_i_vld                (/* unused */),
-	.fence_d_vld                (/* unused */),
-	.fence_rdy                  (1'b1),
+    	.fence_i_vld                (/* unused */),
+	    .fence_d_vld                (/* unused */),
+    	.fence_rdy                  (1'b1),
 
         .dbg_req_halt         (hart_req_halt),
         .dbg_req_halt_on_reset(hart_req_halt_on_reset),
@@ -432,7 +432,7 @@ end else if (DTM_TYPE == "XILINX7") begin
         .dbg_sbus_wdata(sbus_wdata),
         .dbg_sbus_rdata(sbus_rdata),
 
-	.eco_version                (4'd0),
+    	.eco_version                (4'd0),
 
         // Level-sensitive interrupt sources
         .irq        (irq),          // -> mip.meip
@@ -509,7 +509,7 @@ end else if (DTM_TYPE == "XILINX7") begin
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
         .ADDR_MASK(`ADDR_MASK)
-        ) l1cache (
+        ) l1 (
         .clk          (clk),
         .rst_n        (rst_n),
       .mhartid_val    (mhartid_val),
@@ -549,7 +549,7 @@ end else if (DTM_TYPE == "XILINX7") begin
     );
 
 
-//`define USECROSS
+`define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
         .N_PORTS  (2),
