@@ -93,10 +93,10 @@ module cache_ctrl #(
     input  wire        m_pslverr,
     input  wire        m_sdsbusy,
     input  wire [31:0] m_sdspi_status,
-    // display
-    output wire        MAX7219_CLK,
-    output wire        MAX7219_DATA,
-    output wire        MAX7219_LOAD
+        // display
+        output wire tm_cs,
+        output wire tm_clk,
+        inout  wire tm_dio
 );
 
     /***** store output data to registers in posedge clock cycle *****/
@@ -324,9 +324,9 @@ module cache_ctrl #(
         .m_sdsbusy(m_sdsbusy),
         .m_sdspi_status(m_sdspi_status),
         // display
-        .MAX7219_CLK(MAX7219_CLK),
-        .MAX7219_DATA(MAX7219_DATA),
-        .MAX7219_LOAD(MAX7219_LOAD)
+        .tm_cs(tm_cs),
+        .tm_clk(tm_clk),
+        .tm_dio(tm_dio)
     );
 
 endmodule

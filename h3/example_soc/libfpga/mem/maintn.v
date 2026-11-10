@@ -82,12 +82,13 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
         input  wire [31:0] m_prdata,
         input  wire        m_pready,
         input  wire        m_pslverr,
-	input  wire        m_sdsbusy,
-	input  wire [31:0] m_sdspi_status,
+	    input  wire        m_sdsbusy,
+	    input  wire [31:0] m_sdspi_status,
+
     	// display
-    	output wire MAX7219_CLK,
-    	output wire MAX7219_DATA,
-    	output wire MAX7219_LOAD
+        output wire tm_cs,
+        output wire tm_clk,
+        inout  wire tm_dio
     );
 
     // xsim requires declaration before use
@@ -534,14 +535,17 @@ module m_maintn #(parameter PRELOAD_FILE = "") (
     `ifndef SIM_MODE
     wire clkdiv;
     wire [31:0] data_vector;
+    wraptm1638 #(.CLK_DIV1638(6)) wtm(.clk(clk), .rst(!rst_x), .tm_cs(tm_cs), .tm_clk(tm_clk), .tm_dio(tm_dio), .val(data_vector));
+    `ifdef laur0
     max7219 max7219(.clk(clk), .clkdiv(clkdiv), .reset_n(rst_x), .data_vector(data_vector),
             .clk_out(MAX7219_CLK),
             .data_out(MAX7219_DATA),
             .load_out(MAX7219_LOAD)
         );
     clkdivider cd(.clk(clk), .reset_n(rst_x), .n(21'd100), .clkdiv(clkdiv));
+    `endif
 
-    assign data_vector = (w_btnr == 1 && w_btnl == 1) ? w_sdloader_state :
+    assign data_vector = (w_btnr == 1 && w_btnl == 1) ? r_initaddr3 :
                          (w_btnl == 1 && w_btnr == 0) ? r_sd_checksum :
                          (w_btnl == 0 && w_btnr == 1) ? r_verify_checksum :
                          {r_mem_rb_done, w_sd_init_done, w_init_done, r_zero_done,

@@ -52,10 +52,10 @@ module m_topsim (
     //inout  wire       sddat1,
     //inout  wire       sddat2,
     inout  wire       sddat3,
-    // display
-    output wire       MAX7219_CLK,
-    output wire       MAX7219_DATA,
-    output wire       MAX7219_LOAD
+        // display
+        output wire tm_cs,
+        output wire tm_clk,
+        inout  wire tm_dio
 );
 
     wire sdcard_pwr_n;
@@ -235,9 +235,9 @@ module m_topsim (
         .sddat3(sddat3),
         .w_init_done(w_init_done),
         // display
-        .MAX7219_CLK(MAX7219_CLK),
-        .MAX7219_DATA(MAX7219_DATA),
-        .MAX7219_LOAD(MAX7219_LOAD)
+        .tm_cs(tm_cs),
+        .tm_clk(tm_clk),
+        .tm_dio(tm_dio)
     );
 
 `ifdef DUMP_VCD

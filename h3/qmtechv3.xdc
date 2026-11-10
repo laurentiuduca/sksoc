@@ -622,26 +622,24 @@ set_property INTERNAL_VREF 0.675 [get_iobanks 16]
 
 #pmod J10, BANK35_
 
-## ---- MAX7219 DIN (serial data input) ----
-set_property PACKAGE_PIN G8 [get_ports {MAX7219_DATA}]
-set_property IOSTANDARD LVCMOS33 [get_ports {MAX7219_DATA}]
-set_property PULLDOWN FALSE [get_ports {MAX7219_DATA}]
-set_property DRIVE 8 [get_ports {MAX7219_DATA}]
-set_property SLEW SLOW [get_ports {MAX7219_DATA}]
+## ---- TM1638 ----
+set_property PACKAGE_PIN G8 [get_ports {tm_cs}] 
+set_property IOSTANDARD LVCMOS33 [get_ports {tm_cs} ]
+set_property PULLDOWN FALSE [get_ports {tm_cs}]
+set_property DRIVE 8 [get_ports {tm_cs}]
+set_property SLEW SLOW [get_ports {tm_cs}]
 
-## ---- MAX7219 CLK (serial clock) ----
-set_property PACKAGE_PIN G5 [get_ports {MAX7219_CLK}]
-set_property IOSTANDARD LVCMOS33 [get_ports {MAX7219_CLK}]
-set_property PULLDOWN FALSE [get_ports {MAX7219_CLK}]
-set_property DRIVE 8 [get_ports {MAX7219_CLK}]
-set_property SLEW SLOW [get_ports {MAX7219_CLK}]
+set_property PACKAGE_PIN G5 [get_ports {tm_dio}] 
+set_property IOSTANDARD LVCMOS33 [get_ports {tm_dio}]
+set_property PULLDOWN FALSE [get_ports {tm_dio}]
+set_property DRIVE 8 [get_ports {tm_dio}]
+set_property SLEW SLOW [get_ports {tm_dio}]
 
-## ---- MAX7219 CS / LOAD (chip select) ----
-set_property PACKAGE_PIN G7 [get_ports {MAX7219_LOAD}]
-set_property IOSTANDARD LVCMOS33 [get_ports {MAX7219_LOAD}]
-set_property PULLDOWN FALSE [get_ports {MAX7219_LOAD}]
-set_property DRIVE 8 [get_ports {MAX7219_LOAD}]
-set_property SLEW SLOW [get_ports {MAX7219_LOAD}]
+set_property PACKAGE_PIN G7 [get_ports {tm_clk}] 
+set_property IOSTANDARD LVCMOS33 [get_ports {tm_clk}]
+set_property PULLDOWN FALSE [get_ports {tm_clk}]
+set_property DRIVE 8 [get_ports {tm_clk}]
+set_property SLEW SLOW [get_ports {tm_clk}]
 
 
 # SDcard
