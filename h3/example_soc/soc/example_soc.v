@@ -506,6 +506,7 @@ end else if (DTM_TYPE == "XILINX7") begin
     `define ADDR_MAP  64'h40000000_00000000
     `define ADDR_MASK 64'he0000000_e0000000
     l1cache #(
+        .N_MASTERS(N_HARTS),
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
         .ADDR_MASK(`ADDR_MASK)
@@ -529,7 +530,10 @@ end else if (DTM_TYPE == "XILINX7") begin
       .proc_hwdata(proc_hwdata),    .l1proc_hwdata(l1proc_hwdata),
       .proc_hrdata(proc_hrdata),    .l1proc_hrdata(l1proc_hrdata),
       .proc_hmaster(proc_hmaster),  .l1proc_hmaster(l1proc_hmaster),
-  
+ 
+      .mem_mast_gnt_a(mem_mast_gnt_a), 
+      .peri_mast_gnt_a(peri_mast_gnt_a),
+ 
       .sram0_hready_resp(sram0_hready_resp),
       .sram0_hready(sram0_hready),
       .sram0_hresp(sram0_hresp),
@@ -548,7 +552,7 @@ end else if (DTM_TYPE == "XILINX7") begin
       .sram0_hexokay(sram0_hexokay)
     );
 
-
+    wire [N_HARTS-1:0] mem_mast_gnt_a, peri_mast_gnt_a;
 `define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
@@ -629,6 +633,9 @@ end else if (DTM_TYPE == "XILINX7") begin
         .src_hexcl      (l1proc_hexcl),
         .src_hmaster    (l1proc_hmaster),
         .src_hexokay    (l1proc_hexokay),
+
+        .mem_mast_gnt_a (mem_mast_gnt_a),
+        .peri_mast_gnt_a(peri_mast_gnt_a),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),

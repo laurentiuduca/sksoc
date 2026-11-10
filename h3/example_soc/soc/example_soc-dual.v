@@ -264,6 +264,7 @@ module example_soc #(
     `define ADDR_MAP  64'h40000000_00000000
     `define ADDR_MASK 64'he0000000_e0000000
     l1cache #(
+        .N_MASTERS(N_HARTS),
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
         .ADDR_MASK(`ADDR_MASK)
@@ -287,6 +288,9 @@ module example_soc #(
       .proc_hwdata(i_hwdata),      .l1proc_hwdata(l1i_hwdata),
       .proc_hrdata(i_hrdata),      .l1proc_hrdata(l1i_hrdata),
       .proc_hmaster(i_hmaster),    .l1proc_hmaster(l1i_hmaster),
+
+      .mem_mast_gnt_a (mem_mast_gnt_a),
+      .peri_mast_gnt_a(peri_mast_gnt_a),
 
       .sram0_hready_resp(sram0_hready_resp),
       .sram0_hready(sram0_hready),
@@ -323,6 +327,7 @@ module example_soc #(
     wire [ W_DATA-1:0] l1d_hmaster;
 
     l1cache #(
+        .N_MASTERS(N_HARTS),
         .N_SLAVES (2),
         .ADDR_MAP (`ADDR_MAP),
         .ADDR_MASK(`ADDR_MASK)
@@ -346,6 +351,9 @@ module example_soc #(
       .proc_hwdata(d_hwdata),      .l1proc_hwdata(l1d_hwdata),
       .proc_hrdata(d_hrdata),      .l1proc_hrdata(l1d_hrdata),
       .proc_hmaster(d_hmaster),    .l1proc_hmaster(l1d_hmaster),
+
+      .mem_mast_gnt_a (mem_mast_gnt_a),
+      .peri_mast_gnt_a(peri_mast_gnt_a),
 
       .sram0_hready_resp(sram0_hready_resp),
       .sram0_hready(sram0_hready),
@@ -410,6 +418,7 @@ module example_soc #(
     wire [W_DATA-1:0] bridge_hmaster;
     wire              bridge_hexokay = 1;
 
+    wire [N_HARTS-1:0] mem_mast_gnt_a, peri_mast_gnt_a;
     ahbl_crossbar #(
         .N_MASTERS(N_HARTS),
         .N_SLAVES (2),
@@ -440,6 +449,9 @@ module example_soc #(
         .src_hexcl      ({l1d_hexcl, l1i_hexcl}),
         .src_hmaster    ({l1d_hmaster, l1i_hmaster}),
         .src_hexokay    ({l1d_hexokay, l1i_hexokay}),
+
+        .mem_mast_gnt_a (mem_mast_gnt_a),
+        .peri_mast_gnt_a(peri_mast_gnt_a),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),

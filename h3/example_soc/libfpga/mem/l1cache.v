@@ -4,6 +4,7 @@
 
 module l1cache
     # (
+    parameter N_MASTERS = 2,
     parameter N_SLAVES = 2,
     parameter ADDR_MAP  = 64'h40000000_00000000,
     parameter ADDR_MASK = 64'he0000000_e0000000,
@@ -43,6 +44,8 @@ module l1cache
     output wire [ W_DATA-1:0] l1proc_hwdata,
     input wire [ W_DATA-1:0]  l1proc_hrdata,
     output wire [ W_DATA-1:0] l1proc_hmaster,    
+
+    input wire [N_HARTS-1:0] mem_mast_gnt_a, peri_mast_gnt_a,
 
     input wire              sram0_hready_resp,
     input wire              sram0_hready,

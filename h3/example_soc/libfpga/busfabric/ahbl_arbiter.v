@@ -63,6 +63,8 @@ module ahbl_arbiter #(
     input  wire [N_PORTS*W_DATA-1:0] src_hmaster,
     output wire [       N_PORTS-1:0] src_hexokay,
 
+    output wire [N_PORTS-1:0] mast_gnt_a,
+
     // To slave; functions as master port
     output wire [W_ADDR-1:0] dst_d_pc,
     output wire              dst_hready,
@@ -147,7 +149,7 @@ module ahbl_arbiter #(
     // Address-phase arbitration
 
     reg  [N_PORTS-1:0] mast_req_a;
-    wire [N_PORTS-1:0] mast_gnt_a;
+    //wire [N_PORTS-1:0] mast_gnt_a;
     reg  [N_PORTS-1:0] mast_gnt_d;
     reg  [N_PORTS-1:0] active;
     always @(*) begin
