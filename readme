@@ -20,11 +20,13 @@ download nuttx 12.11.0 os and apps from https://nuttx.apache.org/download
 extract archives
 cd nuttx
 patch -p1 <../nuttx-eth-patch-12.11.patch
+edit arch/risc-v/src/qemu-rv/qemu_rv_timerisr.c
+  #define MTIMER_FREQ 1000000
+  #define TICK_COUNT (1000000 / TICK_PER_SEC)
 cd ../apps
 patch -p1 < ../nuttx-eth-apps-patch-12.11.patch
 cp ../smp_main.c testing/smp
-note - this patches were generated
-with instructions similar to the rlsoc-nuttx repository
+note - these patches were generated with instructions similar to the rlsoc-nuttx repository
 
 1. config nuttx
 cd -
