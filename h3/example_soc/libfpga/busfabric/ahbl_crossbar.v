@@ -62,6 +62,8 @@ module ahbl_crossbar #(
 
     output wire [       N_MASTERS-1:0] mem_mast_gnt_a,
     output wire [       N_MASTERS-1:0] peri_mast_gnt_a,
+    output wire [       N_MASTERS-1:0] mem_mast_gnt_d,
+    output wire [       N_MASTERS-1:0] peri_mast_gnt_d,
 
     // To slaves; function as master ports
     output wire [       N_SLAVES-1:0] dst_hready,
@@ -110,6 +112,9 @@ module ahbl_crossbar #(
     wire  [N_MASTERS-1:0]    xbar_mast_gnt_a [0:N_SLAVES-1];
     assign mem_mast_gnt_a  = xbar_mast_gnt_a[0];
     assign peri_mast_gnt_a = xbar_mast_gnt_a[1];
+    wire  [N_MASTERS-1:0]    xbar_mast_gnt_d [0:N_SLAVES-1];
+    assign mem_mast_gnt_d  = xbar_mast_gnt_d[0];
+    assign peri_mast_gnt_d = xbar_mast_gnt_d[1];
 
     genvar i, j;
 
@@ -314,6 +319,7 @@ module ahbl_crossbar #(
                 .src_hexokay(arb_hexokay),
 
                 .mast_gnt_a(xbar_mast_gnt_a[j]),
+                .mast_gnt_d(xbar_mast_gnt_d[j]),
 
                 .dst_hready(dst_hready[j]),
                 .dst_hready_resp (dst_hready_resp[j]), // this is input port and comes from the slave.

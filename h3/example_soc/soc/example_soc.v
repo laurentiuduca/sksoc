@@ -533,6 +533,8 @@ end else if (DTM_TYPE == "XILINX7") begin
  
       .mem_mast_gnt_a(mem_mast_gnt_a), 
       .peri_mast_gnt_a(peri_mast_gnt_a),
+      .mem_mast_gnt_d(mem_mast_gnt_d), 
+      .peri_mast_gnt_d(peri_mast_gnt_d),
  
       .sram0_hready_resp(sram0_hready_resp),
       .sram0_hready(sram0_hready),
@@ -553,6 +555,7 @@ end else if (DTM_TYPE == "XILINX7") begin
     );
 
     wire [N_HARTS-1:0] mem_mast_gnt_a, peri_mast_gnt_a;
+    wire [N_HARTS-1:0] mem_mast_gnt_d, peri_mast_gnt_d;
 `define USECROSS
 `ifndef USECROSS
     ahbl_splitter #(
@@ -636,6 +639,8 @@ end else if (DTM_TYPE == "XILINX7") begin
 
         .mem_mast_gnt_a (mem_mast_gnt_a),
         .peri_mast_gnt_a(peri_mast_gnt_a),
+        .mem_mast_gnt_d (mem_mast_gnt_d),
+        .peri_mast_gnt_d(peri_mast_gnt_d),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),

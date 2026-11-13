@@ -64,6 +64,7 @@ module ahbl_arbiter #(
     output wire [       N_PORTS-1:0] src_hexokay,
 
     output wire [N_PORTS-1:0] mast_gnt_a,
+    output reg  [N_PORTS-1:0] mast_gnt_d,
 
     // To slave; functions as master port
     output wire [W_ADDR-1:0] dst_d_pc,
@@ -150,7 +151,7 @@ module ahbl_arbiter #(
 
     reg  [N_PORTS-1:0] mast_req_a;
     //wire [N_PORTS-1:0] mast_gnt_a;
-    reg  [N_PORTS-1:0] mast_gnt_d;
+    //reg  [N_PORTS-1:0] mast_gnt_d;
     reg  [N_PORTS-1:0] active;
     always @(*) begin
         for (i = 0; i < N_PORTS; i = i + 1) begin

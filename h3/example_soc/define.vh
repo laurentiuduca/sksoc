@@ -1,8 +1,8 @@
-//`define SIM_MODE
+`define SIM_MODE
 `timescale 1ps / 1ps
 
 //`define DUMP_VCD
-//`define usel1cache
+`define usel1cache
 // dbgstart may be defined in hazard3_config.vh, not here
 //`define dbgsclr
 //`define dbgdhrystone

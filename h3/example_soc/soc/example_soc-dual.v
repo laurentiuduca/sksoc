@@ -291,6 +291,8 @@ module example_soc #(
 
       .mem_mast_gnt_a (mem_mast_gnt_a),
       .peri_mast_gnt_a(peri_mast_gnt_a),
+      .mem_mast_gnt_d (mem_mast_gnt_d),
+      .peri_mast_gnt_d(peri_mast_gnt_d),
 
       .sram0_hready_resp(sram0_hready_resp),
       .sram0_hready(sram0_hready),
@@ -354,6 +356,8 @@ module example_soc #(
 
       .mem_mast_gnt_a (mem_mast_gnt_a),
       .peri_mast_gnt_a(peri_mast_gnt_a),
+      .mem_mast_gnt_d (mem_mast_gnt_d),
+      .peri_mast_gnt_d(peri_mast_gnt_d),
 
       .sram0_hready_resp(sram0_hready_resp),
       .sram0_hready(sram0_hready),
@@ -419,6 +423,7 @@ module example_soc #(
     wire              bridge_hexokay = 1;
 
     wire [N_HARTS-1:0] mem_mast_gnt_a, peri_mast_gnt_a;
+    wire [N_HARTS-1:0] mem_mast_gnt_d, peri_mast_gnt_d;
     ahbl_crossbar #(
         .N_MASTERS(N_HARTS),
         .N_SLAVES (2),
@@ -452,6 +457,8 @@ module example_soc #(
 
         .mem_mast_gnt_a (mem_mast_gnt_a),
         .peri_mast_gnt_a(peri_mast_gnt_a),
+        .mem_mast_gnt_d (mem_mast_gnt_d),
+        .peri_mast_gnt_d(peri_mast_gnt_d),
 
         // To slaves; function as master ports
         .dst_hready_resp({bridge_hready_resp, sram0_hready_resp}),

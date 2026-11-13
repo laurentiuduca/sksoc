@@ -46,6 +46,7 @@ module l1cache
     output wire [ W_DATA-1:0] l1proc_hmaster,    
 
     input wire [N_HARTS-1:0] mem_mast_gnt_a, peri_mast_gnt_a,
+    input wire [N_HARTS-1:0] mem_mast_gnt_d, peri_mast_gnt_d,
 
     input wire              sram0_hready_resp,
     input wire              sram0_hready,
@@ -111,6 +112,20 @@ localparam HSIZE_WORD  = 3'd2;
     assign proc_hrdata      = aproc_hrdata;
     assign l1proc_hmaster   = aproc_hmaster;
 
+    integer i;
+    reg [N_SLAVES-1:0] slave_sel;
+    always @(*) begin
+        if (aproc_htrans == HTRANS_IDLE) begin
+            slave_sel = {N_SLAVES{1'b0}};
+        end else begin
+            for (i = 0; i < N_SLAVES; i = i + 1) begin
+                slave_sel[i] = ((aproc_haddr & ADDR_MASK[i * W_ADDR +: W_ADDR])
+                                == ADDR_MAP[i * W_ADDR +: W_ADDR]);
+            end
+        end
+    end
+
+
     // Decode AHBL controls
     //wire [3:0] wmask_noshift = ~({4{1'b1}} << (1 << proc_hsize));
     //wire [3:0] wmask = wmask_noshift << proc_haddr[1:0];
@@ -169,9 +184,11 @@ localparam HSIZE_WORD  = 3'd2;
             end else if(state == 1) begin
                 // let splitter get the command
                 //if(!l1proc_hready_resp) begin
+                if((mem_mast_gnt_d[mhartid_val] && slave_sel[0]) || 
+                   (peri_mast_gnt_d[mhartid_val] && slave_sel[1])) begin
                      rhready <= 0;
                      state <= 2;
-                //end
+                end
             end else if(state == 2) begin
                 if(l1proc_hready_resp) begin
                     aproc_htrans <= HTRANS_IDLE;
@@ -186,7 +203,10 @@ localparam HSIZE_WORD  = 3'd2;
                 state <= 11;
             end else if(state == 11) begin
                 // let splitter get the command
-                if(!l1proc_hready_resp) begin
+                //if(!l1proc_hready_resp) begin
+                if((mem_mast_gnt_d[mhartid_val] && slave_sel[0]) ||
+                   (peri_mast_gnt_d[mhartid_val] && slave_sel[1])) begin
+
                     rhready <= 0;
                     state <= 12;
                 end
