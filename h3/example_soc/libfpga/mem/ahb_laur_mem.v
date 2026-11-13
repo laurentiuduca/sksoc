@@ -141,6 +141,7 @@ module ahb_sync_sram #(
     reg exclwrdisplay;
     task check_new_req;
         if (ahb_read_aphase) begin
+            r_ahbls_hexokay <= 1;
             state  <= 0;
             //r_ahbls_haddr <= ahbls_haddr;
             r_mask <= wmask;

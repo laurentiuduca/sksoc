@@ -214,6 +214,7 @@ module ahbl_splitter #(
                 $time
             );
 `endif
+`ifdef laur0
         if(/*j < 20 &&*/ src_hready && 
         (osrc_haddr!= src_haddr || osrc_htrans != src_htrans ||//odst_hrdata[W_DATA-1:0] != dst_hrdata[W_DATA-1:0] || 
             osrc_hready != src_hready || osrc_hwrite != src_hwrite)) begin
@@ -253,8 +254,8 @@ module ahbl_splitter #(
             //$finish();
         end
         timecnt <= timecnt + 1;
-    end
-
+`endif
+end
 `endif
 `endif
 
