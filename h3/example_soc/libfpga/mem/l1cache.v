@@ -171,6 +171,7 @@ localparam HSIZE_WORD  = 3'd2;
         end else begin
             if(state == 0) begin
                 aproc_hready_resp <= 0;
+                aproc_hexokay <= 1;
                 if(proc_read_aphase && l1proc_hready_resp) begin
                     preparea;
 `ifdef dbgl1cache
@@ -228,8 +229,8 @@ localparam HSIZE_WORD  = 3'd2;
             if(j < 60) begin
             j <= j+1;
             $display(
-                "h%1xw l1proc_haddr=%x l1proc_hwdata=%x %8d",
-                proc_hmaster, proc_haddr, proc_hwdata, $time);
+                "h%1xws haddr=%x proc_hwdata=%x %8d",
+                aproc_hmaster, aproc_haddr, proc_hwdata, $time);
             end
 `endif
                 state <= 11;
@@ -250,15 +251,12 @@ localparam HSIZE_WORD  = 3'd2;
             if(j < 60) begin
             j <= j+1;
             $display(
-                "h%1xwd l1proc_haddr=%x l1proc_hwdata=%x l1proc_hready_resp=%x,%x %8d",
-                l1proc_hmaster, l1proc_haddr, l1proc_hwdata, l1proc_hready_resp, l1proc_hexokay, $time);
+                "h%1xwd aproc_haddr=%x proc_hwdata=%x hready_resp=%x,%x %8d",
+                l1proc_hmaster, aproc_haddr, aproc_hwdata, l1proc_hready_resp, l1proc_hexokay, $time);
             end
 `endif
                     state <= 0;
                 end
-            end else if(state == 20) begin
-                aproc_hready_resp <= 0;
-                state <= 0;
             end
         end
     end
