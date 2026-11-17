@@ -174,26 +174,22 @@ localparam HSIZE_WORD  = 3'd2;
                 aproc_hexokay <= 1;
                 if(proc_read_aphase && l1proc_hready_resp) begin
                     preparea;
-`ifdef dbgl1cache
-            if(j < 60) begin
-            j <= j+1;
-            $display(
-                "h%1xrs proc_haddr=%x %8d",
-                proc_hmaster, proc_haddr, $time);
-            end
-`endif
                     state <= 1;
+                    `ifdef dbgl1cache
+                    if(j < 60) begin
+                        j <= j+1;
+                        $display("h%1xrs proc_haddr=%x %8d", proc_hmaster, proc_haddr, $time);
+                    end
+                    `endif
                 end else if(proc_write_aphase && l1proc_hready_resp) begin
                     preparea;
-`ifdef dbgl1cache
-            if(j < 60) begin
-            j <= j+1;
-            $display(
-                "h%1xws proc_haddr=%x %8d",
-                proc_hmaster, proc_haddr, $time);
-            end
-`endif
                     state <= 10;
+                    `ifdef dbgl1cache
+                        if(j < 60) begin
+                            j <= j+1;
+                            $display("h%1xws proc_haddr=%x %8d", proc_hmaster, proc_haddr, $time);
+                        end
+                    `endif
                 end 
                 //if (proc_hexcl) begin
                     // bypass cache to make reservation
@@ -211,29 +207,26 @@ localparam HSIZE_WORD  = 3'd2;
                     aproc_hready_resp <= 1;
                     aproc_hrdata <= l1proc_hrdata;
                     assert(l1proc_hmaster == mhartid_val);
-`ifdef dbgl1cache
-            if(j < 60) begin
-            j <= j+1;
-            $display(
-                "h%1xrd l1proc_haddr=%x l1proc_hrdata=%x l1proc_hready_resp=%x,%x %8d",
-                l1proc_hmaster, l1proc_haddr, l1proc_hrdata, l1proc_hready_resp, l1proc_hexokay, $time);
-            end
-`endif
                     state <= 0;
+                    `ifdef dbgl1cache
+                    if(j < 60) begin
+                        j <= j+1;
+                        $display("h%1xrd l1proc_haddr=%x l1proc_hrdata=%x l1proc_hready_resp=%x,%x %8d",
+                            l1proc_hmaster, l1proc_haddr, l1proc_hrdata, l1proc_hready_resp, l1proc_hexokay, $time);
+                    end
+                    `endif
                 end
             end else if(state == 10) begin
                 // data phase of wr
                 //aproc_hready_resp <= 1;
                 aproc_hwdata <= proc_hwdata;
-`ifdef dbgl1cache
-            if(j < 60) begin
-            j <= j+1;
-            $display(
-                "h%1xws haddr=%x proc_hwdata=%x %8d",
-                aproc_hmaster, aproc_haddr, proc_hwdata, $time);
-            end
-`endif
                 state <= 11;
+                `ifdef dbgl1cache
+                if(j < 60) begin
+                    j <= j+1;
+                    $display("h%1xws haddr=%x proc_hwdata=%x %8d", aproc_hmaster, aproc_haddr, proc_hwdata, $time);
+                end
+                `endif
             end else if(state == 11) begin
                 // let splitter get the command
                 if((mem_mast_gnt_a[mhartid_val] && slave_sel[0]) ||
@@ -247,15 +240,14 @@ localparam HSIZE_WORD  = 3'd2;
                     aproc_hready_resp <= 1;
                     aproc_hexokay <= l1proc_hexokay;
                     assert(l1proc_hmaster == mhartid_val);
-`ifdef dbgl1cache
-            if(j < 60) begin
-            j <= j+1;
-            $display(
-                "h%1xwd aproc_haddr=%x proc_hwdata=%x hready_resp=%x,%x %8d",
-                l1proc_hmaster, aproc_haddr, aproc_hwdata, l1proc_hready_resp, l1proc_hexokay, $time);
-            end
-`endif
                     state <= 0;
+                    `ifdef dbgl1cache
+                    if(j < 60) begin
+                        j <= j+1;
+                        $display("h%1xwd aproc_haddr=%x proc_hwdata=%x hready_resp=%x,%x %8d",
+                            l1proc_hmaster, aproc_haddr, aproc_hwdata, l1proc_hready_resp, l1proc_hexokay, $time);
+                    end
+                    `endif
                 end
             end
         end
