@@ -74,17 +74,21 @@ module m_topsim (
     reg [31:0] cnt = 0;
     reg rst_n = 0;
     always @(posedge clk)
+        `ifdef SIM_MODE
+        if (cnt < 4) begin
+        `else
         if (cnt < 24) begin
+        `endif
             rst_n <= 0;
-            cnt   <= cnt + 1;
+            cnt <= cnt + 1;
         end else begin
             rst_n <= 1;
-            if (cnt >= 32'h2220) begin
-`ifdef DUMP_VCD
+            `ifdef DUMP_VCD
+            if ($time >= 4700) begin
                 $display("time to finish %d", $time);
                 $finish;
-`endif
-            end else cnt <= cnt + 1;
+            end
+            `endif
         end
 `ifdef SIM_MODE
     assign pll_clk = clk;
