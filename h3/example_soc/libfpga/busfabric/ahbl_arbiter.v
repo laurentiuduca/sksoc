@@ -163,7 +163,7 @@ module ahbl_arbiter #(
 
     wire canchange;
     assign canchange = SLAVE_ID != 0 ? 0 :
-			     dst_hready_resp && !src_hwrite[active] && src_hready && //(mast_gnt_a[active] == src_hready[active]) && 
+			     dst_hready_resp && !src_hwrite[active] && src_hready_resp && 
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] == src_haddr[W_ADDR*active +: W_ADDR]) || 
 			     ((src_d_pc[W_ADDR*active +: W_ADDR] + 4) == src_haddr[W_ADDR*active +: W_ADDR]));
 
@@ -180,10 +180,9 @@ module ahbl_arbiter #(
     // AHB State Machine
 
     reg [W_ADDR-1:0] dd_pc;
-    assign dst_hready = //mast_gnt_d ? |(src_hready & mast_gnt_d) : 
-				 |(src_hready & mast_gnt_a); //1'b1;
+    assign dst_hready = mast_gnt_d ? |(src_hready & mast_gnt_d) : 
+				 |(src_hready & mast_gnt_a);
 
-    // see spliter
     wire [N_PORTS-1:0] mast_aphase_ends = mast_req_a & src_hready;
     wire [N_PORTS-1:0] buf_wen = mast_aphase_ends & ~(mast_gnt_a &{N_PORTS{dst_hready}});
 
